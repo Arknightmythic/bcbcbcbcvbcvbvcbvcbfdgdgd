@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  dokuprime-fe:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dokuprime_fe
+    image: dokuprime-fe
+    ports:
+      - "5173:5173"
+    env_file:
+      - .env
+    restart: always
