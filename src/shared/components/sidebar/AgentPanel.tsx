@@ -1,14 +1,13 @@
 // src/layouts/components/AgentPanel.tsx
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router';
-import { Clock, MessageSquare, History } from 'lucide-react';
+import { Clock, MessageSquare, History, GripVertical } from 'lucide-react';
 
 import { ChatList } from './ChatList';
 import type { Chat } from '../../types/types';
 import { AgentSidebarSection } from './AgentSidebarSection';
-
-
+import { useDraggable } from '../../hooks/useDraggable';
 
 // Tipe data yang dibutuhkan
 type ChatListType = 'active' | 'queue' | 'history' | 'pending';
@@ -23,12 +22,26 @@ interface AgentPanelProps {
     history: Chat[];
     pending: Chat[];
   };
+  panelRef: React.RefObject<HTMLDivElement | null>;
+  onDrag: (deltaY: number) => void;
+  chatListHeight: number;
 }
 
-export const AgentPanel = ({ agentName, agentStatus, chats }: AgentPanelProps) => {
+export const AgentPanel = ({
+  agentName,
+  agentStatus,
+  chats,
+  panelRef,
+  onDrag,
+  chatListHeight,
+}: AgentPanelProps) => {
   const location = useLocation();
   const [activeList, setActiveList] = useState<ChatListType>('queue');
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
+  const dragHandleRef = useRef<HTMLDivElement>(null);
+
+  useDraggable(panelRef, dragHandleRef, onDrag);
+
 
   // EFEK UNTUK MENGATUR TAB AKTIF BERDASARKAN URL
   useEffect(() => {
@@ -41,7 +54,7 @@ export const AgentPanel = ({ agentName, agentStatus, chats }: AgentPanelProps) =
     console.log(`Chat with id ${id} selected.`);
     setSelectedChatId(id);
   };
-  
+
   const listConfig = {
     queue: { icon: Clock, title: "Antrian Chat", empty: "Tidak ada antrian." },
     active: { icon: MessageSquare, title: "Sesi Aktif", empty: "Tidak ada sesi aktif." },
@@ -52,7 +65,13 @@ export const AgentPanel = ({ agentName, agentStatus, chats }: AgentPanelProps) =
   const currentList = listConfig[activeList];
 
   return (
-    <div className="flex flex-col min-h-0 border-t border-gray-200">
+    <div ref={panelRef} className="flex flex-col min-h-0 border-t border-gray-200">
+       <div
+        ref={dragHandleRef}
+        className="flex justify-center items-center h-4 bg-gray-100 cursor-ns-resize"
+      >
+        <GripVertical className="w-4 h-4 text-gray-400" />
+      </div>
       {/* Gunakan komponen baru dengan props yang sesuai */}
       <AgentSidebarSection
         agentName={agentName}
@@ -67,7 +86,7 @@ export const AgentPanel = ({ agentName, agentStatus, chats }: AgentPanelProps) =
         }}
       />
 
-      <div className="overflow-y-auto hidden md:block h-[200px]">
+      <div className="overflow-y-auto hidden md:block" style={{ height: `${chatListHeight}px` }}>
         <ChatList
           title={currentList.title}
           icon={currentList.icon}

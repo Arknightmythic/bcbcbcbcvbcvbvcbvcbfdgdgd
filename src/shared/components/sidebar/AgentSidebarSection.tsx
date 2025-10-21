@@ -17,7 +17,7 @@ interface AgentSidebarSectionProps {
 
 // Sub-komponen untuk menghindari repetisi
 const TabButton = ({ label, count, isActive, onClick }: { label: string, count: number, isActive: boolean, onClick: () => void }) => {
-  const activeStyle = "bg-white border-gray-200 shadow-sm";
+  const activeStyle = "bg-bOss-red border-bOss-red-200 shadow-sm";
   const inactiveStyle = "bg-transparent border-transparent";
   
   return (
@@ -25,8 +25,8 @@ const TabButton = ({ label, count, isActive, onClick }: { label: string, count: 
       onClick={onClick}
       className={`flex-1 rounded-md py-1 text-xs transition-all duration-200 ${isActive ? activeStyle : inactiveStyle}`}
     >
-      <span className="block font-bold text-lg text-gray-800">{count}</span>
-      <span className="text-gray-600 capitalize">{label}</span>
+      <span className={`block font-bold text-lg ${isActive ? "text-white" : "text-gray-800"}`}>{count}</span>
+      <span className={`capitalize ${isActive ? "text-white" : "text-gray-600"}`}>{label}</span>
     </button>
   );
 };
@@ -59,7 +59,7 @@ export const AgentSidebarSection = ({
     <div className="px-5 py-4 border-t border-gray-200 bg-gray-50 hidden md:block">
       {/* Profile Section */}
       <div className="flex items-center mb-3">
-        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold mr-3">
+        <div className="w-8 h-8 bg-bOss-red rounded-full flex items-center justify-center text-white text-sm font-bold mr-3">
           {agentInitial}
         </div>
         <div className="flex-1">
