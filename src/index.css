@@ -1,12 +1,60 @@
 @import "tailwindcss";
 
-@theme{
+@theme {
+  /* ============================================= */
+  /* Original Base Colors                 */
+  /* ============================================= */
   --color-bOss-blue: #00479B;
   --color-bOss-red: #9b1f15;
   --color-bOss-hblue: #EBF4FF;
   --color-Oss-blue: #00479B;
-}
 
+
+  --color-bOss-blue-10: #F0F6FC;   
+  --color-bOss-blue-50: #EBF4FF;
+  --color-bOss-blue-100: #D2E6FF;
+  --color-bOss-blue-200: #A6CBFF;
+  --color-bOss-blue-300: #73A9FF;
+  --color-bOss-blue-400: #3C84FF;
+  --color-bOss-blue-500: #00479B;  
+  --color-bOss-blue-600: #003A7C;
+  --color-bOss-blue-700: #002D5E;
+  --color-bOss-blue-800: #002145;
+
+  --color-bOss-red-10: #FCF3F2;   
+  --color-bOss-red-50: #FAE5E3;
+  --color-bOss-red-100: #F4C7C3;
+  --color-bOss-red-200: #E99B94;
+  --color-bOss-red-300: #D96559;
+  --color-bOss-red-400: #C2392B;
+  --color-bOss-red-500: #9b1f15; 
+  --color-bOss-red-600: #7E1A12;
+  --color-bOss-red-700: #61140E;
+  --color-bOss-red-800: #4B100B;
+
+
+  --color-bOss-hblue-10: #F7FBFF;  
+  --color-bOss-hblue-50: #F0F6FF;
+  --color-bOss-hblue-100: #EBF4FF; 
+  --color-bOss-hblue-200: #D3E7FF;
+  --color-bOss-hblue-300: #B2D5FF;
+  --color-bOss-hblue-400: #88BFFF;
+  --color-bOss-hblue-500: #57A1FF;
+  --color-bOss-hblue-600: #297FE5;
+  --color-bOss-hblue-700: #005DB3;
+  --color-bOss-hblue-800: #004280;
+
+  --color-Oss-blue-10: #F0F6FC;   
+  --color-Oss-blue-50: #EBF4FF;
+  --color-Oss-blue-100: #D2E6FF;
+  --color-Oss-blue-200: #A6CBFF;
+  --color-Oss-blue-300: #73A9FF;
+  --color-Oss-blue-400: #3C84FF;
+  --color-Oss-blue-500: #00479B;  
+  --color-Oss-blue-600: #003A7C;
+  --color-Oss-blue-700: #002D5E;
+  --color-Oss-blue-800: #002145;
+}
 
 
 /* :root {

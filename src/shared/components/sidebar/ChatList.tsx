@@ -3,7 +3,7 @@
 import type { LucideIcon } from 'lucide-react';
 
 import { ChatListItem } from './ChatListItem';
-import type { Chat } from '../types/types';
+import type { Chat } from '../../types/types';
 
 interface ChatListProps {
   title: string;

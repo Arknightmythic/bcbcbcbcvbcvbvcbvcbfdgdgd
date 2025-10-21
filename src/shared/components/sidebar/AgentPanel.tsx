@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router';
 import { Clock, MessageSquare, History } from 'lucide-react';
-import type { Chat } from '../types/types';
-import { AgentSidebarSection } from './agentsidebarsection';
+
 import { ChatList } from './ChatList';
+import type { Chat } from '../../types/types';
+import { AgentSidebarSection } from './AgentSidebarSection';
 
 
 

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { LogOut } from "lucide-react";
-import { useClickOutside } from "../hooks/useClickOutside";
+import { useClickOutside } from "../../hooks/useClickOutside";
 
 // Dummy user data to replace the useAuth hook
 const dummyUser = {

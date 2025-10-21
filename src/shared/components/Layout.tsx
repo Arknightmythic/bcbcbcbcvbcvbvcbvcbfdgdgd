@@ -1,20 +1,31 @@
-import { Outlet } from "react-router"
-import Header from "./header"
-import Sidebar from "./Sidebar"
+import { useState } from "react";
+import { Outlet } from "react-router";
+import Sidebar from "./sidebar/Sidebar";
+import Header from "./header/header";
+
 
 function Layout() {
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  const toggleSidebar = () => {
+    setIsSidebarCollapsed(!isSidebarCollapsed);
+  };
+
   return (
-    
-   <div className="flex min-h-screen relative">
-      <div className="flex flex-col flex-1 ml-20 md:ml-72">
-        <Sidebar/>
-        <Header/>
+    <div className="flex min-h-screen relative">
+      <Sidebar isCollapsed={isSidebarCollapsed} />
+      <div
+        className={`flex flex-col flex-1 transition-all duration-300 ${
+          isSidebarCollapsed ? "ml-25" : "ml-72"
+        }`}
+      >
+        <Header toggleSidebar={toggleSidebar} />
         <main className="flex-1 px-8 pt-5 bg-[#F9FAFB] overflow-auto relative mr-0 pr-0">
           <Outlet />
         </main>
       </div>
     </div>
-  )
+  );
 }
 
-export default Layout
+export default Layout;
