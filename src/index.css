@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+@theme{
+  --color-bOss-blue: #00479B;
+  --color-bOss-red: #9b1f15;
+  --color-bOss-hblue: #EBF4FF;
+  --color-Oss-blue: #00479B;
+}
+
+
+
 /* :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -68,3 +77,5 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 } */
+
+
