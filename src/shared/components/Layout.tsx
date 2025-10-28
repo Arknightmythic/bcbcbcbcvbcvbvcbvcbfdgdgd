@@ -23,7 +23,7 @@ function Layout() {
         }`}
       >
         <Header toggleSidebar={toggleSidebar} />
-        <main className={`flex-1 px-6 pt-5 bg-[#F9FAFB] overflow-auto relative mr-0 pr-0  ${isOutletBlurred ? 'blur-sm' : ''}`}>
+        <main className={`flex flex-col flex-1 p-5 bg-[#F9FAFB] overflow-y-auto relative ${isOutletBlurred ? 'blur-sm' : ''}`}>
           <Outlet />
         </main>
       </div>
