@@ -6,6 +6,8 @@ import DocumentManagementPage from "./features/DocumentManagement/pages/Document
 import UploadPage from "./features/UploadDocument/pages/UploadPage";
 import PublicServiceIntroPage from "./features/PublicService/pages/PublicServiceIntroPage";
 import PublicServiceChatPage from "./features/PublicService/pages/PublicServiceChatPage";
+import HistoryValidationPage from "./features/HistoryValidation/pages/HistoryValidationPage";
+import GuidePage from "./features/Guide/pages/GuidePage";
 
 const Router = createBrowserRouter([
     {
@@ -35,6 +37,14 @@ const Router = createBrowserRouter([
             {
                 path: 'public-service/:sessionId', // Halaman Chat aktual
                 element: <PublicServiceChatPage />
+            },
+            {
+                path:'validation-history',
+                element:<HistoryValidationPage/>
+            },
+            {
+                path:'guide',
+                element:<GuidePage/>
             }
         ]
     }

@@ -24,7 +24,7 @@ const TableControls = <T extends object>({
   filterConfig,
 }: TableControlsProps<T>) => {
   return (
-    <div className="p-4 bg-gray-50 rounded-t-lg">
+    <div className="py-4 bg-gray-50 rounded-t-lg">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Search Input */}
         <div className="lg:col-span-2">

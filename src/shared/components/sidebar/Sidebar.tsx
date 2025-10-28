@@ -1,6 +1,6 @@
 
 import { Link, useLocation } from "react-router";
-import { Users, Shield, Briefcase, LayoutDashboard, Dock, Database, BotIcon } from "lucide-react";
+import { Users, Shield, Briefcase, LayoutDashboard, Dock, Database, BotIcon, History, SearchSlash } from "lucide-react";
 import { useState, useRef, useCallback } from 'react';
 
 import { AgentPanel } from "./AgentPanel";
@@ -13,6 +13,8 @@ const dummyMenu: MenuItem[] = [
   { path: "/upload-document", title: "Knowledge base", icon: Database, identifier: "upload-document"},
   { path: "/document-management", title: "Document Management", icon: Dock, identifier: "document-management" },
   { path: "/public-service", title: "Public service", icon: BotIcon, identifier: "public-service" },
+  { path: "/validation-history", title: "Validation History", icon: History, identifier: "validation-history" },
+  { path: "/guide", title: "Guide", icon: SearchSlash, identifier: "guide" },
   { path: "/agent-dashboard", title: "Agent Dashboard", icon: Briefcase, identifier: "agent-dashboard" },
   { path: "/user-management", title: "User Management", icon: Users, identifier: "user-management" },
   { path: "/role-management", title: "Role Management", icon: Shield, identifier: "role-management" },
@@ -21,7 +23,7 @@ const dummyMenu: MenuItem[] = [
 const dummyUser = {
   name: "Budi Santoso",
   isSuperAdmin: false,
-  permissions: ["dashboard:access", "document-management:access", "agent-dashboard:access", "user-management:master", "upload-document:access", "public-service:access"],
+  permissions: ["dashboard:access", "document-management:access", "agent-dashboard:access", "user-management:master", "upload-document:access", "public-service:access", "validation-history:access","guide:access"],
   status: 'online' as const,
 };
 
