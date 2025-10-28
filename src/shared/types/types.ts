@@ -1,4 +1,4 @@
-import type { LucideIcon } from 'lucide-react';
+import type { LucideIcon } from "lucide-react";
 
 export interface MenuItem {
   path: string;
@@ -13,3 +13,5 @@ export interface Chat {
   last_message: string;
   timestamp: string;
 }
+
+export type DocumentCategory = "panduan" | "uraian" | "peraturan";

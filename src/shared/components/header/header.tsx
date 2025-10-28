@@ -6,7 +6,9 @@ import UserProfile from "./UserProfile";
 const menuConfig = [
   { path: "/dashboard", title: "Dashboard" },
   { path: "/users", title: "User Management" },
+  { path: "/document-management", title: "Document Management" },
   { path: "/settings", title: "Settings" },
+  { path: "/upload-document", title: "Knowledge base" },
 ];
 
 const Notifications = () => (
@@ -33,7 +35,7 @@ const Header = ({ toggleSidebar }: { toggleSidebar: () => void }) => {
   }, [location.pathname]);
 
   return (
-    <header className="flex h-20 w-full items-center justify-between bg-gray-50 px-6 border-b border-gray-200">
+    <header className="flex h-22 w-full items-center justify-between bg-white px-6 border-b border-gray-200 pt-5">
       <div className="flex items-center gap-4">
         <button onClick={toggleSidebar} className="text-gray-600 hover:text-gray-800">
           <Menu className="h-6 w-6" />

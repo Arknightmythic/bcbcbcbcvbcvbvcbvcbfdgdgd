@@ -37,9 +37,9 @@ function Login() {
 
       <div className="w-full md:w-1/2 flex flex-col items-center justify-center p-8 md:p-12 lg:p-16 relative overflow-auto">
        <div className="absolute top-8 right-8 md:top-12 md:right-12 lg:top-16 lg:right-16">          <img
-            src="/Dokuprime.svg"
+            src="/dokulogo.png"
             alt="Logo Dokuprime"
-            className="h-8 md:h-10"
+            className="h-15 md:h-28"
           />
         </div>
 

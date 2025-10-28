@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+:root {
+  font-family: 'Montserrat', system-ui, Helvetica, Arial, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+
 @theme {
   /* ============================================= */
   /* Original Base Colors                 */

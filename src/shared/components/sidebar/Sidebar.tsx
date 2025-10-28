@@ -1,5 +1,6 @@
+// src/shared/components/sidebar/Sidebar.tsx
 import { Link, useLocation } from "react-router";
-import { Users, Shield, Briefcase, LayoutDashboard } from "lucide-react";
+import { Users, Shield, Briefcase, LayoutDashboard, Paperclip, Dock, Database } from "lucide-react";
 import { useState, useRef, useCallback } from 'react';
 
 import { AgentPanel } from "./AgentPanel";
@@ -9,6 +10,8 @@ import Tooltip from "../Tooltip";
 
 const dummyMenu: MenuItem[] = [
   { path: "/dashboard", title: "Dashboard", icon: LayoutDashboard, identifier: "dashboard" },
+  {path: "/upload-document", title: "Knowledge base", icon: Database, identifier: "upload-document"},
+  { path: "/document-management", title: "Document Management", icon: Dock, identifier: "document-management" },
   { path: "/agent-dashboard", title: "Agent Dashboard", icon: Briefcase, identifier: "agent-dashboard" },
   { path: "/user-management", title: "User Management", icon: Users, identifier: "user-management" },
   { path: "/role-management", title: "Role Management", icon: Shield, identifier: "role-management" },
@@ -17,7 +20,7 @@ const dummyMenu: MenuItem[] = [
 const dummyUser = {
   name: "Budi Santoso",
   isSuperAdmin: false,
-  permissions: ["dashboard:access", "agent-dashboard:access", "user-management:master"],
+  permissions: ["dashboard:access", "document-management:access", "agent-dashboard:access", "user-management:master", "upload-document:access"],
   status: 'online' as const,
 };
 
@@ -65,7 +68,7 @@ const NavigationMenu = ({ menuItems, currentPath, isCollapsed }: { menuItems: Me
   </div>
 );
 
-const Sidebar = ({ isCollapsed }: { isCollapsed: boolean }) => {
+const Sidebar = ({ isCollapsed, setOutletBlurred }: { isCollapsed: boolean, setOutletBlurred: (isBlurred: boolean) => void }) => {
   const location = useLocation();
   const [agentPanelHeight, setAgentPanelHeight] = useState(300); // Initial height
   const sidebarRef = useRef<HTMLElement>(null);
@@ -99,7 +102,7 @@ const Sidebar = ({ isCollapsed }: { isCollapsed: boolean }) => {
       }`}
     >
       <div ref={logoSectionRef} className={`${isCollapsed ? "justify-center ml-0" : "md:justify-start justify-center md:ml-2"} flex h-20 items-center px-4 mt-4 mb-4 `}>
-        <img src={isCollapsed ? "/dokuprime-d.png" : "/Dokuprime.svg"} alt="Logo" className="h-10 md:h-12" />
+        <img src={isCollapsed ? "/dokulogo-d.png" : "/dokulogo.png"} alt="Logo" className={`${isCollapsed ? "h-10" : "h-30"}`} />
       </div>
 
       <div className={`flex flex-1 flex-col ${isCollapsed ? 'overflow-visible' : 'overflow-hidden'}`}>
@@ -107,8 +110,8 @@ const Sidebar = ({ isCollapsed }: { isCollapsed: boolean }) => {
           <NavigationMenu menuItems={accessibleMenu} currentPath={location.pathname} isCollapsed={isCollapsed} />
         </div>
 
-        {showAgentSection && !isCollapsed && (
-          <div style={{ height: `${agentPanelHeight}px` }}>
+        {showAgentSection && (
+          <div style={{ height: isCollapsed ? 'auto' : `${agentPanelHeight}px` }} className="mt-auto">
             <AgentPanel
               panelRef={agentPanelRef}
               agentName={dummyUser.name}
@@ -116,6 +119,8 @@ const Sidebar = ({ isCollapsed }: { isCollapsed: boolean }) => {
               agentStatus={dummyUser.status}
               onDrag={handleDrag}
               chatListHeight={chatListHeight}
+              isCollapsed={isCollapsed}
+              setOutletBlurred={setOutletBlurred}
             />
           </div>
         )}

@@ -1,3 +1,4 @@
+// src/shared/components/Layout.tsx
 import { useState } from "react";
 import { Outlet } from "react-router";
 import Sidebar from "./sidebar/Sidebar";
@@ -6,6 +7,8 @@ import Header from "./header/header";
 
 function Layout() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isOutletBlurred, setIsOutletBlurred] = useState(false);
+
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
@@ -13,14 +16,14 @@ function Layout() {
 
   return (
     <div className="flex min-h-screen relative">
-      <Sidebar isCollapsed={isSidebarCollapsed} />
+      <Sidebar isCollapsed={isSidebarCollapsed} setOutletBlurred={setIsOutletBlurred}/>
       <div
         className={`flex flex-col flex-1 transition-all duration-300 ${
           isSidebarCollapsed ? "ml-25" : "ml-72"
         }`}
       >
         <Header toggleSidebar={toggleSidebar} />
-        <main className="flex-1 px-8 pt-5 bg-[#F9FAFB] overflow-auto relative mr-0 pr-0">
+        <main className={`flex-1 px-6 pt-5 bg-[#F9FAFB] overflow-auto relative mr-0 pr-0  ${isOutletBlurred ? 'blur-sm' : ''}`}>
           <Outlet />
         </main>
       </div>
