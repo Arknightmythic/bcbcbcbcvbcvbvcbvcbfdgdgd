@@ -8,6 +8,7 @@ import PublicServiceIntroPage from "./features/PublicService/pages/PublicService
 import PublicServiceChatPage from "./features/PublicService/pages/PublicServiceChatPage";
 import HistoryValidationPage from "./features/HistoryValidation/pages/HistoryValidationPage";
 import GuidePage from "./features/Guide/pages/GuidePage";
+import UserManagementPage from "./features/UserManagement/pages/UserManagementPage";
 
 const Router = createBrowserRouter([
     {
@@ -45,6 +46,10 @@ const Router = createBrowserRouter([
             {
                 path:'guide',
                 element:<GuidePage/>
+            },
+            {
+                path:'user-management',
+                element:<UserManagementPage/>
             }
         ]
     }
