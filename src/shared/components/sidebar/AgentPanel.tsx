@@ -1,8 +1,6 @@
-// src/shared/components/sidebar/AgentPanel.tsx
-
 import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router';
-import { Clock, MessageSquare, History, GripVertical, X } from 'lucide-react';
+import { Clock, MessageSquare, History, X } from 'lucide-react';
 
 import { ChatList } from './ChatList';
 import type { Chat } from '../../types/types';
@@ -11,8 +9,6 @@ import { useDraggable } from '../../hooks/useDraggable';
 import Tooltip from '../Tooltip';
 import type { LucideIcon } from 'lucide-react';
 
-
-// Tipe data yang dibutuhkan
 type ChatListType = 'active' | 'queue' | 'history' | 'pending';
 type AgentStatus = 'online' | 'away' | 'offline';
 
@@ -26,8 +22,6 @@ interface AgentPanelProps {
     pending: Chat[];
   };
   panelRef: React.RefObject<HTMLDivElement | null>;
-  onDrag: (deltaY: number) => void;
-  chatListHeight: number;
   isCollapsed: boolean;
   setOutletBlurred: (isBlurred: boolean) => void;
 }
@@ -37,8 +31,6 @@ export const AgentPanel = ({
   agentStatus,
   chats,
   panelRef,
-  onDrag,
-  chatListHeight,
   isCollapsed,
   setOutletBlurred,
 }: AgentPanelProps) => {
@@ -48,11 +40,9 @@ export const AgentPanel = ({
   const dragHandleRef = useRef<HTMLDivElement>(null);
   const [isCollapsedPanelOpen, setIsCollapsedPanelOpen] = useState(false);
 
-  // Gunakan hook dengan parameter `enabled`
-  useDraggable(panelRef, dragHandleRef, onDrag, !isCollapsed);
+  // Fitur drag dinonaktifkan secara permanen
+  useDraggable(panelRef, dragHandleRef, () => {}, false);
 
-
-  // EFEK UNTUK MENGATUR TAB AKTIF BERDASARKAN URL
   useEffect(() => {
     if (location.pathname.startsWith('/agent-dashboard/history')) {
       setActiveList('history');
@@ -106,12 +96,12 @@ export const AgentPanel = ({
         </Tooltip>
 
         <div className="relative">
-          <button
+          {/* <button
             onClick={() => setIsCollapsedPanelOpen(!isCollapsedPanelOpen)}
             className="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-full"
           >
             <MessageSquare className="w-5 h-5 text-gray-600" />
-          </button>
+          </button> */}
           {isCollapsedPanelOpen && (
              <div className="absolute bottom-0 left-full ml-10 bg-white rounded-lg shadow-lg border w-72 flex flex-col">
               <div className="p-2 border-b flex justify-between items-center">
@@ -152,16 +142,9 @@ export const AgentPanel = ({
     );
   }
 
-
   return (
     <div ref={panelRef} className="flex flex-col min-h-0 border-t border-gray-200">
-       <div
-        ref={dragHandleRef}
-        className="flex justify-center items-center h-4 bg-gray-100 cursor-ns-resize"
-      >
-        <GripVertical className="w-4 h-4 text-gray-400" />
-      </div>
-      {/* Gunakan komponen baru dengan props yang sesuai */}
+      {/* Drag handle dan ChatList dihilangkan */}
       <AgentSidebarSection
         agentName={agentName}
         agentStatus={agentStatus}
@@ -174,18 +157,6 @@ export const AgentPanel = ({
           pending: chats.pending.length,
         }}
       />
-
-      <div className="overflow-y-auto hidden md:block" style={{ height: `${chatListHeight}px` }}>
-        <ChatList
-          title={currentList.title}
-          icon={currentList.icon}
-          chats={chats[activeList]}
-          onItemClick={handleItemClick}
-          emptyMessage={currentList.empty}
-          type={activeList}
-          selectedChatId={selectedChatId ?? undefined}
-        />
-      </div>
     </div>
   );
 };

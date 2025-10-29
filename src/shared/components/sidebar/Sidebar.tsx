@@ -1,12 +1,10 @@
-
 import { Link, useLocation } from "react-router";
-import { Users, Shield, Briefcase, LayoutDashboard, Dock, Database, BotIcon, History, SearchSlash } from "lucide-react";
-import { useState, useRef, useCallback } from 'react';
+import { Users, Shield,  LayoutDashboard, Dock, Database, BotIcon, History, SearchSlash } from "lucide-react";
+import { useRef } from 'react';
 
 import { AgentPanel } from "./AgentPanel";
 import type { MenuItem } from "../../types/types";
 import Tooltip from "../Tooltip";
-
 
 const dummyMenu: MenuItem[] = [
   { path: "/dashboard", title: "Dashboard", icon: LayoutDashboard, identifier: "dashboard" },
@@ -15,7 +13,7 @@ const dummyMenu: MenuItem[] = [
   { path: "/public-service", title: "Public service", icon: BotIcon, identifier: "public-service" },
   { path: "/validation-history", title: "Validation History", icon: History, identifier: "validation-history" },
   { path: "/guide", title: "Guide", icon: SearchSlash, identifier: "guide" },
-  { path: "/agent-dashboard", title: "Agent Dashboard", icon: Briefcase, identifier: "agent-dashboard" },
+  // { path: "/agent-dashboard", title: "Agent Dashboard", icon: Briefcase, identifier: "agent-dashboard" },
   { path: "/user-management", title: "User Management", icon: Users, identifier: "user-management" },
   { path: "/role-management", title: "Role Management", icon: Shield, identifier: "role-management" },
 ];
@@ -73,29 +71,15 @@ const NavigationMenu = ({ menuItems, currentPath, isCollapsed }: { menuItems: Me
 
 const Sidebar = ({ isCollapsed, setOutletBlurred }: { isCollapsed: boolean, setOutletBlurred: (isBlurred: boolean) => void }) => {
   const location = useLocation();
-  const [agentPanelHeight, setAgentPanelHeight] = useState(300); 
   const sidebarRef = useRef<HTMLElement>(null);
   const agentPanelRef = useRef<HTMLDivElement>(null);
   const logoSectionRef = useRef<HTMLDivElement>(null);
-
-  const handleDrag = useCallback((deltaY: number) => {
-    setAgentPanelHeight(prevHeight => {
-      const newHeight = prevHeight - deltaY;
-      const sidebarHeight = sidebarRef.current?.clientHeight ?? 0;
-      const logoHeight = logoSectionRef.current?.clientHeight ?? 0;
-      const minHeight = 150; 
-      const maxHeight = sidebarHeight - logoHeight;
-      return Math.max(minHeight, Math.min(newHeight, maxHeight));
-    });
-  }, []);
 
   const accessibleMenu = dummyMenu.filter(item =>
     dummyUser.isSuperAdmin || dummyUser.permissions.some(p => p.startsWith(item.identifier))
   );
 
   const showAgentSection = dummyUser.permissions.includes("agent-dashboard:access");
-
-  const chatListHeight = agentPanelHeight - 150;
 
   return (
     <nav
@@ -114,14 +98,12 @@ const Sidebar = ({ isCollapsed, setOutletBlurred }: { isCollapsed: boolean, setO
         </div>
 
         {showAgentSection && (
-          <div style={{ height: isCollapsed ? 'auto' : `${agentPanelHeight}px` }} className="mt-auto">
+          <div style={{ height: 'auto' }} className="mt-auto">
             <AgentPanel
               panelRef={agentPanelRef}
               agentName={dummyUser.name}
               chats={dummyChats}
               agentStatus={dummyUser.status}
-              onDrag={handleDrag}
-              chatListHeight={chatListHeight}
               isCollapsed={isCollapsed}
               setOutletBlurred={setOutletBlurred}
             />

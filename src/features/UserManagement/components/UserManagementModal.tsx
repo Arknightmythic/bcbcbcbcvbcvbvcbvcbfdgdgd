@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2, X } from 'lucide-react';
 import type { User, Team, Role } from '../utils/types';
+import CustomSelect from '../../../shared/components/CustomSelect'; // Menggunakan CustomSelect
 
 interface UserManagementModalProps {
   isOpen: boolean;
@@ -37,18 +38,28 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
         name: user?.name || '',
         email: user?.email || '',
         password: '', // Selalu kosongkan password
-        team: user?.team || '',
-        role: user?.role || '',
+        team: user?.team ? teams.find(t => t.name === user.team)?.id || '' : '',
+        role: user?.role ? roles.find(r => r.name === user.role)?.id || '' : '',
       });
     }
-  }, [isOpen, user]);
+  }, [isOpen, user, teams, roles]);
 
-  const filteredRoles = formData.team ? roles.filter(r => r.team_id === formData.team) : [];
+  const teamOptions = teams.map(t => ({ value: t.id, label: t.name }));
+  const roleOptions = formData.team
+    ? roles.filter(r => r.team_id === formData.team).map(r => ({ value: r.id, label: r.name }))
+    : [];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const selectedTeam = teams.find(t => t.id === formData.team);
+    const selectedRole = roles.find(r => r.id === formData.role);
+
     const userData = {
-      ...formData,
+      name: formData.name,
+      email: formData.email,
+      password: formData.password,
+      team: selectedTeam?.name,
+      role: selectedRole?.name,
       account_type: 'credential' as const,
     };
     onSave(userData, user?.id);
@@ -57,14 +68,13 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
-        <div className="flex justify-between items-center mb-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md animate-fade-in-up" onClick={(e) => e.stopPropagation()}>
+        <div className="flex justify-between items-center pb-4 border-b">
           <h2 className="text-2xl font-bold">{isEditMode ? 'Edit User' : 'Create New User'}</h2>
-          <button onClick={onClose}><X className="w-6 h-6" /></button>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-800"><X className="w-6 h-6" /></button>
         </div>
-        <form onSubmit={handleSubmit}>
-          {/* Fields... */}
+        <form onSubmit={handleSubmit} className="mt-6">
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">Name</label>
@@ -72,7 +82,7 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 required
               />
             </div>
@@ -82,7 +92,7 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 required
               />
             </div>
@@ -90,40 +100,36 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
               <label className="block text-sm font-medium text-gray-700">Password</label>
               <input
                 type="password"
-                placeholder={isEditMode ? "Leave blank to keep current password" : ""}
+                placeholder={isEditMode ? "Leave blank to keep current" : ""}
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 required={!isEditMode}
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Team (Optional)</label>
-              <select
+              <CustomSelect
+                selectedType="default"
                 value={formData.team}
-                onChange={(e) => setFormData({ ...formData, team: e.target.value, role: '' })}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-              >
-                <option value="">Select a team</option>
-                {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-              </select>
+                onChange={(value) => setFormData({ ...formData, team: value, role: '' })}
+                options={[{ value: '', label: 'Select a team' }, ...teamOptions]}
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Role (Optional)</label>
-              <select
+              <CustomSelect
+                selectedType="default"
                 value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                onChange={(value) => setFormData({ ...formData, role: value })}
+                options={[{ value: '', label: formData.team ? 'No Role Assigned' : 'Select a team first' }, ...roleOptions]}
                 disabled={!formData.team}
-              >
-                <option value="">{formData.team ? "No Role Assigned" : "Select a team first"}</option>
-                {filteredRoles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-              </select>
+              />
             </div>
           </div>
-          <div className="flex justify-end space-x-4 mt-6">
-            <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 rounded-lg">Cancel</button>
-            <button type="submit" disabled={isLoading} className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center">
+          <div className="flex justify-end space-x-4 mt-8 pt-4 border-t">
+            <button type="button" onClick={onClose} className="px-5 py-2.5 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg hover:bg-gray-100">Cancel</button>
+            <button type="submit" disabled={isLoading} className="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 flex items-center">
               {isLoading && <Loader2 className="animate-spin w-5 h-5 mr-2" />}
               {isEditMode ? 'Save Changes' : 'Create User'}
             </button>
