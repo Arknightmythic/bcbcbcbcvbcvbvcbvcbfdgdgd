@@ -1,17 +1,51 @@
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
+
+import toast from 'react-hot-toast';
+import { useAuthActions } from '../../../shared/store/authStore';
+import { useSignIn } from '../hooks/useSignIn';
+
+// Skema validasi menggunakan Zod
+const signInSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(1, 'Password is required'),
+});
+
+type SignInValues = z.infer<typeof signInSchema>;
 
 function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const { login: loginAction } = useAuthActions();
+  const { mutate: loginMutation, isPending } = useSignIn();
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    navigate('/dashboard');
-    e.preventDefault();
-    console.log('Login submitted:', { email, password });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SignInValues>({
+    resolver: zodResolver(signInSchema),
+  });
+
+  const [showPassword, setShowPassword] = useState(false);
+
+  const onSubmit = (data: SignInValues) => {
+    loginMutation(data, {
+      onSuccess: (response) => {
+        loginAction(response.data);
+        toast.success('Login successful!');
+        navigate('/dashboard');
+      },
+      onError: (error: any) => {
+        const errorMessage =
+          error.response?.data?.message || 'Login failed. Please try again.';
+        toast.error(errorMessage);
+      },
+    });
   };
 
   return (
@@ -20,8 +54,8 @@ function Login() {
         className="relative w-full md:w-1/2 flex items-center justify-start px-8 md:px-12 lg:px-20 py-16 text-white"
         style={{
           backgroundImage: 'url("/oss-red-bg.jpeg")',
-          backgroundSize: "cover",
-          backgroundPosition: "center",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
         }}
       >
         <div className="absolute inset-0 bg-black opacity-30 z-0" />
@@ -36,7 +70,8 @@ function Login() {
       </div>
 
       <div className="w-full md:w-1/2 flex flex-col items-center justify-center p-8 md:p-12 lg:p-16 relative overflow-auto">
-       <div className="absolute top-8 right-8 md:top-12 md:right-12 lg:top-16 lg:right-16">          <img
+        <div className="absolute top-8 right-8 md:top-12 md:right-12 lg:top-16 lg:right-16">
+          <img
             src="/dokulogo.png"
             alt="Logo Dokuprime"
             className="h-15 md:h-28"
@@ -51,7 +86,7 @@ function Login() {
             Sign in with your email credentials.
           </p>
 
-          <div className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div>
               <label
                 htmlFor="email"
@@ -61,20 +96,34 @@ function Login() {
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none z-10">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    />
                   </svg>
                 </span>
                 <input
                   id="email"
                   type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  {...register('email')}
                   placeholder="Enter your email"
                   className="pl-10 pr-3 py-3 w-full border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-Oss-blue focus:border-blue-500 text-sm overflow-hidden text-ellipsis"
                   style={{ fontSize: '14px' }}
                 />
               </div>
+              {errors.email && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.email.message}
+                </p>
+              )}
             </div>
 
             <div>
@@ -86,15 +135,24 @@ function Login() {
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none z-10">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                    />
                   </svg>
                 </span>
                 <input
                   id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  type={showPassword ? 'text' : 'password'}
+                  {...register('password')}
                   placeholder="Enter your password"
                   className="pl-10 pr-12 py-3 w-full border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-Oss-blue focus:border-blue-500 text-sm overflow-hidden text-ellipsis"
                   style={{ fontSize: '14px' }}
@@ -103,7 +161,7 @@ function Login() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none z-10"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? (
                     <EyeOff className="w-5 h-5" />
@@ -112,17 +170,22 @@ function Login() {
                   )}
                 </button>
               </div>
+              {errors.password && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.password.message}
+                </p>
+              )}
             </div>
 
             <button
-              type="button"
-              onClick={handleSubmit}
-              className="w-full flex justify-center items-center py-3 px-4 rounded-md shadow-sm text-white bg-bOss-blue hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-Oss-blue transition-colors duration-200 text-sm font-medium"
+              type="submit"
+              disabled={isPending}
+              className="w-full flex justify-center items-center py-3 px-4 rounded-md shadow-sm text-white bg-bOss-blue hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-Oss-blue transition-colors duration-200 text-sm font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
               style={{ fontSize: '14px' }}
             >
-              Sign In
+              {isPending ? 'Signing In...' : 'Sign In'}
             </button>
-          </div>
+          </form>
 
           <div className="mt-6">
             <div className="relative">
@@ -130,7 +193,10 @@ function Login() {
                 <div className="w-full border-t border-gray-300"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500" style={{ fontSize: '13px' }}>
+                <span
+                  className="px-2 bg-white text-gray-500"
+                  style={{ fontSize: '13px' }}
+                >
                   Or continue with
                 </span>
               </div>
@@ -153,7 +219,10 @@ function Login() {
           </div>
         </div>
 
-        <p className="mt-8 text-center text-xs text-gray-500" style={{ fontSize: '11px' }}>
+        <p
+          className="mt-8 text-center text-xs text-gray-500"
+          style={{ fontSize: '11px' }}
+        >
           &copy; 2025 Dokuprime. All rights reserved.
         </p>
       </div>

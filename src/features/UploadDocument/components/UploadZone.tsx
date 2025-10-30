@@ -54,7 +54,7 @@ const UploadZone: React.FC<UploadZoneProps> = ({
         <input type="file" id="file-input" multiple className="hidden" onChange={(e) => e.target.files && onFilesSelected(e.target.files)} accept=".pdf,.txt" />
         <UploadCloud className="w-12 h-12 text-gray-400 mb-4" />
         <p className="text-gray-600">Drag the document here, or <label htmlFor="file-input" className="text-blue-600 font-semibold cursor-pointer hover:underline">choose file</label></p>
-        <p className="text-xs text-gray-400 mt-2">Supports: Word, PDF, JPG, & PNG.</p>
+        <p className="text-xs text-gray-400 mt-2">Supports: PDF, txt.</p>
       </div>
 
       {/* Staged Files List */}
@@ -77,7 +77,7 @@ const UploadZone: React.FC<UploadZoneProps> = ({
       {/* Upload Button and Category Dropdown */}
       <div className="flex justify-end items-center mt-6 space-x-4">
         {/* Dropdown Kategori */}
-        <div className="relative">
+        <div className="relative min-w-25">
           <CustomSelect
             value={selectedCategory}
             onChange={(value) => onCategoryChange(value as DocumentCategory)}

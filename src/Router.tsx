@@ -1,7 +1,11 @@
-import { createBrowserRouter } from "react-router";
-import Login from "./features/Auth/pages/Login";
+
+
+// Layout & Halaman Utama
 import Layout from "./shared/components/Layout";
+import Login from "./features/Auth/pages/Login";
 import Dashboard from "./features/Dashboard/pages/Dashboard";
+
+// Halaman Fitur
 import DocumentManagementPage from "./features/DocumentManagement/pages/DocumentManagement";
 import UploadPage from "./features/UploadDocument/pages/UploadPage";
 import PublicServiceIntroPage from "./features/PublicService/pages/PublicServiceIntroPage";
@@ -11,59 +15,86 @@ import GuidePage from "./features/Guide/pages/GuidePage";
 import UserManagementPage from "./features/UserManagement/pages/UserManagementPage";
 import TeamManagementPage from "./features/TeamManagements/pages/TeamManagementPage";
 import RoleManagementPage from "./features/RoleManagements/pages/RoleManagementPage";
+import { createBrowserRouter, redirect } from "react-router";
+import { useAuthStore } from "./shared/store/authStore";
+
+// Fungsi loader untuk memeriksa status autentikasi
+const authLoader = () => {
+  const { isAuthenticated } = useAuthStore.getState();
+  if (!isAuthenticated) {
+    // Jika pengguna tidak terautentikasi, arahkan ke halaman login
+    return redirect("/login");
+  }
+  return null;
+};
+
+const loginLoader = () => {
+  const { isAuthenticated } = useAuthStore.getState();
+  if (isAuthenticated) {
+    // Jika pengguna sudah login dan mencoba mengakses /login, arahkan ke dashboard
+    return redirect("/dashboard");
+  }
+  return null;
+};
 
 const Router = createBrowserRouter([
-    {
-        path:'/login',
-        element:<Login/>
-    },
-    {
-        path:'/',
-        element:<Layout/>,
-        children:[
-            {
-                path:'dashboard',
-                element:<Dashboard/>
-            },
-            {
-                path:'document-management',
-                element:<DocumentManagementPage/>
-            },
-            {
-                path:'upload-document',
-                element:<UploadPage/>
-            },
-            {
-                path: 'public-service', // Halaman Intro & Selector
-                element: <PublicServiceIntroPage />
-            },
-            {
-                path: 'public-service/:sessionId', // Halaman Chat aktual
-                element: <PublicServiceChatPage />
-            },
-            {
-                path:'validation-history',
-                element:<HistoryValidationPage/>
-            },
-            {
-                path:'guide',
-                element:<GuidePage/>
-            },
-            {
-                path:'user-management',
-                element:<UserManagementPage/>
-            },
-            {
-                path:'team-management',
-                element:<TeamManagementPage/>
-            },
-            {
-                path:'Role-management',
-                element:<RoleManagementPage/>
-            },
-        ]
-    }
-])
-
+  {
+    path: "/login",
+    loader: loginLoader, // Loader untuk halaman login
+    element: <Login />,
+  },
+  {
+    path: "/",
+    loader: authLoader, // Loader untuk semua rute di dalam layout utama
+    element: <Layout />,
+    children: [
+      {
+        // Arahkan dari "/" ke "/dashboard" secara default
+        index: true, 
+        loader: () => redirect("/dashboard"),
+      },
+      {
+        path: "dashboard",
+        element: <Dashboard />,
+      },
+      {
+        path: "document-management",
+        element: <DocumentManagementPage />,
+      },
+      {
+        path: "upload-document",
+        element: <UploadPage />,
+      },
+      {
+        path: "public-service",
+        element: <PublicServiceIntroPage />,
+      },
+      {
+        path: "public-service/:sessionId",
+        element: <PublicServiceChatPage />,
+      },
+      {
+        path: "validation-history",
+        element: <HistoryValidationPage />,
+      },
+      {
+        path: "guide",
+        element: <GuidePage />,
+      },
+      {
+        path: "user-management",
+        element: <UserManagementPage />,
+      },
+      {
+        path: "team-management",
+        element: <TeamManagementPage />,
+      },
+      {
+        path: "role-management", // Perbaiki path agar konsisten
+        element: <RoleManagementPage />,
+      },
+    ],
+  },
+]);
 
 export default Router;

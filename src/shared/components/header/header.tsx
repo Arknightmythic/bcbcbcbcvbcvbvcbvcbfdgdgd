@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Bell, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 import { useLocation } from "react-router";
 import UserProfile from "./UserProfile";
 
