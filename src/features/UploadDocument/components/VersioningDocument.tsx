@@ -3,16 +3,14 @@ import toast from 'react-hot-toast';
 import { Clock, Info, Loader2, UploadCloud, X } from 'lucide-react';
 import type { PendingDocument, UploadedDocument } from '../types/types';
 
-
-
 interface VersioningDocumentModalProps {
   isOpen: boolean;
   onClose: () => void;
   document: UploadedDocument | null;
   pendingDocument: PendingDocument | null;
   onVersioning: (file: File) => void;
-  isReplacing: boolean; 
-  isPending: boolean; 
+  isReplacing: boolean;
+  isPending: boolean;
 }
 
 const VersioningDocumentModal: React.FC<VersioningDocumentModalProps> = ({
@@ -24,17 +22,12 @@ const VersioningDocumentModal: React.FC<VersioningDocumentModalProps> = ({
   isReplacing,
   isPending,
 }) => {
-  
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState<boolean>(false);
-  
-  
   const fileInputRef = useRef<HTMLInputElement>(null);
-
   const hasPending = !!pendingDocument;
 
   useEffect(() => {
-    
     if (!isOpen) {
       setFile(null);
       if (fileInputRef.current) {
@@ -43,10 +36,8 @@ const VersioningDocumentModal: React.FC<VersioningDocumentModalProps> = ({
     }
   }, [isOpen]);
 
-  
   const handleFileSelect = (selectedFile: File | undefined) => {
     if (!selectedFile) return;
-
     const allowedTypes = ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "image/jpeg", "image/png"];
     if (allowedTypes.includes(selectedFile.type)) {
       setFile(selectedFile);
@@ -55,7 +46,6 @@ const VersioningDocumentModal: React.FC<VersioningDocumentModalProps> = ({
     }
   };
 
-  
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); setIsDragging(true); };
   const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => { setIsDragging(false); };
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -69,15 +59,15 @@ const VersioningDocumentModal: React.FC<VersioningDocumentModalProps> = ({
   const handleRemoveFile = () => {
     setFile(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = ""; 
+      fileInputRef.current.value = "";
     }
   };
-  
+
   const handleConfirmVersioning = () => {
     if (file) {
       onVersioning(file);
     } else {
-      toast.error("Please select a versioningment file first.");
+      toast.error("Please select a versioning file first.");
     }
   };
 
@@ -91,13 +81,13 @@ const VersioningDocumentModal: React.FC<VersioningDocumentModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 transition-opacity">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 m-4 animate-fade-in-up">
+    <div className="fixed inset-0 z-50 flex justify-center items-center bg-white/30 backdrop-blur-sm p-4" onClick={onClose}>
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 m-4 animate-fade-in-up" onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-gray-800">Versioning Document</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-800"><X className="w-6 h-6" /></button>
         </div>
-        <p className="text-sm text-gray-600 mb-4">You will versioning the: <span className="font-semibold">{document?.document_name}</span></p>
+        <p className="text-sm text-gray-600 mb-4">You are versioning: <span className="font-semibold">{document?.document_name}</span></p>
         
         {isPending ? (
             <div className="flex justify-center items-center h-48"><Loader2 className="animate-spin w-8 h-8 text-blue-500" /></div>
@@ -109,7 +99,7 @@ const VersioningDocumentModal: React.FC<VersioningDocumentModalProps> = ({
                     onDrop={handleDrop} 
                     className={`p-6 border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-center transition-colors duration-300 ${isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300"} ${hasPending && "bg-gray-100 border-gray-200 cursor-not-allowed opacity-60"}`}
                 >
-                    <input type="file" ref={fileInputRef} id="versioning-file-input" className="hidden" onChange={(e) => handleFileSelect(e.target.files?.[0])} accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png" disabled={hasPending} />
+                    <input type="file" ref={fileInputRef} id="versioning-file-input" className="hidden" onChange={(e) => handleFileSelect(e.target.files?.[0])} accept=".pdf,.txt" disabled={hasPending} />
                     <UploadCloud className="w-10 h-10 text-gray-400 mb-3" />
                     <p className="text-gray-600">
                         Drag a file, or <label htmlFor="versioning-file-input" className={`font-semibold ${hasPending ? 'text-gray-500' : 'text-blue-600 cursor-pointer hover:underline'}`}>choose file</label>
@@ -120,11 +110,11 @@ const VersioningDocumentModal: React.FC<VersioningDocumentModalProps> = ({
                 {hasPending && pendingDocument && (
                     <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                         <div className="flex items-center justify-between">
-                             <h4 className="font-semibold text-gray-800">Versioningment in Process</h4>
+                             <h4 className="font-semibold text-gray-800">Versioning in Process</h4>
                              <div className="relative group">
                                 <Info className="w-5 h-5 text-blue-500"/>
                                 <div className="absolute bottom-full mb-2 w-64 bg-gray-800 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 -translate-x-1/2 left-1/2">
-                                    The previous versioning must be approved or rejected before you can upload a new version.
+                                    The previous version must be approved or rejected before you can upload a new version.
                                 </div>
                              </div>
                         </div>
@@ -142,7 +132,7 @@ const VersioningDocumentModal: React.FC<VersioningDocumentModalProps> = ({
                   </div>
                 )}
                 
-                <div className="flex justify-end gap-3 mt-6">
+                <div className="flex justify-end gap-3 mt-6 border-t pt-4">
                   <button onClick={onClose} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cancel</button>
                   <button onClick={handleConfirmVersioning} disabled={!file || isReplacing || hasPending} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 flex items-center">
                     {isReplacing && <Loader2 className="animate-spin h-5 w-5 mr-2" />}

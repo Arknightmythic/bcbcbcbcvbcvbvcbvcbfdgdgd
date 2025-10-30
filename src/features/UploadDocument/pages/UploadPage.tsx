@@ -72,7 +72,7 @@ const filterConfig: FilterConfig<Filters>[] = [
     options: [
       { value: "", label: "All Types" },
       { value: "PDF", label: "PDF" },
-      { value: "DOCX", label: "DOCX" },
+      { value: "TXT", label: "TXT" },
     ],
   },
   {
@@ -87,7 +87,7 @@ const filterConfig: FilterConfig<Filters>[] = [
   {
     key: "status",
     options: [
-      { value: "", label: "All Statuses" },
+      { value: "", label: "All Status" },
       { value: "completed", label: "Completed" },
       { value: "pending", label: "Pending" },
       { value: "failed", label: "Failed" },
@@ -313,10 +313,10 @@ const UploadPage: React.FC = () => {
 
   return (
     <>
-      <p className="text-gray-500 text-md">
+      {/* <p className="text-gray-500 text-md">
         This page is used to upload legal documents that will be used as a
         knowledge base.
-      </p>
+      </p> */}
 
       <div className="mt-6">
         <UploadZone
@@ -335,14 +335,17 @@ const UploadPage: React.FC = () => {
       {uploadProgress > 0 && <UploadProgress progress={uploadProgress} />}
 
       <div className="mt-8">
-        <TableControls
-          searchTerm={searchTerm}
-          searchPlaceholder="Search by name, staff, team..."
-          filters={filters}
-          onSearchChange={setSearchTerm}
-          onFilterChange={handleFilterChange}
-          filterConfig={filterConfig} // Sekarang variabel ini ada
-        />
+        <div className="px-4 bg-gray-50 rounded-t-lg shadow-md">
+          <TableControls
+            searchTerm={searchTerm}
+            searchPlaceholder="Search by name, staff, team..."
+            filters={filters}
+            onSearchChange={setSearchTerm}
+            onFilterChange={handleFilterChange}
+            filterConfig={filterConfig}
+          />
+        </div>
+
         <DocumentsTable
           documents={paginatedDocuments}
           selectedDocs={selectedDocs}

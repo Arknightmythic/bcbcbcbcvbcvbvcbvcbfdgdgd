@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router";
-import { Users, Shield, LayoutDashboard, Dock, Database, BotIcon, History, SearchSlash } from "lucide-react";
-import { useRef } from 'react';
+import { Users, Shield, LayoutDashboard, Dock, Database, BotIcon, History, SearchSlash, User2 } from "lucide-react";
+import {  useRef } from 'react';
 
 import { AgentPanel } from "./AgentPanel";
 import type { MenuItem } from "../../types/types";
@@ -14,14 +14,15 @@ const dummyMenu: MenuItem[] = [
   { path: "/public-service", title: "Public service", icon: BotIcon, identifier: "public-service" },
   { path: "/validation-history", title: "Validation History", icon: History, identifier: "validation-history" },
   { path: "/guide", title: "Guide", icon: SearchSlash, identifier: "guide" },
-  { path: "/user-management", title: "User Management", icon: Users, identifier: "user-management" },
+  { path: "/user-management", title: "User Management", icon: User2, identifier: "user-management" },
+  { path: "/team-management", title: "Team Management ", icon: Users, identifier: "team-management" },
   { path: "/role-management", title: "Role Management", icon: Shield, identifier: "role-management" },
 ];
 
 const dummyUser = {
   name: "Budi Santoso",
   isSuperAdmin: false,
-  permissions: ["dashboard:access", "document-management:access", "agent-dashboard:access", "user-management:master", "upload-document:access", "public-service:access", "validation-history:access","guide:access"],
+  permissions: ["dashboard:access", "document-management:access", "agent-dashboard:access", "user-management:master", "upload-document:access", "public-service:access", "validation-history:access","guide:access", "team-management", "role-management"],
   status: 'online' as const,
 };
 
@@ -41,43 +42,43 @@ const dummyChats = {
 
 // --- START: MODIFIED COMPONENT ---
 const NavigationMenu = ({ menuItems, currentPath, isCollapsed }: { menuItems: MenuItem[], currentPath: string, isCollapsed: boolean }) => (
-  <div className="space-y-2 px-2 py-6 md:px-4">
-    {menuItems.map((item) => {
-      const isActive = currentPath === item.path || currentPath.startsWith(`${item.path}/`);
-      const linkContent = (
-        <Link
-          key={item.path}
-          to={item.path}
-          className={`group flex items-center rounded-lg px-3 py-2.5 mx-2 transition-colors duration-200 ${
-            isCollapsed ? 'justify-center' : 'justify-start'
-          } ${
-            isActive ? "bg-bOss-red text-white" : "hover:bg-bOss-red-50 text-gray-600"
-          }`}
-        >
-          <item.icon className="h-5 w-5 flex-shrink-0" />
-          <span
-            className={`
-              whitespace-nowrap font-medium overflow-hidden transition-all duration-300 ease-in-out
-              ${isCollapsed ? 'w-0 opacity-0 ml-0' : 'w-auto opacity-100 ml-3'}
-            `}
+    <div className="space-y-2 px-2 py-6 md:px-4">
+      {menuItems.map((item) => {
+        const isActive = currentPath === item.path || currentPath.startsWith(`${item.path}/`);
+        const linkContent = (
+          <Link
+            key={item.path}
+            to={item.path}
+            // MODIFICATION: Removed py-2.5, added fixed height h-14
+            className={`group flex items-center rounded-lg px-3 h-12 mx-2 transition-colors duration-200 ${
+              isCollapsed ? 'justify-center' : 'justify-start'
+            } ${
+              isActive ? "bg-bOss-red text-white" : "hover:bg-bOss-red-50 text-gray-600"
+            }`}
           >
-            {item.title}
-          </span>
-        </Link>
-      );
-
-      return isCollapsed ? (
-        <Tooltip key={item.path} text={item.title}>
-          {linkContent}
-        </Tooltip>
-      ) : (
-        linkContent
-      );
-    })}
-  </div>
-);
+            <item.icon className="h-5 w-5 flex-shrink-0" />
+            <span
+              className={`
+                font-medium overflow-hidden transition-all duration-300 ease-in-out leading-snug
+                ${isCollapsed ? 'w-0 opacity-0 ml-0' : 'w-auto opacity-100 ml-3'}
+              `}
+            >
+              {item.title}
+            </span>
+          </Link>
+        );
+  
+        return isCollapsed ? (
+          <Tooltip key={item.path} text={item.title}>
+            {linkContent}
+          </Tooltip>
+        ) : (
+          linkContent
+        );
+      })}
+    </div>
+  );
 // --- END: MODIFIED COMPONENT ---
-
 
 const Sidebar = ({ isCollapsed, setOutletBlurred }: { isCollapsed: boolean, setOutletBlurred: (isBlurred: boolean) => void }) => {
   const location = useLocation();
@@ -98,8 +99,19 @@ const Sidebar = ({ isCollapsed, setOutletBlurred }: { isCollapsed: boolean, setO
         isCollapsed ? "w-25" : "w-72"
       }`}
     >
-      <div ref={logoSectionRef} className={`${isCollapsed ? "justify-center ml-0" : "md:justify-start justify-center md:ml-2"} flex h-20 items-center px-4 mt-4 mb-4 `}>
-        <img src={isCollapsed ? "/dokulogo-d.png" : "/dokulogo.png"} alt="Logo" className={`${isCollapsed ? "h-10" : "h-30"}`} />
+      <div className={`flex h-20 items-center px-4 mt-4 mb-4 transition-all duration-300 ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
+          <div className="relative flex items-center justify-center h-12 w-full">
+              <img 
+                  src="/dokulogo.png" 
+                  alt="Logo" 
+                  className={`absolute h-30 transition-all duration-300 ease-in-out ${isCollapsed ? 'opacity-0 scale-75' : 'opacity-100 scale-100'}`}
+              />
+              <img 
+                  src="/dokulogo-d.png" 
+                  alt="Collapsed Logo" 
+                  className={`absolute h-10 transition-all duration-300 ease-in-out ${isCollapsed ? 'opacity-100 scale-100' : 'opacity-0 scale-75'}`}
+              />
+          </div>
       </div>
 
       <div className={`flex flex-1 flex-col ${isCollapsed ? 'overflow-visible' : 'overflow-hidden'}`}>

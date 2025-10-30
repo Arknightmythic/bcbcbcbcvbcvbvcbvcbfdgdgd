@@ -9,6 +9,8 @@ import PublicServiceChatPage from "./features/PublicService/pages/PublicServiceC
 import HistoryValidationPage from "./features/HistoryValidation/pages/HistoryValidationPage";
 import GuidePage from "./features/Guide/pages/GuidePage";
 import UserManagementPage from "./features/UserManagement/pages/UserManagementPage";
+import TeamManagementPage from "./features/TeamManagements/pages/TeamManagementPage";
+import RoleManagementPage from "./features/RoleManagements/pages/RoleManagementPage";
 
 const Router = createBrowserRouter([
     {
@@ -50,7 +52,15 @@ const Router = createBrowserRouter([
             {
                 path:'user-management',
                 element:<UserManagementPage/>
-            }
+            },
+            {
+                path:'team-management',
+                element:<TeamManagementPage/>
+            },
+            {
+                path:'Role-management',
+                element:<RoleManagementPage/>
+            },
         ]
     }
 ])

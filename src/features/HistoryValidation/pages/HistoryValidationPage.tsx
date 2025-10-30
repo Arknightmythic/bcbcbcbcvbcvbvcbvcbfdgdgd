@@ -1,5 +1,9 @@
 import { useMemo, useState } from "react";
-import type { ActionType, ValidationHistory, ChatMessage } from "../utils/types";
+import type {
+  ActionType,
+  ValidationHistory,
+  ChatMessage,
+} from "../utils/types";
 import HistoryValidationTable from "../components/HistoryValidationTable";
 import ChatHistoryModal from "../components/ChatHistoryModal";
 import TableControls, {
@@ -14,7 +18,7 @@ const filterConfig: FilterConfig<Filters>[] = [
   {
     key: "status",
     options: [
-      { value: "", label: "All Statuses" },
+      { value: "", label: "All Status" },
       { value: "open", label: "Open" },
       { value: "closed", label: "Closed" },
     ],
@@ -22,15 +26,33 @@ const filterConfig: FilterConfig<Filters>[] = [
 ];
 
 const DUMMY_HISTORY: ValidationHistory[] = [
-  { id: 1, tanggal: "2023-10-27T10:00:00Z", user: "John Doe", session_id: "sess_12345", konteks: "Pertanyaan tentang produk", status: "open" },
-  { id: 2, tanggal: "2023-10-26T11:30:00Z", user: "Jane Smith", session_id: "sess_67890", konteks: "Keluhan layanan", status: "closed" },
+  {
+    id: 1,
+    tanggal: "2023-10-27T10:00:00Z",
+    user: "John Doe",
+    session_id: "sess_12345",
+    konteks: "Pertanyaan tentang produk",
+    status: "open",
+  },
+  {
+    id: 2,
+    tanggal: "2023-10-26T11:30:00Z",
+    user: "Jane Smith",
+    session_id: "sess_67890",
+    konteks: "Keluhan layanan",
+    status: "closed",
+  },
 ];
 
 const DUMMY_CHAT_HISTORY: ChatMessage[] = [
-    {id: '1', sender: 'user', text: 'Halo, saya mau tanya tentang produk A.'},
-    {id: '2', sender: 'agent', text: 'Tentu, produk A adalah produk terbaik kami. Ada yang spesifik yang ingin anda tanyakan?'},
-    {id: '3', sender: 'user', text: 'Berapa harganya?'},
-    {id: '4', sender: 'agent', text: 'Harganya 100 ribu rupiah.'},
+  { id: "1", sender: "user", text: "Halo, saya mau tanya tentang produk A." },
+  {
+    id: "2",
+    sender: "agent",
+    text: "Tentu, produk A adalah produk terbaik kami. Ada yang spesifik yang ingin anda tanyakan?",
+  },
+  { id: "3", sender: "user", text: "Berapa harganya?" },
+  { id: "4", sender: "agent", text: "Harganya 100 ribu rupiah." },
 ];
 
 const HistoryValidationPage = () => {
@@ -47,7 +69,9 @@ const HistoryValidationPage = () => {
         history.user.toLowerCase().includes(lowerSearchTerm) ||
         history.session_id.toLowerCase().includes(lowerSearchTerm) ||
         history.konteks.toLowerCase().includes(lowerSearchTerm);
-      const statusMatch = filters.status ? history.status === filters.status : true;
+      const statusMatch = filters.status
+        ? history.status === filters.status
+        : true;
 
       return searchMatch && statusMatch;
     });
@@ -78,14 +102,17 @@ const HistoryValidationPage = () => {
   return (
     <>
       <div className="flex flex-col flex-1 min-h-0">
-        <TableControls
-          searchTerm={searchTerm}
-          searchPlaceholder="Search by user, session id, konteks..."
-          filters={filters}
-          onSearchChange={setSearchTerm}
-          onFilterChange={handleFilterChange}
-          filterConfig={filterConfig}
-        />
+        <div className="px-4 bg-gray-50 rounded-t-lg shadow-md">
+          <TableControls
+            searchTerm={searchTerm}
+            searchPlaceholder="Search by user, session id, konteks..."
+            filters={filters}
+            onSearchChange={setSearchTerm}
+            onFilterChange={handleFilterChange}
+            filterConfig={filterConfig}
+          />
+        </div>
+
         <HistoryValidationTable
           histories={paginatedHistories}
           onAction={handleOpenModal}

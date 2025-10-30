@@ -6,6 +6,24 @@ import type { ChatSession, ChatMessage, Citation, OpenCitationsState, ChatMode }
 const dummySessions: ChatSession[] = [
   { id: 'session-123', agent_name: 'AI Assistant', created_at: new Date(Date.now() - 3600 * 1000).toISOString() },
   { id: 'session-456', agent_name: 'Customer Support Bot', created_at: new Date(Date.now() - 86400 * 1000 * 2).toISOString() },
+  { id: 'session-123', agent_name: 'AI Assistant', created_at: new Date(Date.now() - 3600 * 1000).toISOString() },
+  { id: 'session-456', agent_name: 'Customer Support Bot', created_at: new Date(Date.now() - 86400 * 1000 * 2).toISOString() },
+  { id: 'session-123', agent_name: 'AI Assistant', created_at: new Date(Date.now() - 3600 * 1000).toISOString() },
+  { id: 'session-456', agent_name: 'Customer Support Bot', created_at: new Date(Date.now() - 86400 * 1000 * 2).toISOString() },
+  { id: 'session-123', agent_name: 'AI Assistant', created_at: new Date(Date.now() - 3600 * 1000).toISOString() },
+  { id: 'session-456', agent_name: 'Customer Support Bot', created_at: new Date(Date.now() - 86400 * 1000 * 2).toISOString() },
+  { id: 'session-123', agent_name: 'AI Assistant', created_at: new Date(Date.now() - 3600 * 1000).toISOString() },
+  { id: 'session-456', agent_name: 'Customer Support Bot', created_at: new Date(Date.now() - 86400 * 1000 * 2).toISOString() },
+  { id: 'session-123', agent_name: 'AI Assistant', created_at: new Date(Date.now() - 3600 * 1000).toISOString() },
+  { id: 'session-456', agent_name: 'Customer Support Bot', created_at: new Date(Date.now() - 86400 * 1000 * 2).toISOString() },
+  { id: 'session-123', agent_name: 'AI Assistant', created_at: new Date(Date.now() - 3600 * 1000).toISOString() },
+  { id: 'session-456', agent_name: 'Customer Support Bot', created_at: new Date(Date.now() - 86400 * 1000 * 2).toISOString() },
+  { id: 'session-123', agent_name: 'AI Assistant', created_at: new Date(Date.now() - 3600 * 1000).toISOString() },
+  { id: 'session-456', agent_name: 'Customer Support Bot', created_at: new Date(Date.now() - 86400 * 1000 * 2).toISOString() },
+  { id: 'session-123', agent_name: 'AI Assistant', created_at: new Date(Date.now() - 3600 * 1000).toISOString() },
+  { id: 'session-456', agent_name: 'Customer Support Bot', created_at: new Date(Date.now() - 86400 * 1000 * 2).toISOString() },
+  { id: 'session-123', agent_name: 'AI Assistant', created_at: new Date(Date.now() - 3600 * 1000).toISOString() },
+  { id: 'session-456', agent_name: 'Customer Support Bot', created_at: new Date(Date.now() - 86400 * 1000 * 2).toISOString() },
 ];
 
 const dummyMessages: Record<string, ChatMessage[]> = {
@@ -23,7 +41,7 @@ const dummyMessages: Record<string, ChatMessage[]> = {
 
 const dummyCitations: Citation[] = [
   { messageId: 'msg-1', documentName: 'Panduan Pengguna V1.pdf', content: 'Untuk memulai, klik tombol "Start" di halaman utama...' },
-  { messageId: 'msg-1', documentName: 'FAQ_Umum.docx', content: 'Pertanyaan umum lainnya dapat ditemukan di bagian FAQ.' },
+  { messageId: 'msg-1', documentName: 'FAQ_Umum.pdf', content: 'Pertanyaan umum lainnya dapat ditemukan di bagian FAQ.' },
 ];
 
 

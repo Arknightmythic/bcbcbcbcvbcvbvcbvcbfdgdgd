@@ -4,11 +4,8 @@ import type { ChatMessage } from '../utils/types';
 
 interface MessageActionsProps {
   message: ChatMessage;
-  // --- START: Hapus props 'previousMessage' dan 'onCopy' ---
-  // previousMessage?: ChatMessage; // Tidak diperlukan lagi di sini
   onFeedback: (messageId: string, feedback: 'like' | 'dislike') => void;
-  // onCopy: (question?: ChatMessage, answer?: ChatMessage) => void; // Tidak diperlukan lagi di sini
-  // --- END: Hapus props 'previousMessage' dan 'onCopy' ---
+ 
 }
 
 const MessageActions: React.FC<MessageActionsProps> = ({ message, onFeedback }) => { // <-- Hapus props yang tidak dipakai
@@ -20,27 +17,12 @@ const MessageActions: React.FC<MessageActionsProps> = ({ message, onFeedback }) 
     onFeedback(message.id, feedback);
   };
 
-  // --- START: Hapus handler 'handleCopyClick' ---
-  // const handleCopyClick = () => {
-  //   onCopy(previousMessage, message);
-  // };
-  // --- END: Hapus handler 'handleCopyClick' ---
-
   return (
     <div className="mt-4 pt-3 border-t border-gray-200">
-      <div className="flex items-center justify-between text-sm text-gray-600">
+      <div className="flex items-center justify-between text-sm text-gray-600 gap-2">
         <span className="italic">Apakah ini menjawab pertanyaan Anda?</span>
         <div className="flex items-center gap-2">
-          {/* --- START: Hapus Tombol Copy dari JSX --- */}
-          {/* <button
-            onClick={handleCopyClick}
-            className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-            title="Salin percakapan"
-          >
-            <Copy className="w-4 h-4" />
-          </button> */}
-          {/* --- END: Hapus Tombol Copy dari JSX --- */}
-
+        
           {/* Tombol Thumbs Up */}
           <button
             onClick={() => handleFeedback('like')}

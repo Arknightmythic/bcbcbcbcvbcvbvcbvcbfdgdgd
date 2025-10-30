@@ -82,7 +82,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                 className={`absolute top-0 z-10 p-1 text-gray-400 bg-white border border-gray-200 rounded-full shadow-sm
                            opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all duration-200
                            hover:text-blue-600 hover:bg-blue-100 hover:border-blue-200 focus:outline-none focus:ring-1 focus:ring-blue-300
-                           ${message.sender === 'user' ? '-left-2 -mr-7 transform -translate-y-1/4' : '-right-2 -ml-7 transform -translate-y-1/4'}`}
+                           ${message.sender === 'user' ? '-left-4 -mr-7 transform -translate-y-1/4' : '-right-4 -ml-7 transform -translate-y-1/4'}`}
                 title="Salin pesan"
             >
                 <Copy className="w-3.5 h-3.5" />

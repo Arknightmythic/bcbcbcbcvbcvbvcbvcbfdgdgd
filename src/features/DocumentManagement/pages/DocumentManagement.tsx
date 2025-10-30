@@ -18,8 +18,8 @@ const filterConfig: FilterConfig<Filters>[] = [
     options: [
       { value: "", label: "All Types" },
       { value: "PDF", label: "PDF" },
-      { value: "DOCX", label: "DOCX" },
-      { value: "JPG", label: "JPG" },
+      { value: "TXT", label: "TXT" },
+     
     ],
   },
   {
@@ -34,7 +34,7 @@ const filterConfig: FilterConfig<Filters>[] = [
   {
     key: "status",
     options: [
-      { value: "", label: "All Statuses" },
+      { value: "", label: "All Status" },
       { value: "approved", label: "Approved" },
       { value: "pending", label: "Pending" },
       { value: "rejected", label: "Rejected" },
@@ -56,21 +56,21 @@ const DUMMY_DOCUMENTS: Document[] = [
   {
     id: 2,
     upload_date: "2023-10-25T11:30:00Z",
-    document_name: "Invoice Q4 2023.docx",
+    document_name: "Invoice Q4 2023.pdf",
     staff: "Citra Lestari",
-    document_type: "DOCX",
+    document_type: "TXT",
     status: "approved",
-    file_path: "documents/invoice.docx",
+    file_path: "documents/invoice.pdf",
     category: "uraian",
   },
   {
     id: 3,
     upload_date: "2023-10-24T09:00:00Z",
-    document_name: "KTP Owner.jpg",
+    document_name: "file2.pdf",
     staff: "Budi Santoso",
-    document_type: "JPG",
+    document_type: "TXT",
     status: "rejected",
-    file_path: "documents/ktp.jpg",
+    file_path: "documents/file.txt",
     category: "panduan",
   },
 ];
@@ -195,14 +195,17 @@ const DocumentManagementPage = () => {
   return (
     <>
       <div className="flex flex-col flex-1 min-h-0">
-        <TableControls
-          searchTerm={searchTerm}
-          searchPlaceholder="Search by name, staff..."
-          filters={filters}
-          onSearchChange={setSearchTerm}
-          onFilterChange={handleFilterChange}
-          filterConfig={filterConfig}
-        />
+        <div className="px-4 bg-gray-50 rounded-t-lg shadow-md">
+          <TableControls
+            searchTerm={searchTerm}
+            searchPlaceholder="Search by name, staff..."
+            filters={filters}
+            onSearchChange={setSearchTerm}
+            onFilterChange={handleFilterChange}
+            filterConfig={filterConfig}
+          />
+        </div>
+
         <DocumentTable
           documents={paginatedDocuments} // Kirim data yang sudah dipaginasi
           hasManagerAccess={hasManagerAccess}

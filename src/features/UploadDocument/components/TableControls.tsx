@@ -27,7 +27,7 @@ const categoryOptions = [
 ];
 
 const statusOptions = [
-  { value: '', label: 'All Statuses' },
+  { value: '', label: 'All Status' },
   { value: 'completed', label: 'Completed' },
   { value: 'pending', label: 'Pending' },
   { value: 'failed', label: 'Failed' },
@@ -72,7 +72,7 @@ const TableControls: React.FC<TableControlsProps> = ({
           >
             <option value="">All Types</option>
             <option value="PDF">PDF</option>
-            <option value="DOCX">DOCX</option>
+            <option value=TXT>DOCX</option>
           </select>
         </div>
 

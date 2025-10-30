@@ -51,7 +51,7 @@ const UploadZone: React.FC<UploadZoneProps> = ({
         onDrop={handleDrop}
         className={`p-8 border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-center transition-colors ${ isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300' }`}
       >
-        <input type="file" id="file-input" multiple className="hidden" onChange={(e) => e.target.files && onFilesSelected(e.target.files)} accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png" />
+        <input type="file" id="file-input" multiple className="hidden" onChange={(e) => e.target.files && onFilesSelected(e.target.files)} accept=".pdf,.txt" />
         <UploadCloud className="w-12 h-12 text-gray-400 mb-4" />
         <p className="text-gray-600">Drag the document here, or <label htmlFor="file-input" className="text-blue-600 font-semibold cursor-pointer hover:underline">choose file</label></p>
         <p className="text-xs text-gray-400 mt-2">Supports: Word, PDF, JPG, & PNG.</p>

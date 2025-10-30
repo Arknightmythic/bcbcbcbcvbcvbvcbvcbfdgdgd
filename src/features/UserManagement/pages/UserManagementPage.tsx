@@ -24,7 +24,7 @@ const DUMMY_ROLES: Role[] = [
 
 const DUMMY_USERS: User[] = [
   { id: 1, name: 'Budi Santoso', email: 'budi.santoso@example.com', account_type: 'credential', team: 'IT', role: 'Developer' },
-  { id: 2, name: 'Citra Lestari', email: 'citra.lestari@example.com', account_type: 'google', team: 'Finance', role: 'Accountant' },
+  { id: 2, name: 'Citra Lestari', email: 'citra.lestari@example.com', account_type: 'microsoft', team: 'Finance', role: 'Accountant' },
   { id: 3, name: 'Admin Utama', email: 'admin@example.com', account_type: 'credential', team: 'Superadmin', role: 'Super User' },
   { id: 4, name: 'Dewi Anggraini', email: 'dewi.anggraini@example.com', account_type: 'microsoft', team: 'Legal' },
   { id: 5, name: 'Eko Prasetyo', email: 'eko.prasetyo@example.com', account_type: 'credential', team: 'Finance', role: 'Auditor' },
@@ -118,7 +118,7 @@ const UserManagementPage = () => {
   return (
     <>
       <div className="flex flex-col flex-1 min-h-0">
-        <div className="p-4 bg-gray-50 rounded-t-lg shadow-md">
+        <div className="px-4 bg-gray-50 rounded-t-lg shadow-md">
             <div className="flex justify-between items-center">
                  <div className="flex-grow">
                     <TableControls
