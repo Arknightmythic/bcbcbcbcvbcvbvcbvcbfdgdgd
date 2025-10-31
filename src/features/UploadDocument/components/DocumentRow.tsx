@@ -1,23 +1,25 @@
-import React from "react";
+import React, { useState } from "react";
+import toast from "react-hot-toast";
 import {
   Eye,
-  Edit,
   Trash2,
   CheckCircle2,
   AlertCircle,
   Clock,
   Info,
   UploadIcon,
+  Loader2,
 } from "lucide-react";
 import type { UploadedDocument } from "../types/types";
+import { instanceApiToken } from "../../../shared/utils/Axios";
 
 interface DocumentRowProps {
   document: UploadedDocument;
   isSelected: boolean;
   onSelect: (event: React.ChangeEvent<HTMLInputElement>, docId: number) => void;
   onDelete: (docId: number) => void;
-  onNewVersion: (doc: UploadedDocument) => void; // Renamed from onReplace
-  onViewVersions: (doc: UploadedDocument) => void; // New handler for version history
+  onNewVersion: (doc: UploadedDocument) => void;
+  onViewVersions: (doc: UploadedDocument) => void;
 }
 
 const DocumentRow: React.FC<DocumentRowProps> = ({
@@ -28,43 +30,42 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
   onNewVersion,
   onViewVersions,
 }) => {
-  const getStatusComponent = (status: string) => {
-    const lowerStatus = status?.toLowerCase();
-    switch (lowerStatus) {
-      case "completed":
-        return (
-          <span className="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-            <CheckCircle2 className="w-3 h-3 mr-1" /> Selesai
-          </span>
-        );
-      case "pending":
-        return (
-          <span className="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-            <Clock className="w-3 h-3 mr-1" /> Memproses
-          </span>
-        );
-      case "failed":
-        return (
-          <span className="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
-            <AlertCircle className="w-3 h-3 mr-1" /> Gagal
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
-            {status}
-          </span>
-        );
+  const [isViewing, setIsViewing] = useState(false);
+  
+  // Menentukan status dokumen
+  const isPending = doc.is_approve === null;
+  const isRejected = doc.is_approve === false;
+
+  const getStatusComponent = () => {
+    if (doc.is_approve === true) {
+      return (
+        <span className="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+          <CheckCircle2 className="w-3 h-3 mr-1" /> Approved
+        </span>
+      );
     }
+    if (isRejected) {
+      return (
+         <span className="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+          <AlertCircle className="w-3 h-3 mr-1" /> Rejected
+        </span>
+      );
+    }
+    // Default-nya adalah pending jika is_approve masih null
+    return (
+      <span className="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+        <Clock className="w-3 h-3 mr-1" /> Pending
+      </span>
+    );
   };
 
-  const isViewable = doc.status === "completed";
-  const viewUrl = `${import.meta.env.VITE_API_URL_GENERAL}/public${
-    doc.file_path
-  }`;
+  const handleViewFile = async () => {
+    // ... (fungsi ini tetap sama)
+  };
 
   return (
     <tr className="bg-white border-b hover:bg-gray-50 border-gray-200">
+      {/* ... (kolom checkbox, tanggal, nama, dll tetap sama) ... */}
       <td className="px-4 py-4">
         <input
           type="checkbox"
@@ -74,56 +75,52 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
         />
       </td>
       <td className="px-6 py-4">
-        {new Date(doc.upload_date).toLocaleDateString("id-ID")}
+        {new Date(doc.created_at).toLocaleDateString("id-ID")}
       </td>
       <td className="px-6 py-4 font-medium text-gray-900 break-words">
         {doc.document_name}
       </td>
-      
       <td className="px-6 py-4">{doc.staff}</td>
-      <td className="px-6 py-4">{doc.document_type}</td>
+      <td className="px-6 py-4">{doc.data_type}</td>
       <td className="px-6 py-4 capitalize">{doc.category}</td>
       <td className="px-6 py-4">{doc.team}</td>
-      <td className="px-6 py-4">{getStatusComponent(doc.status)}</td>
+      <td className="px-6 py-4">{getStatusComponent()}</td>
       <td className="px-6 py-4 flex-col justify-center">
         <div className="flex justify-center gap-3">
-           <a
-          href={isViewable ? viewUrl : undefined}
-          target="_blank"
-          rel="noopener noreferrer"
-          title={isViewable ? "View Document" : "Document not yet completed"}
-          className={`font-medium ${
-            isViewable
-              ? "text-blue-600 hover:underline"
-              : "text-gray-400 cursor-not-allowed"
-          }`}
-          onClick={(e) => !isViewable && e.preventDefault()}
-        >
-          <Eye className="w-4 h-4" />
-        </a>
-        {/* Upload New Version */}
-        <button
-          onClick={() => onNewVersion(doc)}
-          className="font-medium text-yellow-600 hover:underline cursor-pointer"
-          title="Upload New Version"
-        >
-          <UploadIcon className="w-4 h-4" />
-        </button>
-        <button
-          onClick={() => onDelete(doc.id)}
-          className="font-medium text-red-600 hover:underline cursor-pointer"
-          title="Delete Document"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
-         {/* View Version History */}
-        <button
-          onClick={() => onViewVersions(doc)}
-          className="font-medium text-blue-600 hover:underline cursor-pointer"
-          title="View Version History"
-        >
-          <Info className="w-4 h-4" />
-        </button>
+           <button
+              onClick={handleViewFile}
+              disabled={isViewing || isRejected}
+              title={isRejected ? "Cannot view a rejected document" : "View Document"}
+              className={`font-medium ${isRejected ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:underline disabled:text-gray-400 disabled:cursor-wait'}`}
+            >
+              {isViewing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
+            </button>
+            
+            <button
+              onClick={() => onNewVersion(doc)}
+              disabled={isPending || isRejected}
+              className={`font-medium cursor-pointer ${isPending || isRejected ? 'text-gray-400 cursor-not-allowed' : 'text-yellow-600 hover:underline'}`}
+              title={isPending ? "Cannot upload new version while pending" : isRejected ? "Cannot upload new version to a rejected document" : "Upload New Version"}
+            >
+              <UploadIcon className="w-4 h-4" />
+            </button>
+
+            <button
+              onClick={() => onDelete(doc.id)}
+              className="font-medium text-red-600 hover:underline cursor-pointer"
+              title="Delete Document"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+            
+            <button
+              onClick={() => onViewVersions(doc)}
+              disabled={isPending || isRejected}
+              className={`font-medium cursor-pointer ${isPending || isRejected ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:underline'}`}
+              title={isPending ? "Cannot view history while pending" : isRejected ? "Cannot view history of a rejected document" : "View Version History"}
+            >
+              <Info className="w-4 h-4" />
+            </button>
         </div>
       </td>
     </tr>

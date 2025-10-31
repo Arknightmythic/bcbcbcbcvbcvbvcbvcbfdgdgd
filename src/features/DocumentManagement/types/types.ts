@@ -1,13 +1,17 @@
+// src/features/DocumentManagement/types/types.ts
+
 export type DocumentCategory = 'panduan' | 'uraian' | 'peraturan';
 export type ActionType = 'approve' | 'reject' | 'delete';
 
+// Tipe ini diperbarui agar cocok dengan respons API
 export interface Document {
   id: number;
-  upload_date: string;
+  created_at: string;
   document_name: string;
   staff: string;
-  document_type: string; // Tetap ada meskipun tidak difilter
-  status: 'approved' | 'rejected' | 'pending';
-  file_path: string;
-  category: DocumentCategory; // <-- TAMBAHAN BARU
+  data_type: string;
+  team: string;
+  is_approve: boolean | null; // null = pending, true = approved, false = rejected
+  filename: string;
+  category: DocumentCategory;
 }

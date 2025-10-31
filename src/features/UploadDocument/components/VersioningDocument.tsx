@@ -38,16 +38,17 @@ const VersioningDocumentModal: React.FC<VersioningDocumentModalProps> = ({
 
   const handleFileSelect = (selectedFile: File | undefined) => {
     if (!selectedFile) return;
-    const allowedTypes = ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "image/jpeg", "image/png"];
+    const allowedTypes = ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "image/jpeg", "image/png", "text/plain"];
     if (allowedTypes.includes(selectedFile.type)) {
       setFile(selectedFile);
     } else {
-      toast.error("File type not supported. Only Word, PDF, JPG, & PNG.");
+      toast.error("File type not supported. Only Word, PDF, JPG, PNG & TXT.");
     }
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); setIsDragging(true); };
-  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => { setIsDragging(false); };
+  // Parameter 'e' yang tidak terpakai dihapus
+  const handleDragLeave = () => { setIsDragging(false); };
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
@@ -99,7 +100,7 @@ const VersioningDocumentModal: React.FC<VersioningDocumentModalProps> = ({
                     onDrop={handleDrop} 
                     className={`p-6 border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-center transition-colors duration-300 ${isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300"} ${hasPending && "bg-gray-100 border-gray-200 cursor-not-allowed opacity-60"}`}
                 >
-                    <input type="file" ref={fileInputRef} id="versioning-file-input" className="hidden" onChange={(e) => handleFileSelect(e.target.files?.[0])} accept=".pdf,.txt" disabled={hasPending} />
+                    <input type="file" ref={fileInputRef} id="versioning-file-input" className="hidden" onChange={(e) => handleFileSelect(e.target.files?.[0])} accept=".pdf,.txt,.doc,.docx" disabled={hasPending} />
                     <UploadCloud className="w-10 h-10 text-gray-400 mb-3" />
                     <p className="text-gray-600">
                         Drag a file, or <label htmlFor="versioning-file-input" className={`font-semibold ${hasPending ? 'text-gray-500' : 'text-blue-600 cursor-pointer hover:underline'}`}>choose file</label>
@@ -120,7 +121,8 @@ const VersioningDocumentModal: React.FC<VersioningDocumentModalProps> = ({
                         </div>
                         <div className="mt-2 text-sm text-gray-700">
                             <p><strong>File Name:</strong> {pendingDocument.document_name}</p>
-                            <p className="flex items-center gap-2"><strong>Status:</strong> {getStatusComponent(pendingDocument.status)}</p>
+                            {/* Perbaikan di sini: Menangani kemungkinan nilai null */}
+                            <p className="flex items-center gap-2"><strong>Status:</strong> {getStatusComponent(pendingDocument.status ?? undefined)}</p>
                         </div>
                     </div>
                 )}

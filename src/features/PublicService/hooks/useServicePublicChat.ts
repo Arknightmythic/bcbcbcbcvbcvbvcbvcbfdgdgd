@@ -148,14 +148,14 @@ export const usePublicServiceChat = () => {
       setMessages((prev) => [...prev, botMessage]);
 
       
-       if (currentInput.toLowerCase().includes('panduan')) {
-         const newCitation: Citation = {
-           messageId: botMessageId,
-           documentName: 'Contoh Panduan.pdf',
-           content: 'Ini adalah konten dari Contoh Panduan.pdf sebagai dummy citation.'
-         };
-         setCitations(prev => [...prev, newCitation]);
-       }
+       // --- MODIFIKASI: Tambahkan dummy citation di sini ---
+       const newCitation: Citation = {
+         messageId: botMessageId,
+         documentName: 'Dummy_Source_From_Hook.pdf',
+         content: 'Ini adalah konten dari dokumen sumber tiruan yang ditambahkan dari dalam hook.'
+       };
+       setCitations(prev => [...prev, newCitation]);
+       // --- AKHIR MODIFIKASI ---
 
       setIsBotLoading(false);
     }, 1500); 

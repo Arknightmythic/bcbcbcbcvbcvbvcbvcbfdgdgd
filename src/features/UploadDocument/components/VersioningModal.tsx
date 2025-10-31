@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, FileText, Eye } from 'lucide-react'; // Changed Download to Eye
+import { X, FileText, Eye } from 'lucide-react';
 import type { DocumentVersion } from '../types/types';
 
 interface VersioningModalProps {
@@ -12,8 +12,8 @@ interface VersioningModalProps {
 const VersioningModal: React.FC<VersioningModalProps> = ({ isOpen, onClose, versions, documentTitle }) => {
   if (!isOpen) return null;
 
-  // Sort versions by version number in descending order (latest first)
-  const sortedVersions = [...versions].sort((a, b) => b.version - a.version);
+  // Sort versions by ID in descending order (latest first)
+  const sortedVersions = [...versions].sort((a, b) => b.id - a.id);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-sm" onClick={onClose}>
@@ -26,7 +26,6 @@ const VersioningModal: React.FC<VersioningModalProps> = ({ isOpen, onClose, vers
         <div className="mt-6 max-h-[70vh] overflow-y-auto">
           {sortedVersions.length > 0 ? (
             <div className="w-full text-sm text-left text-gray-500">
-              {/* Updated grid layout for 5 columns */}
               <div className="grid grid-cols-[1fr_4fr_2fr_2fr_1fr] gap-4 px-4 py-3 bg-gray-100 font-semibold text-gray-700 uppercase rounded-t-lg">
                 <div>Version</div>
                 <div>File Name</div>
@@ -35,10 +34,10 @@ const VersioningModal: React.FC<VersioningModalProps> = ({ isOpen, onClose, vers
                 <div className="text-right">Action</div>
               </div>
               <div className="divide-y divide-gray-200">
-                {sortedVersions.map((version) => (
-                  <div key={version.version} className="grid grid-cols-[1fr_4fr_2fr_2fr_1fr] gap-4 items-center px-4 py-3 hover:bg-gray-50">
+                {sortedVersions.map((version, index) => (
+                  <div key={version.id} className="grid grid-cols-[1fr_4fr_2fr_2fr_1fr] gap-4 items-center px-4 py-3 hover:bg-gray-50">
                     {/* Column 1: Version */}
-                    <div className="text-gray-900 font-medium">v{version.version}</div>
+                    <div className="text-gray-900 font-medium">v{sortedVersions.length - index}</div>
                     
                     {/* Column 2: File Name */}
                     <div className="flex items-center gap-2">
@@ -52,16 +51,16 @@ const VersioningModal: React.FC<VersioningModalProps> = ({ isOpen, onClose, vers
                     <div className="text-gray-700">{version.staff}</div>
 
                     {/* Column 4: Date */}
-                    <div className="text-gray-700">{new Date(version.upload_date).toLocaleDateString("id-ID")}</div>
+                    <div className="text-gray-700">{new Date(version.created_at).toLocaleDateString("id-ID")}</div>
 
                     {/* Column 5: Action */}
                     <div className="flex justify-end">
                       <a 
-                        href={`${import.meta.env.VITE_API_URL_GENERAL}/public${version.file_path}`} 
+                        href={`${import.meta.env.VITE_API_BE_URL}/api/documents/download/${version.filename}`} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="p-2 text-blue-600 hover:bg-blue-100 rounded-md transition-colors"
-                        title={`View Version ${version.version}`}
+                        title={`View Version ${sortedVersions.length - index}`}
                       >
                         <Eye className="w-5 h-5" />
                       </a>

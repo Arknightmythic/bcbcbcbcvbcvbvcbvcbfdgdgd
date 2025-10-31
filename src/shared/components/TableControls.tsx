@@ -11,6 +11,8 @@ interface TableControlsProps<T extends object> {
   searchPlaceholder: string;
   filters: T; 
   onSearchChange: (value: string) => void;
+  // Handler baru untuk tombol search
+  onSearchSubmit: () => void;
   onFilterChange: (filterName: keyof T, value: string) => void; 
   filterConfig: FilterConfig<T>[];
 }
@@ -20,16 +22,24 @@ const TableControls = <T extends object>({
   searchPlaceholder,
   filters,
   onSearchChange,
+  onSearchSubmit, // Prop baru
   onFilterChange,
   filterConfig,
 }: TableControlsProps<T>) => {
+
+  // Fungsi untuk menangani Enter key pada input search
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      onSearchSubmit();
+    }
+  };
+
   return (
     <div className="py-4 bg-gray-50 rounded-t-lg">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        {/* Search Input */}
-        <div className="lg:col-span-2">
-          <label htmlFor="table-search" className="sr-only">Search</label>
-          <div className="relative">
+        {/* Search Input and Button */}
+        <div className="lg:col-span-2 flex items-center gap-2">
+          <div className="relative flex-grow">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Search className="h-5 w-5 text-gray-400" />
             </div>
@@ -40,8 +50,15 @@ const TableControls = <T extends object>({
               placeholder={searchPlaceholder}
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
+              onKeyDown={handleKeyDown} // Menambahkan event keydown
             />
           </div>
+          <button
+            onClick={onSearchSubmit}
+            className="px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            Search
+          </button>
         </div>
 
         {/* Filter yang dirender secara dinamis */}

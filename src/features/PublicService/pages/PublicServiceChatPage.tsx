@@ -17,6 +17,7 @@ interface MessageBubbleProps {
   userInitial: string;
 }
 
+// --- START: MODIFIED MessageBubble COMPONENT ---
 const MessageBubble: React.FC<MessageBubbleProps> = ({
   message,
   previousMessage,
@@ -38,23 +39,35 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
       onCopy(previousMessage, message);
     }
   };
+  
+  // Conditionally render nothing for system messages
+  if (message.sender === 'system') {
+    return (
+        <div key={message.id} className="mb-4 flex justify-center">
+            <div className="p-3 rounded-lg bg-gray-100 text-gray-600 text-xs text-center mx-auto">
+                 <p className="whitespace-pre-wrap m-0 text-sm">{message.text}</p>
+            </div>
+        </div>
+    );
+  }
 
   return (
-    <div key={message.id} className={`relative group mb-4 flex gap-3 ${message.sender === 'user' ? 'flex-row-reverse' : message.sender === 'system' ? 'justify-center' : ''}`}>
-      {message.sender !== 'system' && (
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 text-white ${message.sender === 'user' ? 'bg-bOss-blue' : 'bg-bOss-red'}`}>
-          {message.sender === 'user' ? userInitial : 'AI'}
-        </div>
-      )}
-      <div className={`relative p-3 rounded-lg max-w-[75%] leading-relaxed shadow-sm ${
-          message.sender === 'user' ? 'bg-bOss-blue text-white rounded-br-none'
-          : message.sender === 'system' ? 'bg-gray-100 text-gray-600 text-xs text-center mx-auto'
-          : 'bg-gray-100 text-gray-800 rounded-bl-none'
-      }`}>
-        <p className="whitespace-pre-wrap m-0 text-sm">{message.text}</p>
-        {message.sender === 'agent' && (
-          hasCitations ? (
-            <div className={`mt-3 pt-2 border-t text-xs border-gray-200`}>
+    <div key={message.id} className={`relative group mb-4 flex gap-3 ${message.sender === 'user' ? 'flex-row-reverse' : ''}`}>
+      {/* Avatar */}
+      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 text-white ${message.sender === 'user' ? 'bg-bOss-blue' : 'bg-bOss-red'}`}>
+        {message.sender === 'user' ? userInitial : 'AI'}
+      </div>
+
+      {/* Wrapper for Bubble + Actions */}
+      <div className="flex flex-col max-w-[75%] items-start">
+        {/* The Bubble */}
+        <div className={`relative p-3 rounded-lg leading-relaxed shadow-sm w-fit ${
+            message.sender === 'user' ? 'bg-bOss-blue text-white rounded-br-none' : 'bg-gray-100 text-gray-800 rounded-bl-none'
+        }`}>
+          <p className="whitespace-pre-wrap m-0 text-sm">{message.text}</p>
+          
+          {message.sender === 'agent' && hasCitations && (
+            <div className="mt-3 pt-2 border-t text-xs border-gray-200">
               <button onClick={() => onToggleCitation(message.id)} className="w-full flex justify-between items-center text-left font-semibold text-gray-500 mb-1 focus:outline-none">
                 <span>Sumber ({messageCitations.length})</span>
                 <span className={`transform transition-transform duration-200 ${isOpen ? 'rotate-180' : 'rotate-0'}`}>▼</span>
@@ -69,31 +82,31 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                 </div>
               </div>
             </div>
-           ) : (
-            <MessageActions
-              message={message}
-              onFeedback={onFeedback}
-            />
-          )
-        )}
-        {message.sender !== 'system' && (
-            <button
-                onClick={handleCopyClick}
-                className={`absolute top-0 z-10 p-1 text-gray-400 bg-white border border-gray-200 rounded-full shadow-sm
-                           opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all duration-200
-                           hover:text-blue-600 hover:bg-blue-100 hover:border-blue-200 focus:outline-none focus:ring-1 focus:ring-blue-300
-                           ${message.sender === 'user' ? '-left-4 -mr-7 transform -translate-y-1/4' : '-right-4 -ml-7 transform -translate-y-1/4'}`}
-                title="Salin pesan"
-            >
-                <Copy className="w-3.5 h-3.5" />
-            </button>
+          )}
+
+          <button
+              onClick={handleCopyClick}
+              className={`absolute top-0 z-10 p-1 text-gray-400 bg-white border border-gray-200 rounded-full shadow-sm
+                          opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all duration-200
+                          hover:text-blue-600 hover:bg-blue-100 hover:border-blue-200 focus:outline-none focus:ring-1 focus:ring-blue-300
+                          ${message.sender === 'user' ? '-left-4 -mr-7 transform -translate-y-1/4' : '-right-4 -ml-7 transform -translate-y-1/4'}`}
+              title="Salin pesan"
+          >
+              <Copy className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {/* Actions, now correctly constrained by the wrapper's max-width */}
+        {message.sender === 'agent' && (
+          <div className="mt-2 w-full">
+            <MessageActions message={message} onFeedback={onFeedback} />
+          </div>
         )}
       </div>
     </div>
   );
 };
-
-
+// --- END: MODIFIED MessageBubble COMPONENT ---
 
 
 const PublicServiceChatPage: React.FC = () => {
@@ -270,4 +283,3 @@ const PublicServiceChatPage: React.FC = () => {
 };
 
 export default PublicServiceChatPage;
-

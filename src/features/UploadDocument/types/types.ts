@@ -1,29 +1,33 @@
+// src/features/UploadDocument/types/types.ts
+
 export type DocumentCategory = 'panduan' | 'uraian' | 'peraturan';
 
-// This will represent a document in the main table
+// Tipe ini disesuaikan agar cocok dengan respons dari backend
 export interface UploadedDocument {
   id: number;
-  upload_date: string;
+  created_at: string; // Sebelumnya 'upload_date'
   document_name: string;
-  document_type: string;
+  data_type: string; // Sebelumnya 'document_type'
   staff: string;
   team: string;
-  status: 'completed' | 'pending' | 'failed' | string;
-  file_path: string;
+  status: string | null; // Status bisa null dari backend
+  filename: string; // Nama file unik, sebelumnya 'file_path'
   category: DocumentCategory;
-  version: number; // <-- ADDED: Current version number
+  is_approve: boolean | null;
 }
 
-// This will represent a single entry in the version history modal
+// Tipe untuk detail versi dokumen, akan digunakan di modal riwayat
 export interface DocumentVersion {
-  version: number;
+  id: number;
   document_name: string;
-  upload_date: string;
+  created_at: string;
   staff: string;
-  file_path: string;
+  filename: string;
+  is_approve: boolean | null;
 }
 
+// Tipe untuk dokumen yang sedang dalam proses approval
 export interface PendingDocument {
   document_name: string;
-  status: 'pending' | string;
+  status: string | null;
 }
