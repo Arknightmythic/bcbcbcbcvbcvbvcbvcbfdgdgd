@@ -12,6 +12,19 @@ interface ApiResponse {
     };
 }
 
+interface ViewUrlResponse {
+  status: string;
+  message: string;
+  data: {
+    url: string;
+  };
+}
+
+export const generateViewUrl = async (filename: string) => {
+  const response = await instanceApiToken.post<ViewUrlResponse>('/api/documents/generate-view-url', { filename });
+  return response.data;
+};
+
 // Fungsi untuk mengambil detail untuk mendapatkan detail_id
 export const getDocumentDetails = async (documentId: number) => {
     const response = await instanceApiToken.get(`/api/documents/details`, {

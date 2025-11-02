@@ -1,6 +1,8 @@
+// src/features/RoleManagements/components/ViewPermissionModal.tsx
+
 import React from 'react';
 import { ShieldCheck, X } from 'lucide-react';
-import type { Role } from '../utils/types';
+import type { Role } from '../utils/types'; // Tipe Role adalah GetRoleDTO
 
 interface ViewPermissionsModalProps {
   isOpen: boolean;
@@ -28,13 +30,15 @@ const ViewPermissionsModal: React.FC<ViewPermissionsModalProps> = ({ isOpen, onC
           </div>
           <div>
             <span className="font-semibold text-gray-700">Team:</span>
-            <p className="text-lg text-gray-900 capitalize">{role.team_name || 'Unknown Team'}</p>
+            {/* Baca dari objek team */}
+            <p className="text-lg text-gray-900 capitalize">{role.team.name || 'Unknown Team'}</p>
           </div>
         </div>
 
         <div>
           <h3 className="text-lg font-bold text-gray-800 mb-3">Assigned Permissions</h3>
           <div className="max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+            {/* role.permissions sekarang array of object Permission */}
             {role.permissions && role.permissions.length > 0 ? (
               <ul className="space-y-2">
                 {role.permissions.map(permission => (

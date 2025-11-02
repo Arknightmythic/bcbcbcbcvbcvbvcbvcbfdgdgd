@@ -1,36 +1,33 @@
+// src/features/RoleManagements/pages/RoleManagementPage.tsx
+
 import { useState, useMemo } from 'react';
-import { Plus } from 'lucide-react';
-import type { ActionType, Role, Permission, Team} from '../utils/types';// Reuse
+import { Plus, Loader2 } from 'lucide-react';
+import type { ActionType, Role, RoleModalData, RolePayload, Team } from '../utils/types';
+
+// Import hooks
+import {
+  useGetRoles,
+  useCreateRole,
+  useUpdateRole,
+  useDeleteRole,
+  useGetModalDependencies, // Hook baru untuk ambil data modal
+} from '../hooks/useRoleManagement';
+
 import TableControls from '../../../shared/components/TableControls';
 import RoleTable from '../components/RoleTable';
 import ConfirmationModal from '../../../shared/components/ConfirmationModal';
 import RoleManagementModal from '../components/RoleManagementModal';
 import ViewPermissionsModal from '../components/ViewPermissionModal';
 
-// --- DUMMY DATA ---
-const DUMMY_TEAMS: Team[] = [
-    { id: '1', name: 'Superadmin' }, { id: '2', name: 'Finance' }, { id: '3', name: 'Legal' }, { id: '4', name: 'IT' },
-];
-
-const DUMMY_PERMISSIONS: Permission[] = [
-    { id: 'p1', name: 'dashboard-read' }, { id: 'p2', name: 'user-management-master' },
-    { id: 'p3', name: 'document-management-read' }, { id: 'p4', name: 'document-management-create' },
-    { id: 'p5', name: 'agent-dashboard-access' }, { id: 'p6', 'name': 'role-management-delete'}
-];
-
-const DUMMY_ROLES: Role[] = [
-    { id: 1, name: 'Admin', description: 'Administrator role', team_name: 'Superadmin', permissions: [DUMMY_PERMISSIONS[1], DUMMY_PERMISSIONS[5]] },
-    { id: 2, name: 'Finance Staff', description: 'Handles financial documents', team_name: 'Finance', permissions: [DUMMY_PERMISSIONS[0], DUMMY_PERMISSIONS[2]] },
-    { id: 3, name: 'Legal Counsel', description: 'Manages legal aspects', team_name: 'Legal', permissions: [DUMMY_PERMISSIONS[2], DUMMY_PERMISSIONS[3]] },
-];
-// --- END DUMMY DATA ---
+// --- HAPUS DUMMY DATA ---
 
 interface Filters {
-  team: string;
+  team: string; // Akan digunakan untuk filter client-side
 }
 
 const RoleManagementPage = () => {
-    const [roles, setRoles] = useState<Role[]>(DUMMY_ROLES);
+    // Hapus state 'roles'
+    const [searchInput, setSearchInput] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [filters, setFilters] = useState<Filters>({ team: '' });
     const [currentPage, setCurrentPage] = useState(1);
@@ -43,24 +40,55 @@ const RoleManagementPage = () => {
     const [selectedRole, setSelectedRole] = useState<Role | null>(null);
     const [roleToDelete, setRoleToDelete] = useState<Role | null>(null);
   
-    const [isSaving, setIsSaving] = useState(false);
-  
+    // --- Integrasi React Query ---
+    const searchParams = useMemo(() => {
+        const params = new URLSearchParams();
+        params.set('limit', String(itemsPerPage));
+        params.set('offset', String((currentPage - 1) * itemsPerPage));
+        // Backend GET /api/roles tidak support search
+        return params;
+    }, [currentPage, itemsPerPage]);
+
+    const { data: rolesData, isLoading: isLoadingRoles } = useGetRoles(searchParams);
+    const { 
+        teams, 
+        permissions, 
+        isLoading: isLoadingModalDeps 
+    } = useGetModalDependencies();
+
+    const { mutate: createRole, isPending: isCreating } = useCreateRole();
+    const { mutate: updateRole, isPending: isUpdating } = useUpdateRole();
+    const { mutate: deleteRole, isPending: isDeleting } = useDeleteRole();
+
+    const isSaving = isCreating || isUpdating;
+
+    const roles = useMemo(() => rolesData?.roles || [], [rolesData]);
+    const totalItems = useMemo(() => rolesData?.total || 0, [rolesData]);
+
+    // Filter client-side
     const filteredRoles = useMemo(() => {
         return roles.filter(role => {
           const lowerSearchTerm = searchTerm.toLowerCase();
-          const searchMatch = role.name.toLowerCase().includes(lowerSearchTerm) || role.team_name.toLowerCase().includes(lowerSearchTerm);
-          const teamMatch = filters.team ? role.team_name === filters.team : true;
+          const searchMatch = role.name.toLowerCase().includes(lowerSearchTerm) || 
+                              role.team.name.toLowerCase().includes(lowerSearchTerm);
+          
+          const teamMatch = filters.team ? role.team.name === filters.team : true;
           return searchMatch && teamMatch;
         });
       }, [roles, searchTerm, filters]);
 
     const paginatedRoles = useMemo(() => {
-        const startIndex = (currentPage - 1) * itemsPerPage;
-        return filteredRoles.slice(startIndex, startIndex + itemsPerPage);
-    }, [filteredRoles, currentPage, itemsPerPage]);
+        // Paginasi di-handle backend, filter di client
+        return filteredRoles;
+    }, [filteredRoles]);
 
     const handleFilterChange = (filterName: keyof Filters, value: string) => {
         setFilters(prev => ({ ...prev, [filterName]: value }));
+        setCurrentPage(1); // Filter client-side
+    };
+
+    const handleSearchSubmit = () => {
+        setSearchTerm(searchInput);
         setCurrentPage(1);
     };
 
@@ -77,35 +105,57 @@ const RoleManagementPage = () => {
         }
     };
 
-    const handleSaveRole = (roleData: any, id?: number) => {
-        setIsSaving(true);
-        setTimeout(() => {
-            const teamName = DUMMY_TEAMS.find(t => t.id === roleData.teamId)?.name || 'N/A';
-            const permissions = roleData.permissions.map((pId: string) => DUMMY_PERMISSIONS.find(p => p.id === pId)).filter(Boolean);
+    // Handler Save baru
+    const handleSaveRole = (modalData: RoleModalData, id?: number) => {
+        // Konversi modal data ke payload API
+        const payload: RolePayload = {
+            name: modalData.name,
+            team_id: Number(modalData.teamId), // Konversi ke number
+            permissions: modalData.permissionIds, // Sudah string[]
+        };
 
-            if (id) {
-                setRoles(roles.map(r => r.id === id ? { ...r, name: roleData.name, description: roleData.description, permissions, team_name: teamName } : r));
-            } else {
-                const newRole: Role = { id: Date.now(), name: roleData.name, description: roleData.description, team_name: teamName, permissions };
-                setRoles([newRole, ...roles]);
-            }
-            setIsSaving(false);
-            setModalOpen(false);
-        }, 1000);
+        if (id) {
+            updateRole({ id, data: payload }, {
+                onSuccess: () => setModalOpen(false)
+            });
+        } else {
+            createRole(payload, {
+                onSuccess: () => setModalOpen(false)
+            });
+        }
     };
     
     const handleConfirmDelete = () => {
         if (roleToDelete) {
-            setRoles(roles.filter(r => r.id !== roleToDelete.id));
-            setConfirmModalOpen(false);
-            setRoleToDelete(null);
+            deleteRole(roleToDelete.id, {
+                onSuccess: () => {
+                    setConfirmModalOpen(false);
+                    setRoleToDelete(null);
+                }
+            });
         }
     };
 
+    // Buat opsi filter dari data teams
+    const filterTeamOptions = useMemo(() => [
+        { value: '', label: 'All Teams' },
+        ...teams.map(t => ({ value: t.name, label: t.name }))
+    ], [teams]);
+
+
     const filterConfig = [
-        { key: 'team' as keyof Filters, options: [{ value: '', label: 'All Teams' }, ...DUMMY_TEAMS.map(t => ({ value: t.name, label: t.name }))] },
+        { key: 'team' as keyof Filters, options: filterTeamOptions },
     ];
   
+    // Tampilkan loading utama jika data dependensi modal belum siap
+    if (isLoadingModalDeps) {
+        return (
+            <div className="flex-1 flex justify-center items-center">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+            </div>
+        )
+    }
+
     return (
       <>
         <div className="flex flex-col flex-1 min-h-0">
@@ -113,10 +163,11 @@ const RoleManagementPage = () => {
             <div className="p-4 flex items-center justify-between gap-4">
                 <div className="flex-grow">
                     <TableControls
-                        searchTerm={searchTerm}
+                        searchTerm={searchInput}
                         searchPlaceholder="Search by role or team name..."
                         filters={filters}
-                        onSearchChange={setSearchTerm}
+                        onSearchChange={setSearchInput}
+                        onSearchSubmit={handleSearchSubmit} // Hubungkan handler
                         onFilterChange={handleFilterChange}
                         filterConfig={filterConfig}
                     />
@@ -130,20 +181,46 @@ const RoleManagementPage = () => {
             </div>
           </div>
           
-          <RoleTable
-            roles={paginatedRoles}
-            onAction={handleAction}
-            currentPage={currentPage}
-            itemsPerPage={itemsPerPage}
-            totalItems={filteredRoles.length}
-            onPageChange={setCurrentPage}
-            onItemsPerPageChange={setItemsPerPage}
-          />
+          {isLoadingRoles && roles.length === 0 ? (
+            <div className="flex-1 flex justify-center items-center p-10">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+             </div>
+          ) : (
+            <RoleTable
+                roles={paginatedRoles} // Kirim data dari API
+                onAction={handleAction}
+                currentPage={currentPage}
+                itemsPerPage={itemsPerPage}
+                totalItems={totalItems} // Kirim total dari API
+                onPageChange={setCurrentPage}
+                onItemsPerPageChange={setItemsPerPage}
+            />
+          )}
         </div>
   
-        <RoleManagementModal isOpen={isModalOpen} onClose={() => setModalOpen(false)} onSave={handleSaveRole} role={selectedRole} teams={DUMMY_TEAMS} permissions={DUMMY_PERMISSIONS} isLoading={isSaving} />
-        <ViewPermissionsModal isOpen={isViewModalOpen} onClose={() => setViewModalOpen(false)} role={selectedRole} />
-        <ConfirmationModal isOpen={isConfirmModalOpen} onClose={() => setConfirmModalOpen(false)} onConfirm={handleConfirmDelete} title="Confirm Deletion" confirmText="Delete" confirmColor="bg-red-600 hover:bg-red-700">
+        <RoleManagementModal 
+            isOpen={isModalOpen} 
+            onClose={() => setModalOpen(false)} 
+            onSave={handleSaveRole} 
+            role={selectedRole} 
+            teams={teams} // Kirim data teams
+            permissions={permissions} // Kirim data permissions
+            isLoading={isSaving} 
+        />
+        <ViewPermissionsModal 
+            isOpen={isViewModalOpen} 
+            onClose={() => setViewModalOpen(false)} 
+            role={selectedRole} 
+        />
+        <ConfirmationModal 
+            isOpen={isConfirmModalOpen} 
+            onClose={() => setConfirmModalOpen(false)} 
+            onConfirm={handleConfirmDelete} 
+            title="Confirm Deletion" 
+            confirmText="Delete" 
+            confirmColor="bg-red-600 hover:bg-red-700"
+            isConfirming={isDeleting} // Tambahkan status loading
+        >
           <p>Are you sure you want to delete the role "{roleToDelete?.name}"? This action cannot be undone.</p>
         </ConfirmationModal>
       </>

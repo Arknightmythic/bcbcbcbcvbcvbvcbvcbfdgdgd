@@ -1,15 +1,19 @@
-import React, { useState, useEffect } from 'react';
+// src/features/UserManagement/components/UserManagementModal.tsx
+
+import React, { useState, useEffect, useMemo } from 'react';
 import { Loader2, X } from 'lucide-react';
-import type { User, Team, Role } from '../utils/types';
-import CustomSelect from '../../../shared/components/CustomSelect'; // Menggunakan CustomSelect
+// Import tipe data yang sudah diperbarui
+import type { User, Team, Role, UserModalData } from '../utils/types';
+import CustomSelect from '../../../shared/components/CustomSelect';
 
 interface UserManagementModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (user: Omit<User, 'id'>, id?: number) => void;
-  user: User | null;
-  teams: Team[];
-  roles: Role[];
+  // Prop onSave diubah untuk mengirim data form mentah
+  onSave: (data: UserModalData, id?: number) => void;
+  user: User | null; // Tipe User adalah DTO backend
+  teams: Team[]; // Tipe Team adalah DTO backend
+  roles: Role[]; // Tipe Role adalah DTO backend
   isLoading: boolean;
 }
 
@@ -26,8 +30,8 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
     name: '',
     email: '',
     password: '',
-    team: '',
-    role: '',
+    teamId: '', // ID team (dari role.team.id)
+    roleId: '', // ID role (dari role.id)
   });
 
   const isEditMode = !!user;
@@ -38,31 +42,39 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
         name: user?.name || '',
         email: user?.email || '',
         password: '', // Selalu kosongkan password
-        team: user?.team ? teams.find(t => t.name === user.team)?.id || '' : '',
-        role: user?.role ? roles.find(r => r.name === user.role)?.id || '' : '',
+        teamId: user?.role?.team?.id?.toString() || '',
+        roleId: user?.role?.id?.toString() || '',
       });
     }
-  }, [isOpen, user, teams, roles]);
+  }, [isOpen, user, teams, roles]); // teams dan roles ditambahkan sbg dependensi
 
-  const teamOptions = teams.map(t => ({ value: t.id, label: t.name }));
-  const roleOptions = formData.team
-    ? roles.filter(r => r.team_id === formData.team).map(r => ({ value: r.id, label: r.name }))
-    : [];
+  // Opsi tim sekarang dari data API
+  const teamOptions = useMemo(() => 
+    teams.map(t => ({ value: t.id.toString(), label: t.name })),
+    [teams]
+  );
+
+  // Opsi role di-filter berdasarkan teamId yang dipilih
+  const roleOptions = useMemo(() => 
+    formData.teamId
+      ? roles
+          .filter(r => r.team.id.toString() === formData.teamId)
+          .map(r => ({ value: r.id.toString(), label: r.name }))
+      : [],
+    [roles, formData.teamId]
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const selectedTeam = teams.find(t => t.id === formData.team);
-    const selectedRole = roles.find(r => r.id === formData.role);
-
-    const userData = {
+    const modalData: UserModalData = {
       name: formData.name,
       email: formData.email,
       password: formData.password,
-      team: selectedTeam?.name,
-      role: selectedRole?.name,
-      account_type: 'credential' as const,
+      teamId: formData.teamId,
+      roleId: formData.roleId,
     };
-    onSave(userData, user?.id);
+    // Kirim data modal ke parent, parent yg akan memformat payload API
+    onSave(modalData, user?.id);
   };
 
   if (!isOpen) return null;
@@ -108,22 +120,22 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Team (Optional)</label>
+              <label className="block text-sm font-medium text-gray-700">Team</label>
               <CustomSelect
                 selectedType="default"
-                value={formData.team}
-                onChange={(value) => setFormData({ ...formData, team: value, role: '' })}
+                value={formData.teamId}
+                onChange={(value) => setFormData({ ...formData, teamId: value, roleId: '' })} // Reset role saat team berubah
                 options={[{ value: '', label: 'Select a team' }, ...teamOptions]}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Role (Optional)</label>
+              <label className="block text-sm font-medium text-gray-700">Role</label>
               <CustomSelect
                 selectedType="default"
-                value={formData.role}
-                onChange={(value) => setFormData({ ...formData, role: value })}
-                options={[{ value: '', label: formData.team ? 'No Role Assigned' : 'Select a team first' }, ...roleOptions]}
-                disabled={!formData.team}
+                value={formData.roleId}
+                onChange={(value) => setFormData({ ...formData, roleId: value })}
+                options={[{ value: '', label: formData.teamId ? 'No Role Assigned' : 'Select a team first' }, ...roleOptions]}
+                disabled={!formData.teamId}
               />
             </div>
           </div>

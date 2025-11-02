@@ -1,28 +1,34 @@
+// src/features/TeamManagements/pages/TeamManagementPage.tsx
+
 import { useState, useMemo } from 'react';
-import { Plus } from 'lucide-react';
-import type { ActionType, Team } from '../utils/types';
+import { Plus, Loader2 } from 'lucide-react';
+import type { ActionType, Team, TeamPayload } from '../utils/types';
+
+// Import hooks
+import {
+  useGetTeams,
+  useCreateTeam,
+  useUpdateTeam,
+  useDeleteTeam,
+} from '../hooks/useTeamManagement';
+
 import TableControls from '../../../shared/components/TableControls';
 import TeamTable from '../components/TeamTable';
 import ConfirmationModal from '../../../shared/components/ConfirmationModal';
 import TeamManagementModal from '../components/TeamManagementModal';
 
-// --- DUMMY DATA ---
-const DUMMY_TEAMS: Team[] = [
-    { id: 1, name: 'Finance', user_count: 5, access: ['dashboard', 'document-management'] },
-    { id: 2, name: 'Legal', user_count: 3, access: ['knowledge-base', 'sipp-case-details'] },
-    { id: 3, name: 'IT', user_count: 8, access: ['dashboard', 'user-management', 'team-management'] },
-    { id: 4, name: 'Marketing', user_count: 12, access: ['market-competitor-insight'] },
-];
-// --- END DUMMY DATA ---
+// --- HAPUS DUMMY DATA ---
 
+// Ubah 'access' menjadi 'page'
 interface Filters {
-  access: string;
+  page: string;
 }
 
 const TeamManagementPage = () => {
-    const [teams, setTeams] = useState<Team[]>(DUMMY_TEAMS);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [filters, setFilters] = useState<Filters>({ access: '' });
+    // Hapus state 'teams'
+    const [searchInput, setSearchInput] = useState(''); // Untuk input
+    const [searchTerm, setSearchTerm] = useState('');   // Untuk filter
+    const [filters, setFilters] = useState<Filters>({ page: '' });
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
   
@@ -31,25 +37,53 @@ const TeamManagementPage = () => {
     const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
     const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
   
-    const [isSaving, setIsSaving] = useState(false);
-  
+    // --- Integrasi React Query ---
+    const searchParams = useMemo(() => {
+        const params = new URLSearchParams();
+        params.set('limit', String(itemsPerPage));
+        params.set('offset', String((currentPage - 1) * itemsPerPage));
+        // Backend GET /api/teams tidak support search, jadi kita tidak kirim
+        return params;
+    }, [currentPage, itemsPerPage]);
+
+    const { data: teamsData, isLoading: isLoadingTeams } = useGetTeams(searchParams);
+    const { mutate: createTeam, isPending: isCreating } = useCreateTeam();
+    const { mutate: updateTeam, isPending: isUpdating } = useUpdateTeam();
+    const { mutate: deleteTeam, isPending: isDeleting } = useDeleteTeam();
+
+    const isSaving = isCreating || isUpdating;
+
+    const teams = useMemo(() => teamsData?.teams || [], [teamsData]);
+    const totalItems = useMemo(() => teamsData?.total || 0, [teamsData]);
+
     const filteredTeams = useMemo(() => {
         return teams.filter(team => {
           const lowerSearchTerm = searchTerm.toLowerCase();
+          // Filter client-side
           const searchMatch = team.name.toLowerCase().includes(lowerSearchTerm);
-          const accessMatch = filters.access ? team.access.includes(filters.access) : true;
+          // Ubah 'filters.access' menjadi 'filters.page' dan 'team.access' ke 'team.pages'
+          const pageMatch = filters.page ? team.pages.includes(filters.page) : true;
     
-          return searchMatch && accessMatch;
+          return searchMatch && pageMatch;
         });
       }, [teams, searchTerm, filters]);
 
     const paginatedTeams = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return filteredTeams.slice(startIndex, startIndex + itemsPerPage);
-    }, [filteredTeams, currentPage, itemsPerPage]);
+        // Paginasi sudah ditangani server, tapi filter client-side,
+        // jadi kita tetap filter data yang diterima
+        return filteredTeams; 
+        // NOTE: Jika data > itemsPerPage, logic paginasi client-side diperlukan
+        // Tapi backend sudah paginasi, jadi ini seharusnya oke
+    }, [filteredTeams]);
 
     const handleFilterChange = (filterName: keyof Filters, value: string) => {
         setFilters(prev => ({ ...prev, [filterName]: value }));
+        setCurrentPage(1); // Filter client-side, tidak perlu reset
+    };
+
+    // Handler untuk tombol search
+    const handleSearchSubmit = () => {
+        setSearchTerm(searchInput);
         setCurrentPage(1);
     };
 
@@ -63,35 +97,39 @@ const TeamManagementPage = () => {
         }
     };
 
-    const handleSaveTeam = (teamData: Omit<Team, 'id' | 'user_count'>, id?: number) => {
-        setIsSaving(true);
-        setTimeout(() => { // Simulate API call
-            if (id) { // Edit mode
-                setTeams(teams.map(t => t.id === id ? { ...t, ...teamData } : t));
-            } else { // Create mode
-                const newTeam: Team = { ...teamData, id: Date.now(), user_count: 0 };
-                setTeams([newTeam, ...teams]);
-            }
-            setIsSaving(false);
-            setTeamModalOpen(false);
-        }, 1000);
+    // Handler onSave baru
+    const handleSaveTeam = (teamData: TeamPayload, id?: number) => {
+        if (id) { // Edit mode
+            updateTeam({ id, data: teamData }, {
+                onSuccess: () => setTeamModalOpen(false)
+            });
+        } else { // Create mode
+            createTeam(teamData, {
+                onSuccess: () => setTeamModalOpen(false)
+            });
+        }
     };
     
     const handleConfirmDelete = () => {
         if (teamToDelete) {
-            setTeams(teams.filter(t => t.id !== teamToDelete.id));
-            setConfirmModalOpen(false);
-            setTeamToDelete(null);
+            deleteTeam(teamToDelete.id, {
+                onSuccess: () => {
+                    setConfirmModalOpen(false);
+                    setTeamToDelete(null);
+                }
+            });
         }
     };
 
-    const accessRightsOptions = [
+    // Buat opsi filter dari data 'pages' yang ada
+    const accessRightsOptions = useMemo(() => [
         { value: '', label: 'All Access Rights' },
-        ...Array.from(new Set(teams.flatMap(t => t.access))).map(right => ({ value: right, label: right.replace(/_/g, ' ') }))
-    ];
+        ...Array.from(new Set(teams.flatMap(t => t.pages))).map(page => ({ value: page, label: page.replace(/-/g, ' ') }))
+    ], [teams]);
 
     const filterConfig = [
-        { key: 'access' as keyof Filters, options: accessRightsOptions },
+        // Ubah key menjadi 'page'
+        { key: 'page' as keyof Filters, options: accessRightsOptions },
     ];
   
     return (
@@ -101,10 +139,11 @@ const TeamManagementPage = () => {
             <div className="p-4 flex items-center justify-between gap-4">
                 <div className="flex-grow">
                     <TableControls
-                        searchTerm={searchTerm}
+                        searchTerm={searchInput}
                         searchPlaceholder="Search by team name..."
                         filters={filters}
-                        onSearchChange={setSearchTerm}
+                        onSearchChange={setSearchInput}
+                        onSearchSubmit={handleSearchSubmit} // Hubungkan handler search
                         onFilterChange={handleFilterChange}
                         filterConfig={filterConfig}
                     />
@@ -121,15 +160,21 @@ const TeamManagementPage = () => {
             </div>
           </div>
           
-          <TeamTable
-            teams={paginatedTeams}
-            onAction={handleAction}
-            currentPage={currentPage}
-            itemsPerPage={itemsPerPage}
-            totalItems={filteredTeams.length}
-            onPageChange={setCurrentPage}
-            onItemsPerPageChange={setItemsPerPage}
-          />
+          {isLoadingTeams && teams.length === 0 ? (
+             <div className="flex-1 flex justify-center items-center p-10">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+             </div>
+          ) : (
+            <TeamTable
+                teams={paginatedTeams} // Kirim data dari API
+                onAction={handleAction}
+                currentPage={currentPage}
+                itemsPerPage={itemsPerPage}
+                totalItems={totalItems} // Kirim total dari API
+                onPageChange={setCurrentPage}
+                onItemsPerPageChange={setItemsPerPage}
+            />
+          )}
         </div>
   
         <TeamManagementModal
@@ -147,6 +192,7 @@ const TeamManagementPage = () => {
           title="Confirm Deletion"
           confirmText="Delete"
           confirmColor="bg-red-600 hover:bg-red-700"
+          isConfirming={isDeleting} // Tambahkan status loading delete
         >
           <p>Are you sure you want to delete the team "{teamToDelete?.name}"? This action cannot be undone.</p>
         </ConfirmationModal>

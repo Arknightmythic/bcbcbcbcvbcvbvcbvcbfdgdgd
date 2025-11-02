@@ -1,82 +1,119 @@
+// src/features/UserManagement/pages/UserManagementPage.tsx
+
 import { useState, useMemo } from 'react';
-import { Plus } from 'lucide-react';
-import type { ActionType, User, Team, Role } from '../utils/types';
+import { Plus, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
+
+// Import tipe baru dan tipe payload
+import type {
+  ActionType,
+  User,
+  UserModalData,
+  CreateUserPayload,
+  UpdateUserPayload,
+} from '../utils/types';
+
+// Import hooks
+import {
+  useGetUsers,
+  useCreateUser,
+  useUpdateUser,
+  useDeleteUser,
+  useGetTeams,
+  useGetRoles,
+} from '../hooks/useUserManagement';
+
 import TableControls from '../../../shared/components/TableControls';
 import UserTable from '../components/UserTable';
 import ConfirmationModal from '../../../shared/components/ConfirmationModal';
 import UserManagementModal from '../components/UserManagementModal';
 
-// --- DUMMY DATA ---
-const DUMMY_TEAMS: Team[] = [
-  { id: '1', name: 'Superadmin' },
-  { id: '2', name: 'Finance' },
-  { id: '3', name: 'Legal' },
-  { id: '4', name: 'IT' },
-];
-
-const DUMMY_ROLES: Role[] = [
-  { id: '101', name: 'Super User', team_id: '1' },
-  { id: '201', name: 'Accountant', team_id: '2' },
-  { id: '202', name: 'Auditor', team_id: '2' },
-  { id: '301', name: 'Lawyer', team_id: '3' },
-  { id: '401', name: 'Developer', team_id: '4' },
-];
-
-const DUMMY_USERS: User[] = [
-  { id: 1, name: 'Budi Santoso', email: 'budi.santoso@example.com', account_type: 'credential', team: 'IT', role: 'Developer' },
-  { id: 2, name: 'Citra Lestari', email: 'citra.lestari@example.com', account_type: 'microsoft', team: 'Finance', role: 'Accountant' },
-  { id: 3, name: 'Admin Utama', email: 'admin@example.com', account_type: 'credential', team: 'Superadmin', role: 'Super User' },
-  { id: 4, name: 'Dewi Anggraini', email: 'dewi.anggraini@example.com', account_type: 'microsoft', team: 'Legal' },
-  { id: 5, name: 'Eko Prasetyo', email: 'eko.prasetyo@example.com', account_type: 'credential', team: 'Finance', role: 'Auditor' },
-];
-// --- END DUMMY DATA ---
-
-
+// Filter sekarang hanya untuk UI, API call akan menggunakan state lain
 interface Filters {
   team: string;
   role: string;
 }
 
 const UserManagementPage = () => {
-  const [users, setUsers] = useState<User[]>(DUMMY_USERS);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filters, setFilters] = useState<Filters>({ team: '', role: '' });
+  // --- PERUBAHAN STATE SEARCH ---
+  const [searchInput, setSearchInput] = useState(''); // State untuk input field
+  const [searchTerm, setSearchTerm] = useState('');   // State untuk filter aktif
+  
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
+  // State untuk UI (modal, delete)
   const [isUserModalOpen, setUserModalOpen] = useState(false);
   const [isConfirmModalOpen, setConfirmModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
-  const [isSaving, setIsSaving] = useState(false);
+  // --- Integrasi React Query ---
 
+  // 1. Buat parameter query untuk API
+  const searchParams = useMemo(() => {
+    const params = new URLSearchParams();
+    params.set('limit', String(itemsPerPage));
+    params.set('offset', String((currentPage - 1) * itemsPerPage));
+    
+    // Kita tidak mengirim search ke backend karena backend tidak mendukungnya
+    // if (searchTerm) params.set('search', searchTerm); 
+    
+    return params;
+  }, [currentPage, itemsPerPage]); // Hapus searchTerm dari dependency
+
+  // 2. Fetch data menggunakan hooks
+  const { data: usersData, isLoading: isLoadingUsers } = useGetUsers(searchParams);
+  const { data: teamsData, isLoading: isLoadingTeams } = useGetTeams();
+  const { data: rolesData, isLoading: isLoadingRoles } = useGetRoles();
+
+  // 3. Siapkan data mutasi
+  const { mutate: createUser, isPending: isCreating } = useCreateUser();
+  const { mutate: updateUser, isPending: isUpdating } = useUpdateUser();
+  const { mutate: deleteUser, isPending: isDeleting } = useDeleteUser();
+
+  const isSaving = isCreating || isUpdating;
+
+  // 4. Memoize data untuk tabel dan modal
+  const users = useMemo(() => usersData?.data || [], [usersData]);
+  const totalItems = useMemo(() => usersData?.total || 0, [usersData]);
+  const teams = useMemo(() => teamsData || [], [teamsData]);
+  const roles = useMemo(() => rolesData || [], [rolesData]);
+
+  // --- Logika Filtering Sederhana di Client ---
+  const [filters, setFilters] = useState<Filters>({ team: '', role: '' });
 
   const filteredUsers = useMemo(() => {
     return users.filter(user => {
+      const teamName = user.role?.team?.name || '';
+      const roleName = user.role?.name || '';
+      
+      // --- PERUBAHAN LOGIKA SEARCH ---
+      // Gunakan 'searchTerm' (state yg aktif) untuk memfilter, bukan 'searchInput'
       const lowerSearchTerm = searchTerm.toLowerCase();
-      const teamName = user.team || '';
-      const roleName = user.role || '';
-      
-      const searchMatch = user.name.toLowerCase().includes(lowerSearchTerm) ||
+      const searchMatch = lowerSearchTerm === '' ? true : // Jika search term kosong, loloskan semua
+                          user.name.toLowerCase().includes(lowerSearchTerm) ||
                           user.email.toLowerCase().includes(lowerSearchTerm);
-      
-      const teamMatch = filters.team ? teamName === DUMMY_TEAMS.find(t => t.id === filters.team)?.name : true;
-      const roleMatch = filters.role ? roleName === DUMMY_ROLES.find(r => r.id === filters.role)?.name : true;
+
+      const teamMatch = filters.team ? teamName === filters.team : true;
+      const roleMatch = filters.role ? roleName === filters.role : true;
 
       return searchMatch && teamMatch && roleMatch;
     });
-  }, [users, searchTerm, filters]);
-
-  const paginatedUsers = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return filteredUsers.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredUsers, currentPage, itemsPerPage]);
+  }, [users, searchTerm, filters]); // <-- Dependensi diubah ke searchTerm
+  
+  // --- Handler ---
 
   const handleFilterChange = (filterName: keyof Filters, value: string) => {
     setFilters(prev => ({ ...prev, [filterName]: value }));
-    setCurrentPage(1);
   };
+  
+  // --- HANDLER BARU UNTUK SUBMIT SEARCH ---
+  const handleSearchSubmit = () => {
+    setSearchTerm(searchInput); // Terapkan nilai dari input ke state filter aktif
+    setCurrentPage(1); // Reset ke halaman pertama saat search
+  };
+
 
   const handleOpenModal = (action: ActionType, user: User) => {
     if (action === 'edit') {
@@ -88,32 +125,65 @@ const UserManagementPage = () => {
     }
   };
 
-  const handleSaveUser = (userData: Omit<User, 'id'>, id?: number) => {
-    setIsSaving(true);
-    setTimeout(() => { // Simulasi async
-      if (id) { // Edit
-        setUsers(users.map(u => u.id === id ? { ...u, ...userData, id } : u));
-      } else { // Create
-        const newUser = { ...userData, id: Date.now() };
-        setUsers([newUser, ...users]);
-      }
-      setIsSaving(false);
-      setUserModalOpen(false);
-    }, 1000);
+  const handleSaveUser = (modalData: UserModalData, id?: number) => {
+    
+    const payload: CreateUserPayload | UpdateUserPayload = {
+      name: modalData.name,
+      email: modalData.email,
+      account_type: 'credential',
+      role_id: modalData.roleId ? Number(modalData.roleId) : null,
+      phone: null,
+    };
+
+    if (modalData.password) {
+      payload.password = modalData.password;
+    }
+
+    if (id) {
+      updateUser({ id, data: payload }, {
+        onSuccess: () => setUserModalOpen(false),
+      });
+    } else {
+      createUser(payload, {
+        onSuccess: () => setUserModalOpen(false),
+      });
+    }
   };
 
   const handleConfirmDelete = () => {
     if (userToDelete) {
-      setUsers(users.filter(u => u.id !== userToDelete.id));
-      setConfirmModalOpen(false);
-      setUserToDelete(null);
+      deleteUser(userToDelete.id, {
+        onSuccess: () => {
+          setConfirmModalOpen(false);
+          setUserToDelete(null);
+        }
+      });
     }
   };
 
+  // Opsi filter dari data API (disederhanakan)
+   const filterTeamOptions = useMemo(() => [
+     { value: '', label: 'All Teams' },
+     ...teams.map(t => ({ value: t.name, label: t.name }))
+   ], [teams]);
+  
+   const filterRoleOptions = useMemo(() => [
+     { value: '', label: 'All Roles' },
+     ...roles.map(r => ({ value: r.name, label: r.name }))
+   ], [roles]);
+
   const filterConfig = [
-    { key: 'team' as keyof Filters, options: [{ value: '', label: 'All Teams' }, ...DUMMY_TEAMS.map(t => ({ value: t.id, label: t.name }))] },
-    { key: 'role' as keyof Filters, options: [{ value: '', label: 'All Roles' }, ...DUMMY_ROLES.map(r => ({ value: r.id, label: r.name }))] },
+    { key: 'team' as keyof Filters, options: filterTeamOptions },
+    { key: 'role' as keyof Filters, options: filterRoleOptions },
   ];
+  
+  if (isLoadingTeams || isLoadingRoles) {
+      return (
+          <div className="flex-1 flex justify-center items-center">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+          </div>
+      )
+  }
 
   return (
     <>
@@ -121,11 +191,13 @@ const UserManagementPage = () => {
         <div className="px-4 bg-gray-50 rounded-t-lg shadow-md">
             <div className="flex justify-between items-center">
                  <div className="flex-grow">
+                    {/* --- PERUBAHAN PROPS TableControls --- */}
                     <TableControls
-                        searchTerm={searchTerm}
+                        searchTerm={searchInput} // <-- Prop 'searchTerm' diisi oleh 'searchInput'
                         searchPlaceholder="Search by name or email..."
                         filters={filters}
-                        onSearchChange={setSearchTerm}
+                        onSearchChange={setSearchInput} // <-- 'onSearchChange' mengubah 'searchInput'
+                        onSearchSubmit={handleSearchSubmit} // <-- 'onSearchSubmit' memanggil handler baru
                         onFilterChange={handleFilterChange}
                         filterConfig={filterConfig}
                     />
@@ -143,11 +215,11 @@ const UserManagementPage = () => {
         </div>
         
         <UserTable
-          users={paginatedUsers}
+          users={filteredUsers} // Gunakan data yg sudah di-filter
           onAction={handleOpenModal}
           currentPage={currentPage}
           itemsPerPage={itemsPerPage}
-          totalItems={filteredUsers.length}
+          totalItems={totalItems} // Total item tetap dari server
           onPageChange={setCurrentPage}
           onItemsPerPageChange={setItemsPerPage}
         />
@@ -158,8 +230,8 @@ const UserManagementPage = () => {
         onClose={() => setUserModalOpen(false)}
         onSave={handleSaveUser}
         user={selectedUser}
-        teams={DUMMY_TEAMS}
-        roles={DUMMY_ROLES}
+        teams={teams}
+        roles={roles}
         isLoading={isSaving}
       />
 
@@ -170,6 +242,7 @@ const UserManagementPage = () => {
         title="Confirm Deletion"
         confirmText="Delete"
         confirmColor="bg-red-600 hover:bg-red-700"
+        isConfirming={isDeleting}
       >
         <p>Are you sure you want to delete the user "{userToDelete?.name}"? This action cannot be undone.</p>
       </ConfirmationModal>

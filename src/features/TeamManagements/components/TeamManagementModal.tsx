@@ -1,46 +1,55 @@
+// src/features/TeamManagements/components/TeamManagementModal.tsx
+
 import React, { useState, useEffect } from 'react';
 import { Loader2, X } from 'lucide-react';
-import type { Team } from '../utils/types';
+import type { Team, TeamPayload } from '../utils/types'; // Import tipe baru
 
-const VALID_ACCESS_RIGHTS = [
-    "dashboard","knowledge-base","market-competitor-insight","prompt-management","upload-document","sipp-case-details","user-management","team-management","role-management","service-public","agent-dashboard", "document-management"
+// Ganti nama variabel agar lebih jelas
+const VALID_PAGES = [
+    "dashboard","knowledge-base","market-competitor-insight","prompt-management",
+    "upload-document","sipp-case-details","user-management","team-management",
+    "role-management","service-public","agent-dashboard", "document-management"
 ];
 
 interface TeamManagementModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (teamData: Omit<Team, 'id' | 'user_count'>, id?: number) => void;
+  // Ubah onSave agar sesuai dengan payload baru
+  onSave: (teamData: TeamPayload, id?: number) => void; 
   team: Team | null;
   isLoading: boolean;
 }
 
 const TeamManagementModal: React.FC<TeamManagementModalProps> = ({ isOpen, onClose, onSave, team, isLoading }) => {
   const [name, setName] = useState('');
-  const [access, setAccess] = useState<Set<string>>(new Set());
+  // Ubah 'access' menjadi 'pages' agar sesuai dengan tipe data
+  const [pages, setPages] = useState<Set<string>>(new Set());
   const isEditMode = !!team;
 
   useEffect(() => {
     if (isOpen) {
       setName(team?.name || '');
-      setAccess(new Set(team?.access || []));
+      // Gunakan 'team.pages'
+      setPages(new Set(team?.pages || []));
     }
   }, [isOpen, team]);
 
-  const handleCheckboxChange = (right: string) => {
-    setAccess(prev => {
-      const newAccess = new Set(prev);
-      if (newAccess.has(right)) {
-        newAccess.delete(right);
+  const handleCheckboxChange = (page: string) => {
+    setPages(prev => {
+      const newPages = new Set(prev);
+      if (newPages.has(page)) {
+        newPages.delete(page);
       } else {
-        newAccess.add(right);
+        newPages.add(page);
       }
-      return newAccess;
+      return newPages;
     });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({ name, access: Array.from(access) }, team?.id);
+    // Kirim payload yang sesuai
+    onSave({ name, pages: Array.from(pages) }, team?.id);
   };
 
   if (!isOpen) return null;
@@ -66,17 +75,18 @@ const TeamManagementModal: React.FC<TeamManagementModalProps> = ({ isOpen, onClo
           </div>
 
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700">Access Rights</label>
+            <label className="block text-sm font-medium text-gray-700">Access Rights (Pages)</label>
             <div className="mt-2 grid grid-cols-2 gap-2 border p-3 rounded-md max-h-48 overflow-y-auto">
-              {VALID_ACCESS_RIGHTS.map(right => (
-                <label key={right} className="flex items-center space-x-2">
+              {/* Gunakan VALID_PAGES */}
+              {VALID_PAGES.map(page => (
+                <label key={page} className="flex items-center space-x-2">
                   <input
                     type="checkbox"
-                    checked={access.has(right)}
-                    onChange={() => handleCheckboxChange(right)}
+                    checked={pages.has(page)}
+                    onChange={() => handleCheckboxChange(page)}
                     className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
-                  <span className="text-sm text-gray-800 capitalize">{right.replace(/-/g, ' ')}</span>
+                  <span className="text-sm text-gray-800 capitalize">{page.replace(/-/g, ' ')}</span>
                 </label>
               ))}
             </div>

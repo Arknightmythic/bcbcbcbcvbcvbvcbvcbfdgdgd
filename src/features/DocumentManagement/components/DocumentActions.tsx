@@ -3,6 +3,7 @@ import toast from "react-hot-toast";
 import { Trash2, CheckCircle, XCircle, Eye, Loader2 } from "lucide-react";
 import type { ActionType, Document } from "../types/types";
 import { instanceApiToken } from "../../../shared/utils/Axios";
+import { generateViewUrl } from "../api/document";
 
 interface DocumentActionsProps {
   document: Document;
@@ -18,17 +19,17 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
 }) => {
   const [isViewing, setIsViewing] = useState(false);
   const isPending = document.is_approve === null;
+  const isRejected = document.is_approve === false;
 
   const handleViewFile = async () => {
     setIsViewing(true);
-    const viewUrl = `${import.meta.env.VITE_API_BE_URL}/api/documents/download/${document.filename}`;
+    // Hapus URL lama
+    // const viewUrl = `${import.meta.env.VITE_API_BE_URL}/api/documents/download/${document.filename}`;
     try {
-      const response = await instanceApiToken.get(viewUrl, { responseType: 'blob' });
-      const contentType = response.headers['content-type'] || `application/${document.data_type}`;
-      const fileBlob = new Blob([response.data], { type: contentType });
-      const fileUrl = URL.createObjectURL(fileBlob);
-      window.open(fileUrl, '_blank');
-      setTimeout(() => URL.revokeObjectURL(fileUrl), 100);
+      // Ganti logika .get() dengan .post() ke endpoint generator
+      const response = await generateViewUrl(document.filename);
+      // Buka URL aman di tab baru
+      window.open(response.data.url, '_blank');
     } catch (error) {
       console.error("Failed to open file:", error);
       toast.error("Could not open the file.");
@@ -39,14 +40,16 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
 
   return (
     <div className="flex items-center justify-center gap-x-3">
-      {/* <button
+      <button
         onClick={handleViewFile}
-        disabled={isViewing}
-        className="p-1 text-blue-600 hover:bg-blue-50 rounded-md transition-colors disabled:text-gray-400"
-        title="View"
+        disabled={isViewing || isRejected} // <-- Tambahkan disable jika ditolak
+        className={`p-1 rounded-md transition-colors ${
+          isRejected ? "text-gray-400 cursor-not-allowed" : "text-blue-600 hover:bg-blue-50 disabled:text-gray-400"
+        }`}
+        title={isRejected ? "Cannot view a rejected document" : "View"}
       >
         {isViewing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Eye className="w-5 h-5" />}
-      </button> */}
+      </button>
 
       {hasManagerAccess && (
         <>

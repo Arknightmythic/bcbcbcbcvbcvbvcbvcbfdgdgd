@@ -11,7 +11,7 @@ import {
   Loader2,
 } from "lucide-react";
 import type { UploadedDocument } from "../types/types";
-import { instanceApiToken } from "../../../shared/utils/Axios";
+import { generateViewUrl } from "../api/document";
 
 interface DocumentRowProps {
   document: UploadedDocument;
@@ -60,9 +60,20 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
   };
 
   const handleViewFile = async () => {
-    // ... (fungsi ini tetap sama)
+    setIsViewing(true);
+    try {
+      // Panggil API baru untuk mendapatkan URL
+      const response = await generateViewUrl(doc.filename);
+      // Buka URL yang aman di tab baru
+      window.open(response.data.url, '_blank');
+    } catch (error) {
+      console.error("Failed to get view URL:", error);
+      toast.error("Could not open the file.");
+    } finally {
+      setIsViewing(false);
+    }
   };
-
+  
   return (
     <tr className="bg-white border-b hover:bg-gray-50 border-gray-200">
       {/* ... (kolom checkbox, tanggal, nama, dll tetap sama) ... */}

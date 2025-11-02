@@ -1,3 +1,5 @@
+// src/features/TeamManagements/components/TeamTable.tsx
+
 import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { ActionType, Team } from '../utils/types';
@@ -40,7 +42,8 @@ const TeamTable: React.FC<TeamTableProps> = ({
           <thead className="bg-gray-100">
             <tr className="text-left text-sm font-semibold text-gray-600">
               <th className="px-4 py-3 sticky top-0 bg-gray-100">Team Name</th>
-              <th className="px-4 py-3 sticky top-0 bg-gray-100">Users</th>
+              {/* HAPUS HEADER 'USERS' */}
+              {/* <th className="px-4 py-3 sticky top-0 bg-gray-100">Users</th> */}
               <th className="px-4 py-3 sticky top-0 bg-gray-100">Access Rights</th>
               <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">Actions</th>
             </tr>
@@ -52,7 +55,8 @@ const TeamTable: React.FC<TeamTableProps> = ({
               ))
             ) : (
               <tr>
-                <td colSpan={4} className="text-center py-10 text-gray-500">
+                {/* Ubah colSpan dari 4 menjadi 3 */}
+                <td colSpan={3} className="text-center py-10 text-gray-500">
                   <p>No teams found matching your criteria.</p>
                 </td>
               </tr>

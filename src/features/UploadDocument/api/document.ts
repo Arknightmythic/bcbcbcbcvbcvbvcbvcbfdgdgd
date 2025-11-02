@@ -18,6 +18,19 @@ interface ApiResponse {
     data: DocumentsPayload;
 }
 
+interface ViewUrlResponse {
+  status: string;
+  message: string;
+  data: {
+    url: string;
+  };
+}
+
+export const generateViewUrl = async (filename: string) => {
+  const response = await instanceApiToken.post<ViewUrlResponse>('/api/documents/generate-view-url', { filename });
+  return response.data;
+};
+
 // Fungsi untuk mengambil daftar dokumen
 export const getDocuments = async (params: URLSearchParams): Promise<DocumentsPayload> => {
   const response = await instanceApiToken.get<ApiResponse>('/api/documents', { params });
