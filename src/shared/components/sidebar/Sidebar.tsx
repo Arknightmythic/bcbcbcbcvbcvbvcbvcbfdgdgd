@@ -103,12 +103,12 @@ const Sidebar = ({ isCollapsed, setOutletBlurred }: { isCollapsed: boolean, setO
       <div className={`flex h-20 items-center px-4 mt-4 mb-4 transition-all duration-300 ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
           <div className="relative flex items-center justify-center h-12 w-full">
               <img 
-                  src="/dokulogo.png" 
+                  src="/LOGO KEMENTERIAN INVESTASI DAN HILIRISASI BKPM-Horizontal.png" 
                   alt="Logo" 
-                  className={`absolute h-30 transition-all duration-300 ease-in-out ${isCollapsed ? 'opacity-0 scale-75' : 'opacity-100 scale-100'}`}
+                  className={`absolute h-15 transition-all duration-300 ease-in-out ${isCollapsed ? 'opacity-0 scale-75' : 'opacity-100 scale-100'}`}
               />
               <img 
-                  src="/dokulogo-d.png" 
+                  src="/bkpmlogo.png" 
                   alt="Collapsed Logo" 
                   className={`absolute h-10 transition-all duration-300 ease-in-out ${isCollapsed ? 'opacity-100 scale-100' : 'opacity-0 scale-75'}`}
               />
