@@ -7,9 +7,10 @@ interface DocumentTableRowProps {
   document: Document;
   hasManagerAccess: boolean;
   onAction: (action: ActionType, doc: Document) => void;
+  onViewFile: (doc: Document) => void;
 }
 
-const DocumentTableRow: React.FC<DocumentTableRowProps> = ({ document, hasManagerAccess, onAction }) => {
+const DocumentTableRow: React.FC<DocumentTableRowProps> = ({ document, hasManagerAccess, onAction, onViewFile }) => {
   // URL untuk mengunduh file
   return (
     <tr className="hover:bg-gray-50 text-sm text-gray-700">
@@ -32,6 +33,7 @@ const DocumentTableRow: React.FC<DocumentTableRowProps> = ({ document, hasManage
             document={document} 
             hasManagerAccess={hasManagerAccess} 
             onAction={onAction}
+            onViewFile={onViewFile}
           />
         </div>
       </td>

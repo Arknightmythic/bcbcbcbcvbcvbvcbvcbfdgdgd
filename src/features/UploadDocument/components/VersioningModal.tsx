@@ -7,9 +7,10 @@ interface VersioningModalProps {
   onClose: () => void;
   versions: DocumentVersion[];
   documentTitle: string;
+  onViewVersion: (version: DocumentVersion) => void;
 }
 
-const VersioningModal: React.FC<VersioningModalProps> = ({ isOpen, onClose, versions, documentTitle }) => {
+const VersioningModal: React.FC<VersioningModalProps> = ({ isOpen, onClose, versions, documentTitle, onViewVersion }) => {
   if (!isOpen) return null;
 
   // Sort versions by ID in descending order (latest first)
@@ -55,15 +56,13 @@ const VersioningModal: React.FC<VersioningModalProps> = ({ isOpen, onClose, vers
 
                     {/* Column 5: Action */}
                     <div className="flex justify-end">
-                      <a 
-                        href={`${import.meta.env.VITE_API_BE_URL}/api/documents/download/${version.filename}`} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
+                      <button 
+                        onClick={() => onViewVersion(version)} // <-- 4. UBAH DARI <a> KE <button>
                         className="p-2 text-blue-600 hover:bg-blue-100 rounded-md transition-colors"
                         title={`View Version ${sortedVersions.length - index}`}
                       >
                         <Eye className="w-5 h-5" />
-                      </a>
+                      </button>
                     </div>
                   </div>
                 ))}

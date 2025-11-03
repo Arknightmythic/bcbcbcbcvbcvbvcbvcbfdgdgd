@@ -1,14 +1,13 @@
 import React from "react";
-
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import CustomSelect from "../../../shared/components/CustomSelect";
-import type { ActionType, ValidationHistory } from "../utils/types";
+import type { ActionType, ValidationHistoryItem } from "../utils/types";
 import HistoryValidationTableRow from "./HistoryValidationRow";
 
-
 interface HistoryValidationTableProps {
-  histories: ValidationHistory[];
-  onAction: (action: ActionType, history: ValidationHistory) => void;
+  histories: ValidationHistoryItem[];
+  onAction: (action: ActionType, history: ValidationHistoryItem) => void;
+  onViewText: (title: string, content: string) => void; // <-- Prop baru
   currentPage: number;
   itemsPerPage: number;
   totalItems: number;
@@ -25,6 +24,7 @@ const itemsPerPageOptions = [
 const HistoryValidationTable: React.FC<HistoryValidationTableProps> = ({
   histories,
   onAction,
+  onViewText, // <-- Ambil prop baru
   currentPage,
   itemsPerPage,
   totalItems,
@@ -41,12 +41,14 @@ const HistoryValidationTable: React.FC<HistoryValidationTableProps> = ({
         <table className="min-w-full">
           <thead className="bg-gray-100">
             <tr className="text-left text-sm font-semibold text-gray-600">
-              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">Tanggal</th>
-              <th className="px-4 py-3 sticky top-0 bg-gray-100">User</th>
-              <th className="px-4 py-3 sticky top-0 bg-gray-100">Session ID</th>
-              <th className="px-4 py-3 sticky top-0 bg-gray-100">Konteks</th>
-              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">Status</th>
-              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">Action</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">TANGGAL</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100">USER</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100">SESSION ID</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100">PERTANYAAN</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100">JAWABAN AI</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">TIDAK TERJAWAB (AI)</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">STATUS VALIDASI</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">AKSI</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -56,11 +58,12 @@ const HistoryValidationTable: React.FC<HistoryValidationTableProps> = ({
                   key={history.id}
                   history={history}
                   onAction={onAction}
+                  onViewText={onViewText} // <-- Teruskan prop
                 />
               ))
             ) : (
               <tr>
-                <td colSpan={6} className="text-center py-10 text-gray-500">
+                <td colSpan={8} className="text-center py-10 text-gray-500">
                   <p>No history found matching your criteria.</p>
                 </td>
               </tr>

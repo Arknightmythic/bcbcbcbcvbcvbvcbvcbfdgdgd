@@ -20,6 +20,7 @@ interface DocumentsTableProps {
   onDeleteSingle: (docId: number) => void;
   onNewVersion: (doc: UploadedDocument) => void; // FIX: Renamed from onReplace
   onViewVersions: (doc: UploadedDocument) => void; // FIX: Added this new prop
+  onViewFile: (doc: UploadedDocument) => void
   currentPage: number;
   itemsPerPage: number;
   totalItems: number;
@@ -47,6 +48,7 @@ const DocumentsTable: React.FC<DocumentsTableProps> = (props) => {
     onDeleteSingle,
     onNewVersion,
     onViewVersions,
+    onViewFile,
     currentPage,
     itemsPerPage,
     totalItems,
@@ -125,6 +127,7 @@ const DocumentsTable: React.FC<DocumentsTableProps> = (props) => {
                   onDelete={onDeleteSingle}
                   onNewVersion={onNewVersion} // Kirim prop yang benar
                   onViewVersions={onViewVersions} // Kirim prop yang benar
+                  onViewFile={onViewFile}
                 />
               ))
             ) : (

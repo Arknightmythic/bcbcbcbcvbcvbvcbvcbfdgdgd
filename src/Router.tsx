@@ -17,6 +17,9 @@ import TeamManagementPage from "./features/TeamManagements/pages/TeamManagementP
 import RoleManagementPage from "./features/RoleManagements/pages/RoleManagementPage";
 import { createBrowserRouter, redirect } from "react-router";
 import { useAuthStore } from "./shared/store/authStore";
+import HelpDeskPage from "./features/HelpDesk/pages/HelpDeskPage";
+import HelpDeskIntroPage from "./features/HelpDesk/pages/HelpDeskIntroPage";
+import HelpDeskChatPage from "./features/HelpDesk/pages/HelpDeskChatPage";
 
 // Fungsi loader untuk memeriksa status autentikasi
 const authLoader = () => {
@@ -92,6 +95,20 @@ const Router = createBrowserRouter([
       {
         path: "role-management", // Perbaiki path agar konsisten
         element: <RoleManagementPage />,
+      },
+      {
+        path: "helpdesk",
+        element: <HelpDeskPage />,
+        children: [
+          {
+            index: true,
+            element: <HelpDeskIntroPage />, // Tampilan intro
+          },
+          {
+            path: ":sessionId",
+            element: <HelpDeskChatPage />, // Tampilan chat aktif
+          },
+        ]
       },
     ],
   },

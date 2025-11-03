@@ -3,10 +3,11 @@ import toast from "react-hot-toast";
 import { Loader2 } from "lucide-react";
 import type { ActionType, Document, DocumentCategory } from "../types/types";
 import { useGetDocuments, useApproveDocument, useRejectDocument } from "../hooks/useDocument";
-import { getDocumentDetails } from "../api/document";
+import { generateViewUrl, getDocumentDetails } from "../api/document";
 import DocumentTable from "../components/DocumentTable";
 import ConfirmationModal from "../../../shared/components/ConfirmationModal";
 import TableControls, { type FilterConfig } from "../../../shared/components/TableControls";
+import PdfViewModal from "../../../shared/components/PDFViewModal";
 
 export interface Filters {
   type: string;
@@ -20,9 +21,7 @@ const filterConfig: FilterConfig<Filters>[] = [
         options: [
             { value: "", label: "All Types" },
             { value: "pdf", label: "PDF" },
-            { value: "docx", label: "DOCX" },
             { value: "txt", label: "TXT" },
-            { value: "doc", label: "DOC" },
         ],
     },
     {
@@ -53,6 +52,11 @@ const DocumentManagementPage = () => {
   const [filters, setFilters] = useState<Filters>({ type: "", category: "", status: "" });
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [viewableUrl, setViewableUrl] = useState<string | null>(null);
+  const [viewableTitle, setViewableTitle] = useState<string>("");
+  const [isGeneratingUrl, setIsGeneratingUrl] = useState(false);
 
   const handleSearchSubmit = () => {
     setSearchTerm(searchInput);
@@ -144,6 +148,29 @@ const DocumentManagementPage = () => {
   
   const modalContent = getModalContent();
 
+  const handleOpenViewFile = async (doc: Document) => {
+    setIsViewModalOpen(true);
+    setIsGeneratingUrl(true);
+    setViewableTitle(doc.document_name);
+    
+    try {
+      const response = await generateViewUrl(doc.filename); //
+      setViewableUrl(response.data.url);
+    } catch (error) {
+      console.error("Failed to get view URL:", error);
+      toast.error("Could not generate secure URL.");
+      setIsViewModalOpen(false); // Tutup modal jika gagal
+    } finally {
+      setIsGeneratingUrl(false);
+    }
+  };
+
+  const handleCloseViewModal = () => {
+    setIsViewModalOpen(false);
+    setViewableUrl(null);
+    setViewableTitle("");
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -181,6 +208,7 @@ const DocumentManagementPage = () => {
           totalItems={totalItems}
           onPageChange={setCurrentPage}
           onItemsPerPageChange={handleItemsPerPageChange}
+          onViewFile={handleOpenViewFile}
         />
       </div>
 
@@ -195,6 +223,14 @@ const DocumentManagementPage = () => {
       >
         <p>{modalContent.body}</p>
       </ConfirmationModal>
+
+      <PdfViewModal
+        isOpen={isViewModalOpen}
+        onClose={handleCloseViewModal}
+        url={viewableUrl}
+        isLoading={isGeneratingUrl}
+        title={viewableTitle}
+      />
     </>
   );
 };

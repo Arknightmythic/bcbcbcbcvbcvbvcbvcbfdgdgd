@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import toast from "react-hot-toast";
 import {
   Eye,
@@ -11,7 +11,7 @@ import {
   Loader2,
 } from "lucide-react";
 import type { UploadedDocument } from "../types/types";
-import { generateViewUrl } from "../api/document";
+
 
 interface DocumentRowProps {
   document: UploadedDocument;
@@ -20,6 +20,7 @@ interface DocumentRowProps {
   onDelete: (docId: number) => void;
   onNewVersion: (doc: UploadedDocument) => void;
   onViewVersions: (doc: UploadedDocument) => void;
+  onViewFile: (doc: UploadedDocument) => void;
 }
 
 const DocumentRow: React.FC<DocumentRowProps> = ({
@@ -29,9 +30,8 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
   onDelete,
   onNewVersion,
   onViewVersions,
+  onViewFile,
 }) => {
-  const [isViewing, setIsViewing] = useState(false);
-  
   // Menentukan status dokumen
   const isPending = doc.is_approve === null;
   const isRejected = doc.is_approve === false;
@@ -46,7 +46,7 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
     }
     if (isRejected) {
       return (
-         <span className="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+        <span className="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
           <AlertCircle className="w-3 h-3 mr-1" /> Rejected
         </span>
       );
@@ -59,21 +59,6 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
     );
   };
 
-  const handleViewFile = async () => {
-    setIsViewing(true);
-    try {
-      // Panggil API baru untuk mendapatkan URL
-      const response = await generateViewUrl(doc.filename);
-      // Buka URL yang aman di tab baru
-      window.open(response.data.url, '_blank');
-    } catch (error) {
-      console.error("Failed to get view URL:", error);
-      toast.error("Could not open the file.");
-    } finally {
-      setIsViewing(false);
-    }
-  };
-  
   return (
     <tr className="bg-white border-b hover:bg-gray-50 border-gray-200">
       {/* ... (kolom checkbox, tanggal, nama, dll tetap sama) ... */}
@@ -98,40 +83,66 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
       <td className="px-6 py-4">{getStatusComponent()}</td>
       <td className="px-6 py-4 flex-col justify-center">
         <div className="flex justify-center gap-3">
-           <button
-              onClick={handleViewFile}
-              disabled={isViewing || isRejected}
-              title={isRejected ? "Cannot view a rejected document" : "View Document"}
-              className={`font-medium ${isRejected ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:underline disabled:text-gray-400 disabled:cursor-wait'}`}
-            >
-              {isViewing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
-            </button>
-            
-            <button
-              onClick={() => onNewVersion(doc)}
-              disabled={isPending || isRejected}
-              className={`font-medium cursor-pointer ${isPending || isRejected ? 'text-gray-400 cursor-not-allowed' : 'text-yellow-600 hover:underline'}`}
-              title={isPending ? "Cannot upload new version while pending" : isRejected ? "Cannot upload new version to a rejected document" : "Upload New Version"}
-            >
-              <UploadIcon className="w-4 h-4" />
-            </button>
+          <button
+            onClick={() => onViewFile(doc)} // <-- UBAH ONCLICK DI SINI
+            disabled={isRejected} // <-- HANYA DISABLE JIKA REJECTED (loading dihandle halaman)
+            title={
+              isRejected ? "Cannot view a rejected document" : "View Document"
+            }
+            className={`font-medium ${
+              isRejected
+                ? "text-gray-400 cursor-not-allowed"
+                : "text-blue-600 hover:underline disabled:text-gray-400"
+            }`}
+          >
+            <Eye className="w-4 h-4" />
+          </button>
 
-            <button
-              onClick={() => onDelete(doc.id)}
-              className="font-medium text-red-600 hover:underline cursor-pointer"
-              title="Delete Document"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-            
-            <button
-              onClick={() => onViewVersions(doc)}
-              disabled={isPending || isRejected}
-              className={`font-medium cursor-pointer ${isPending || isRejected ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:underline'}`}
-              title={isPending ? "Cannot view history while pending" : isRejected ? "Cannot view history of a rejected document" : "View Version History"}
-            >
-              <Info className="w-4 h-4" />
-            </button>
+          <button
+            onClick={() => onNewVersion(doc)}
+            disabled={isPending || isRejected}
+            className={`font-medium cursor-pointer ${
+              isPending || isRejected
+                ? "text-gray-400 cursor-not-allowed"
+                : "text-yellow-600 hover:underline"
+            }`}
+            title={
+              isPending
+                ? "Cannot upload new version while pending"
+                : isRejected
+                ? "Cannot upload new version to a rejected document"
+                : "Upload New Version"
+            }
+          >
+            <UploadIcon className="w-4 h-4" />
+          </button>
+
+          <button
+            onClick={() => onDelete(doc.id)}
+            className="font-medium text-red-600 hover:underline cursor-pointer"
+            title="Delete Document"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+
+          <button
+            onClick={() => onViewVersions(doc)}
+            disabled={isPending || isRejected}
+            className={`font-medium cursor-pointer ${
+              isPending || isRejected
+                ? "text-gray-400 cursor-not-allowed"
+                : "text-blue-600 hover:underline"
+            }`}
+            title={
+              isPending
+                ? "Cannot view history while pending"
+                : isRejected
+                ? "Cannot view history of a rejected document"
+                : "View Version History"
+            }
+          >
+            <Info className="w-4 h-4" />
+          </button>
         </div>
       </td>
     </tr>

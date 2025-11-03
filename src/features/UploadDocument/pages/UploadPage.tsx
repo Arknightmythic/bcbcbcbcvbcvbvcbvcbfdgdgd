@@ -1,10 +1,7 @@
 import React, { useState, useMemo, useCallback } from "react";
 import toast from "react-hot-toast";
 import { useQueryClient } from "@tanstack/react-query";
-
-// Mengimpor hooks yang telah dibuat untuk interaksi API
 import { useGetDocuments, useUploadDocument, useUpdateDocument, useGetDocumentDetails } from "../hooks/useDocument";
-
 import UploadZone from "../components/UploadZone";
 import UploadProgress from "../components/UploadProgress";
 import DocumentsTable from "../components/DocumentsTable";
@@ -13,6 +10,9 @@ import VersioningModal from "../components/VersioningModal";
 import ConfirmationModal from "../../../shared/components/ConfirmationModal";
 import TableControls, { type FilterConfig } from "../../../shared/components/TableControls";
 import type { UploadedDocument, DocumentCategory, DocumentVersion } from "../types/types";
+import { generateViewUrl } from "../api/document"; 
+import PdfViewModal from "../../../shared/components/PDFViewModal";
+
 
 // Tipe untuk aksi pada modal konfirmasi
 type ModalAction = "upload" | "deleteSingle" | "deleteMultiple";
@@ -31,9 +31,7 @@ const filterConfig: FilterConfig<Filters>[] = [
         options: [
             { value: "", label: "All Types" },
             { value: "pdf", label: "PDF" },
-            { value: "docx", label: "DOCX" },
             { value: "txt", label: "TXT" },
-            { value: "doc", label: "DOC" },
         ],
     },
     {
@@ -81,6 +79,11 @@ const UploadPage: React.FC = () => {
     action: null,
     data: null,
   });
+
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [viewableUrl, setViewableUrl] = useState<string | null>(null);
+  const [viewableTitle, setViewableTitle] = useState<string>("");
+  const [isGeneratingUrl, setIsGeneratingUrl] = useState(false);
 
   // React Query hooks
   const queryClient = useQueryClient();
@@ -140,6 +143,38 @@ const UploadPage: React.FC = () => {
               return { title: "Confirm Upload", body: `Are you sure you want to upload the file(s) to the "${data.category}" category?`, confirmText: "Upload", confirmColor: "bg-blue-600 hover:bg-blue-700" };
           default: return {};
       }
+  };
+
+  const handleOpenViewFile = async (doc: { document_name: string, filename: string }) => {
+    //
+    // HAPUS BLOK 'if (isVersioningModalOpen)' DARI SINI
+    // if (isVersioningModalOpen) {
+    //   handleCloseModals(); 
+    // }
+    //
+    
+    setIsViewModalOpen(true);
+    setIsGeneratingUrl(true);
+    setViewableTitle(doc.document_name);
+    
+    try {
+      const response = await generateViewUrl(doc.filename);
+      setViewableUrl(response.data.url);
+    } catch (error) {
+      console.error("Failed to get view URL:", error);
+      toast.error("Could not generate secure URL.");
+      setIsViewModalOpen(false); // Tutup modal jika gagal
+    } finally {
+      setIsGeneratingUrl(false);
+    }
+  };
+
+  // --- FUNGSI INI SUDAH BENAR, TAPI PASTIKAN SEPERTI INI ---
+  const handleCloseViewModal = () => {
+    setIsViewModalOpen(false);
+    setViewableUrl(null); // Reset URL agar iframe bersih saat dibuka lagi
+    setViewableTitle("");
+    // Perhatikan bahwa kita TIDAK MENYENTUH isVersioningModalOpen
   };
 
   const handleUpload = () => {
@@ -246,6 +281,7 @@ const UploadPage: React.FC = () => {
           onDeleteSingle={() => {}}
           onNewVersion={handleOpenNewVersionModal}
           onViewVersions={handleOpenVersioningModal}
+          onViewFile={handleOpenViewFile}
           currentPage={currentPage}
           itemsPerPage={itemsPerPage}
           totalItems={totalItems}
@@ -272,6 +308,7 @@ const UploadPage: React.FC = () => {
           onClose={handleCloseModals}
           versions={versionHistoryData?.data || []}
           documentTitle={currentDocument.document_name}
+          onViewVersion={handleOpenViewFile}
         />
       )}
 
@@ -285,6 +322,13 @@ const UploadPage: React.FC = () => {
       >
         <p>{modalContent.body}</p>
       </ConfirmationModal>
+      <PdfViewModal
+        isOpen={isViewModalOpen}
+        onClose={handleCloseViewModal}
+        url={viewableUrl}
+        isLoading={isGeneratingUrl}
+        title={viewableTitle}
+      />
     </>
   );
 };

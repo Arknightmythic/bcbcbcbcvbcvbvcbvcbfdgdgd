@@ -100,7 +100,7 @@ const VersioningDocumentModal: React.FC<VersioningDocumentModalProps> = ({
                     onDrop={handleDrop} 
                     className={`p-6 border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-center transition-colors duration-300 ${isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300"} ${hasPending && "bg-gray-100 border-gray-200 cursor-not-allowed opacity-60"}`}
                 >
-                    <input type="file" ref={fileInputRef} id="versioning-file-input" className="hidden" onChange={(e) => handleFileSelect(e.target.files?.[0])} accept=".pdf,.txt,.doc,.docx" disabled={hasPending} />
+                    <input type="file" ref={fileInputRef} id="versioning-file-input" className="hidden" onChange={(e) => handleFileSelect(e.target.files?.[0])} accept=".pdf,.txt" disabled={hasPending} />
                     <UploadCloud className="w-10 h-10 text-gray-400 mb-3" />
                     <p className="text-gray-600">
                         Drag a file, or <label htmlFor="versioning-file-input" className={`font-semibold ${hasPending ? 'text-gray-500' : 'text-blue-600 cursor-pointer hover:underline'}`}>choose file</label>

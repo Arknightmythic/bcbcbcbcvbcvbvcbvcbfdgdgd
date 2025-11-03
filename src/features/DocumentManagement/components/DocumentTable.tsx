@@ -15,6 +15,7 @@ interface DocumentTableProps {
   totalItems: number;
   onPageChange: (page: number) => void;
   onItemsPerPageChange: (items: number) => void;
+  onViewFile: (doc: Document) => void;
 }
 
 const itemsPerPageOptions = [
@@ -27,6 +28,7 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
   documents,
   hasManagerAccess,
   onAction,
+  onViewFile,
   currentPage,
   itemsPerPage,
   totalItems,
@@ -70,6 +72,7 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
                   document={doc}
                   hasManagerAccess={hasManagerAccess}
                   onAction={onAction}
+                  onViewFile={onViewFile}
                 />
               ))
             ) : (

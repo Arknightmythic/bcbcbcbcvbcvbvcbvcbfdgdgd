@@ -35,8 +35,7 @@ const statusOptions = [
 const typeOptions = [
   { value: '', label: 'All Types' },
   { value: 'PDF', label: 'PDF' },
-  { value: 'DOCX', label: 'DOCX' },
-  { value: 'JPG', label: 'JPG' },
+  { value: 'txt', label: 'TXT' },
 ];
 
 const TableControls: React.FC<TableControlsProps> = ({

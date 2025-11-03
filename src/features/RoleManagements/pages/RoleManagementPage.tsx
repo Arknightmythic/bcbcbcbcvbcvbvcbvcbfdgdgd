@@ -160,7 +160,7 @@ const RoleManagementPage = () => {
       <>
         <div className="flex flex-col flex-1 min-h-0">
           <div className="bg-gray-50 rounded-t-lg shadow-md">
-            <div className="p-4 flex items-center justify-between gap-4">
+            <div className="px-4 flex items-center justify-between gap-4">
                 <div className="flex-grow">
                     <TableControls
                         searchTerm={searchInput}

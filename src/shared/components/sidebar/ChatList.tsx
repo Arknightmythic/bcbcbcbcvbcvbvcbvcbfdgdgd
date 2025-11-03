@@ -1,7 +1,6 @@
-// src/components/ChatList.tsx
+// [File: src/shared/components/sidebar/ChatList.tsx]
 
 import type { LucideIcon } from 'lucide-react';
-
 import { ChatListItem } from './ChatListItem';
 import type { Chat } from '../../types/types';
 
@@ -11,11 +10,16 @@ interface ChatListProps {
   chats: Chat[];
   onItemClick: (id: string) => void;
   emptyMessage: string;
-  type: 'active' | 'queue' | 'history' | 'pending';
+  // --- DIUBAH: Tambahkan 'resolve' ---
+  type: 'active' | 'queue' | 'history' | 'pending' | 'resolve';
   selectedChatId?: string;
+
+  // --- DIUBAH: Tambahkan prop baru ---
+  itemActionType?: 'accept';
+  onItemActionClick?: (id: string) => void;
 }
 
-export const ChatList = ({ title, icon: Icon, chats, onItemClick, emptyMessage, type, selectedChatId }: ChatListProps) => (
+export const ChatList = ({ title, icon: Icon, chats, onItemClick, emptyMessage, type, selectedChatId, itemActionType, onItemActionClick }: ChatListProps) => (
   <>
     <div className="px-4 py-2 bg-gray-50 border-y border-gray-200 text-xs font-bold text-gray-600 flex items-center">
       <Icon className="w-4 h-4 mr-2" />
@@ -29,6 +33,9 @@ export const ChatList = ({ title, icon: Icon, chats, onItemClick, emptyMessage, 
           isActive={chat.id === selectedChatId}
           onClick={() => onItemClick(chat.id)}
           type={type}
+          // --- DIUBAH: Teruskan prop baru ---
+          actionType={itemActionType}
+          onActionClick={onItemActionClick}
         />
       ))
     ) : (

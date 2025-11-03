@@ -1,19 +1,25 @@
-import React from 'react';
-import type { ValidationHistory } from '../utils/types';
+// [File: src/features/HistoryValidation/components/StatusBadge.tsx]
 
+import React from 'react';
+// import type { ValidationHistory } from '../utils/types'; // <-- Hapus
+import type { ValidationStatus } from '../utils/types'; // <-- Ganti
 
 interface StatusBadgeProps {
-  status: ValidationHistory['status'];
+  // status: ValidationHistory['status']; // <-- Hapus
+  status: ValidationStatus; // <-- Ganti
 }
 
-const getStatusBadgeStyle = (status: ValidationHistory['status']) => {
+const getStatusBadgeStyle = (status: ValidationStatus) => {
   switch (status) {
-    case 'open':
-      return 'bg-blue-100 text-blue-800';
-    case 'closed':
-      return 'bg-gray-100 text-gray-800';
-    default:
+    // Ganti case lama
+    case 'Pending':
       return 'bg-yellow-100 text-yellow-800';
+    case 'Validated':
+      return 'bg-green-100 text-green-800';
+    case 'Not Validated':
+      return 'bg-red-100 text-red-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
   }
 };
 

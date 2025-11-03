@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router";
-import { Users, Shield, LayoutDashboard, Dock, Database, BotIcon, History, SearchSlash, User2 } from "lucide-react";
+import { Users, Shield, LayoutDashboard, Dock, Database, BotIcon, History, SearchSlash, User2, Headset } from "lucide-react";
 import {  useRef } from 'react';
 
 import { AgentPanel } from "./AgentPanel";
@@ -17,12 +17,13 @@ const dummyMenu: MenuItem[] = [
   { path: "/user-management", title: "User Management", icon: User2, identifier: "user-management" },
   { path: "/team-management", title: "Team Management ", icon: Users, identifier: "team-management" },
   { path: "/role-management", title: "Role Management", icon: Shield, identifier: "role-management" },
+  // { path: "/helpdesk", title: "Help Desk", icon: Headset, identifier: "helpdesk" },
 ];
 
 const dummyUser = {
   name: "Budi Santoso",
   isSuperAdmin: false,
-  permissions: ["dashboard:access", "document-management:access", "agent-dashboard:access", "user-management:master", "upload-document:access", "public-service:access", "validation-history:access","guide:access", "team-management", "role-management"],
+  permissions: ["dashboard:access", "document-management:access", "agent-dashboard:access", "user-management:master", "upload-document:access", "public-service:access", "validation-history:access","guide:access", "team-management", "role-management", "helpdesk:access"],
   status: 'online' as const,
 };
 
