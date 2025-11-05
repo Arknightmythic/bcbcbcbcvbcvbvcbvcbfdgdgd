@@ -2,7 +2,8 @@ import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { Loader2 } from "lucide-react";
 import type { ActionType, Document, DocumentCategory } from "../types/types";
-import { useGetDocuments, useApproveDocument, useRejectDocument } from "../hooks/useDocument";
+// 1. Import hook 'useDeleteDocument'
+import { useGetDocuments, useApproveDocument, useRejectDocument, useDeleteDocument } from "../hooks/useDocument";
 import { generateViewUrl, getDocumentDetails } from "../api/document";
 import DocumentTable from "../components/DocumentTable";
 import ConfirmationModal from "../../../shared/components/ConfirmationModal";
@@ -70,13 +71,15 @@ const DocumentManagementPage = () => {
     if (searchTerm) params.set('search', searchTerm);
     if (filters.type) params.set('data_type', filters.type);
     if (filters.category) params.set('category', filters.category);
-    if (filters.status) params.set('status', filters.status); // <-- TAMBAHKAN BARIS INI
+    if (filters.status) params.set('status', filters.status); 
     return params;
   }, [currentPage, itemsPerPage, searchTerm, filters]);
 
   const { data: documentsData, isLoading, isError } = useGetDocuments(searchParams);
   const { mutate: approve, isPending: isApproving } = useApproveDocument();
   const { mutate: reject, isPending: isRejecting } = useRejectDocument();
+  // 2. Inisialisasi hook delete
+  const { mutate: deleteDoc, isPending: isDeleting } = useDeleteDocument();
 
   const documents = useMemo(() => documentsData?.documents || [], [documentsData]);
   const totalItems = useMemo(() => documentsData?.total || 0, [documentsData]);
@@ -101,33 +104,41 @@ const DocumentManagementPage = () => {
     setModalState({ isOpen: false, action: null, document: null });
   };
 
-  const handleConfirmAction = async () => {
+  const handleConfirmAction = async () => { 
     const { action, document } = modalState;
     if (!document) return;
 
-    try {
-        const details = await getDocumentDetails(document.id);
-        if (!details || details.length === 0) {
-            throw new Error("Document details not found.");
-        }
-        
-        const detailId = details[0].id;
-
-        if (action === "approve") {
-            approve(detailId, {
-                onSuccess: () => toast.success("Document approved successfully."),
-                onError: (e: any) => toast.error(e.response?.data?.message || "Failed to approve."),
-            });
-        } else if (action === "reject") {
-            reject(detailId, {
-                onSuccess: () => toast.success("Document rejected successfully."),
-                onError: (e: any) => toast.error(e.response?.data?.message || "Failed to reject."),
-            });
-        }
-    } catch (error) {
-        toast.error("An error occurred while fetching document details.");
-    } finally {
-        handleCloseModal();
+    if (action === "approve") {
+        approve(document.id, { // document.id adalah detailId
+            onSuccess: () => {
+              toast.success("Document approved successfully.");
+              handleCloseModal();
+            },
+            onError: (e: any) => {
+              toast.error(e.response?.data?.message || "Failed to approve.");
+              handleCloseModal();
+            },
+        });
+    } else if (action === "reject") {
+        reject(document.id, { // document.id adalah detailId
+            onSuccess: () => {
+              toast.success("Document rejected successfully.");
+              handleCloseModal();
+            },
+            onError: (e: any) => {
+              toast.error(e.response?.data?.message || "Failed to reject.");
+              handleCloseModal();
+            },
+        });
+    // 3. Tambahkan logika untuk 'delete'
+    } else if (action === "delete") {
+        // Kita menggunakan document.document_id (dari tipe yang dimodifikasi)
+        // yang merupakan ID dokumen utama
+        deleteDoc(document.id, {
+            // Toast sukses/error sudah di-handle di dalam hook
+            onSuccess: handleCloseModal,
+            onError: handleCloseModal, 
+        });
     }
   };
   
@@ -141,7 +152,8 @@ const DocumentManagementPage = () => {
       case "reject":
         return { title: "Confirm Rejection", body: `Are you sure you want to reject "${document.document_name}"?`, confirmText: "Reject", confirmColor: "bg-orange-600 hover:bg-orange-700" };
       case "delete":
-        return { title: "Confirm Deletion", body: `Are you sure you want to delete "${document.document_name}"? This action cannot be undone.`, confirmText: "Delete", confirmColor: "bg-red-600 hover:bg-red-700" };
+        // 4. Perbarui konten modal untuk delete
+        return { title: "Confirm Deletion", body: `Are you sure you want to delete "${document.document_name}"? This action will delete the main document and ALL its versions.`, confirmText: "Delete", confirmColor: "bg-red-600 hover:bg-red-700" };
       default:
         return {};
     }
@@ -155,12 +167,12 @@ const DocumentManagementPage = () => {
     setViewableTitle(doc.document_name);
     
     try {
-      const response = await generateViewUrl(doc.filename); //
+      const response = await generateViewUrl(doc.filename); 
       setViewableUrl(response.data.url);
     } catch (error) {
       console.error("Failed to get view URL:", error);
       toast.error("Could not generate secure URL.");
-      setIsViewModalOpen(false); // Tutup modal jika gagal
+      setIsViewModalOpen(false); 
     } finally {
       setIsGeneratingUrl(false);
     }
@@ -194,7 +206,7 @@ const DocumentManagementPage = () => {
                 searchPlaceholder="Search by name, staff..."
                 filters={filters}
                 onSearchChange={setSearchInput}
-                onSearchSubmit={handleSearchSubmit} // Prop ditambahkan
+                onSearchSubmit={handleSearchSubmit} 
                 onFilterChange={handleFilterChange as any}
                 filterConfig={filterConfig}
             />
@@ -217,7 +229,8 @@ const DocumentManagementPage = () => {
         isOpen={modalState.isOpen}
         onClose={handleCloseModal}
         onConfirm={handleConfirmAction}
-        isConfirming={isApproving || isRejecting} // Prop ditambahkan
+        // 5. Tambahkan 'isDeleting' ke status loading
+        isConfirming={isApproving || isRejecting || isDeleting} 
         title={modalContent.title}
         confirmText={modalContent.confirmText}
         confirmColor={modalContent.confirmColor}

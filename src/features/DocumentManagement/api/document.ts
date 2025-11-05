@@ -86,3 +86,8 @@ export const getAllDocumentDetails = async (params: URLSearchParams) => {
     total: response.data.data.total,
   };
 };
+
+export const deleteDocument = async (documentId: number) => {
+  const response = await instanceApiToken.delete(`/api/documents/${documentId}`);
+  return response.data;
+};
