@@ -42,9 +42,9 @@ const TeamManagementPage = () => {
         const params = new URLSearchParams();
         params.set('limit', String(itemsPerPage));
         params.set('offset', String((currentPage - 1) * itemsPerPage));
-        // Backend GET /api/teams tidak support search, jadi kita tidak kirim
+        if (searchTerm) params.set('search', searchTerm); // <-- TAMBAHKAN BARIS INI
         return params;
-    }, [currentPage, itemsPerPage]);
+    }, [currentPage, itemsPerPage, searchTerm]); // <-- TAMBAHKAN 'searchTerm'
 
     const { data: teamsData, isLoading: isLoadingTeams } = useGetTeams(searchParams);
     const { mutate: createTeam, isPending: isCreating } = useCreateTeam();
@@ -56,17 +56,16 @@ const TeamManagementPage = () => {
     const teams = useMemo(() => teamsData?.teams || [], [teamsData]);
     const totalItems = useMemo(() => teamsData?.total || 0, [teamsData]);
 
-    const filteredTeams = useMemo(() => {
+   const filteredTeams = useMemo(() => {
         return teams.filter(team => {
-          const lowerSearchTerm = searchTerm.toLowerCase();
           // Filter client-side
-          const searchMatch = team.name.toLowerCase().includes(lowerSearchTerm);
+          // HAPUS 'searchMatch'
           // Ubah 'filters.access' menjadi 'filters.page' dan 'team.access' ke 'team.pages'
           const pageMatch = filters.page ? team.pages.includes(filters.page) : true;
     
-          return searchMatch && pageMatch;
+          return pageMatch; // <-- HAPUS 'searchMatch'
         });
-      }, [teams, searchTerm, filters]);
+      }, [teams, filters]); // <-- HAPUS 'searchTerm'
 
     const paginatedTeams = useMemo(() => {
         // Paginasi sudah ditangani server, tapi filter client-side,

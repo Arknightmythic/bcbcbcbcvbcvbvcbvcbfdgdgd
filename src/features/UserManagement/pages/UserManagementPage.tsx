@@ -56,16 +56,17 @@ const UserManagementPage = () => {
     params.set('limit', String(itemsPerPage));
     params.set('offset', String((currentPage - 1) * itemsPerPage));
     
-    // Kita tidak mengirim search ke backend karena backend tidak mendukungnya
-    // if (searchTerm) params.set('search', searchTerm); 
+    if (searchTerm) params.set('search', searchTerm); // <-- BARIS INI DIAKTIFKAN
     
     return params;
-  }, [currentPage, itemsPerPage]); // Hapus searchTerm dari dependency
+  }, [currentPage, itemsPerPage, searchTerm]); // <-- TAMBAHKAN 'searchTerm' // Hapus searchTerm dari dependency
 
   // 2. Fetch data menggunakan hooks
   const { data: usersData, isLoading: isLoadingUsers } = useGetUsers(searchParams);
   const { data: teamsData, isLoading: isLoadingTeams } = useGetTeams();
   const { data: rolesData, isLoading: isLoadingRoles } = useGetRoles();
+
+  console.log(usersData)
 
   // 3. Siapkan data mutasi
   const { mutate: createUser, isPending: isCreating } = useCreateUser();
@@ -83,25 +84,19 @@ const UserManagementPage = () => {
   // --- Logika Filtering Sederhana di Client ---
   const [filters, setFilters] = useState<Filters>({ team: '', role: '' });
 
-  const filteredUsers = useMemo(() => {
+ const filteredUsers = useMemo(() => {
     return users.filter(user => {
       const teamName = user.role?.team?.name || '';
       const roleName = user.role?.name || '';
       
-      // --- PERUBAHAN LOGIKA SEARCH ---
-      // Gunakan 'searchTerm' (state yg aktif) untuk memfilter, bukan 'searchInput'
-      const lowerSearchTerm = searchTerm.toLowerCase();
-      const searchMatch = lowerSearchTerm === '' ? true : // Jika search term kosong, loloskan semua
-                          user.name.toLowerCase().includes(lowerSearchTerm) ||
-                          user.email.toLowerCase().includes(lowerSearchTerm);
+      // LOGIKA SEARCH DIHAPUS DARI SINI
 
       const teamMatch = filters.team ? teamName === filters.team : true;
       const roleMatch = filters.role ? roleName === filters.role : true;
 
-      return searchMatch && teamMatch && roleMatch;
+      return teamMatch && roleMatch; // <-- HAPUS 'searchMatch'
     });
-  }, [users, searchTerm, filters]); // <-- Dependensi diubah ke searchTerm
-  
+  }, [users, filters]); // <-- HAPUS 'searchTerm'
   // --- Handler ---
 
   const handleFilterChange = (filterName: keyof Filters, value: string) => {

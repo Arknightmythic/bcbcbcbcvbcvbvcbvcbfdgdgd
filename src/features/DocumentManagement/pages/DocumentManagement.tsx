@@ -70,6 +70,7 @@ const DocumentManagementPage = () => {
     if (searchTerm) params.set('search', searchTerm);
     if (filters.type) params.set('data_type', filters.type);
     if (filters.category) params.set('category', filters.category);
+    if (filters.status) params.set('status', filters.status); // <-- TAMBAHKAN BARIS INI
     return params;
   }, [currentPage, itemsPerPage, searchTerm, filters]);
 

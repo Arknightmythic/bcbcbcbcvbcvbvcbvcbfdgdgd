@@ -1,11 +1,11 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getDocuments, approveDocument, rejectDocument } from '../api/document';
+import { approveDocument, rejectDocument, getAllDocumentDetails } from '../api/document';
 
 export const useGetDocuments = (params: URLSearchParams) => {
   return useQuery({
     queryKey: ['managementDocuments', params.toString()],
-    queryFn: () => getDocuments(params),
+    queryFn: () => getAllDocumentDetails(params), // <-- UBAH FUNGSI DI SINI
   });
 };
 

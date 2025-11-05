@@ -45,9 +45,9 @@ const RoleManagementPage = () => {
         const params = new URLSearchParams();
         params.set('limit', String(itemsPerPage));
         params.set('offset', String((currentPage - 1) * itemsPerPage));
-        // Backend GET /api/roles tidak support search
+        if (searchTerm) params.set('search', searchTerm); // <-- TAMBAHKAN BARIS INI
         return params;
-    }, [currentPage, itemsPerPage]);
+    }, [currentPage, itemsPerPage, searchTerm]); // <-- TAMBAHKAN 'searchTerm'
 
     const { data: rolesData, isLoading: isLoadingRoles } = useGetRoles(searchParams);
     const { 
@@ -68,14 +68,12 @@ const RoleManagementPage = () => {
     // Filter client-side
     const filteredRoles = useMemo(() => {
         return roles.filter(role => {
-          const lowerSearchTerm = searchTerm.toLowerCase();
-          const searchMatch = role.name.toLowerCase().includes(lowerSearchTerm) || 
-                              role.team.name.toLowerCase().includes(lowerSearchTerm);
+          // HAPUS 'searchMatch'
           
           const teamMatch = filters.team ? role.team.name === filters.team : true;
-          return searchMatch && teamMatch;
+          return teamMatch; // <-- HAPUS 'searchMatch'
         });
-      }, [roles, searchTerm, filters]);
+      }, [roles, filters]); // <-- HAPUS 'searchTerm'
 
     const paginatedRoles = useMemo(() => {
         // Paginasi di-handle backend, filter di client

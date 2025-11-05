@@ -18,7 +18,7 @@ export const getUsers = async (
   params: URLSearchParams
 ): Promise<PaginatedUsersResponse> => {
   const response = await instanceApiToken.get("/api/users/", { params });
-  return response.data.data; // Backend membungkusnya di response.data.data
+  return response.data; // Backend membungkusnya di response.data.data
 };
 
 // POST /api/users

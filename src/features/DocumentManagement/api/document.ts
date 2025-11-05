@@ -12,6 +12,16 @@ interface ApiResponse {
     };
 }
 
+// Tipe ApiResponseBaru (untuk endpoint baru)
+interface ApiAllDetailsResponse {
+  status: string;
+  message: string;
+  data: {
+    document_details: Document[]; // Tipe Document kita sudah cocok
+    total: number;
+  };
+}
+
 interface ViewUrlResponse {
   status: string;
   message: string;
@@ -50,4 +60,13 @@ export const rejectDocument = async (detailId: number) => {
 export const getDocuments = async (params: URLSearchParams) => {
     const response = await instanceApiToken.get<ApiResponse>('/api/documents', { params });
     return response.data.data;
+};
+
+export const getAllDocumentDetails = async (params: URLSearchParams) => {
+  const response = await instanceApiToken.get<ApiAllDetailsResponse>('/api/documents/all-details', { params });
+  // Kembalikan data dengan format yang sama seperti getDocuments
+  return {
+    documents: response.data.data.document_details,
+    total: response.data.data.total,
+  };
 };

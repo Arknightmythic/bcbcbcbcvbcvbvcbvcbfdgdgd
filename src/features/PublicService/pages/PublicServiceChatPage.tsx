@@ -62,13 +62,13 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
       <div className="flex flex-col max-w-[75%] items-start">
         {/* The Bubble */}
         <div className={`relative p-3 rounded-lg leading-relaxed shadow-sm w-fit ${
-            message.sender === 'user' ? 'bg-bOss-blue text-white rounded-br-none' : 'bg-gray-100 text-gray-800 rounded-bl-none'
+            message.sender === 'user' ? 'bg-gray-100 text-gray-800 rounded-br-none' : 'bg-bOss-blue text-white rounded-bl-none'
         }`}>
           <p className="whitespace-pre-wrap m-0 text-sm">{message.text}</p>
           
           {message.sender === 'agent' && hasCitations && (
             <div className="mt-3 pt-2 border-t text-xs border-gray-200">
-              <button onClick={() => onToggleCitation(message.id)} className="w-full flex justify-between items-center text-left font-semibold text-gray-500 mb-1 focus:outline-none">
+              <button onClick={() => onToggleCitation(message.id)} className="w-full flex justify-between items-center text-left font-semibold text-white mb-1 focus:outline-none">
                 <span>Sumber ({messageCitations.length})</span>
                 <span className={`transform transition-transform duration-200 ${isOpen ? 'rotate-180' : 'rotate-0'}`}>▼</span>
               </button>
