@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useCallback } from "react";
 import toast from "react-hot-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { useGetDocuments, useUploadDocument, useUpdateDocument, useGetDocumentDetails } from "../hooks/useDocument";
+// 1. Impor hook delete
+import { useGetDocuments, useUploadDocument, useUpdateDocument, useGetDocumentDetails, useDeleteDocument } from "../hooks/useDocument";
 import UploadZone from "../components/UploadZone";
 import UploadProgress from "../components/UploadProgress";
 import DocumentsTable from "../components/DocumentsTable";
@@ -13,8 +14,7 @@ import type { UploadedDocument, DocumentCategory, DocumentVersion } from "../typ
 import { generateViewUrl } from "../api/document"; 
 import PdfViewModal from "../../../shared/components/PDFViewModal";
 
-
-// Tipe untuk aksi pada modal konfirmasi
+// 2. Tambahkan aksi delete ke tipe ModalAction
 type ModalAction = "upload" | "deleteSingle" | "deleteMultiple";
 
 // Konfigurasi untuk filter tabel
@@ -88,13 +88,7 @@ const UploadPage: React.FC = () => {
   // React Query hooks
   const queryClient = useQueryClient();
 
-  // Fungsi baru untuk submit pencarian
-  const handleSearchSubmit = () => {
-    setSearchTerm(searchInput);
-    setCurrentPage(1); // Reset ke halaman pertama saat search
-  };
-
-  const searchParams = useMemo(() => {
+   const searchParams = useMemo(() => {
     const params = new URLSearchParams();
     params.set('limit', String(itemsPerPage));
     params.set('offset', String((currentPage - 1) * itemsPerPage));
@@ -105,19 +99,32 @@ const UploadPage: React.FC = () => {
     return params;
   }, [currentPage, itemsPerPage, searchTerm, filters]);
 
+
   const { data: documentsData, isLoading: isLoadingDocs, isError } = useGetDocuments(searchParams);
   const { mutate: uploadFiles, isPending: isUploading } = useUploadDocument();
   const { mutate: replaceDocument, isPending: isReplacing } = useUpdateDocument();
   const { data: versionHistoryData } = useGetDocumentDetails(currentDocumentIdForDetails);
+  
+  // 3. Inisialisasi hook delete
+  const { mutate: deleteDocument, isPending: isDeleting } = useDeleteDocument();
 
   const documents = useMemo(() => documentsData?.documents || [], [documentsData]);
   const totalItems = useMemo(() => documentsData?.total || 0, [documentsData]);
 
+  // Fungsi baru untuk submit pencarian
+  const handleSearchSubmit = () => {
+    setSearchTerm(searchInput);
+    setCurrentPage(1); // Reset ke halaman pertama saat search
+  };
+
   const handleOpenModal = (action: ModalAction, data: any = null) => setModalState({ isOpen: true, action, data });
   const handleCloseModal = () => setModalState({ isOpen: false, action: null, data: null });
 
+  // 4. Update handleConfirmAction untuk menangani delete
   const handleConfirmAction = async () => {
-    if (modalState.action === "upload") {
+    const { action, data } = modalState;
+
+    if (action === "upload") {
       const formData = new FormData();
       filesToUpload.forEach(file => formData.append('files', file));
       formData.append('category', selectedCategory as DocumentCategory);
@@ -127,32 +134,72 @@ const UploadPage: React.FC = () => {
           toast.success(`Successfully uploaded ${filesToUpload.length} file(s).`);
           setFilesToUpload([]);
           setSelectedCategory("");
+          handleCloseModal(); // Tutup modal di sini
         },
         onError: (err: any) => {
           toast.error(err.response?.data?.message || "Upload failed.");
+          handleCloseModal(); // Tutup modal di sini
         }
       });
+      return; // Biarkan onSuccess/onError yang menutup modal
     }
-    handleCloseModal();
+
+    // Logika untuk delete single
+    if (action === "deleteSingle") {
+      if (!data?.id) return;
+      deleteDocument(data.id, {
+        onSuccess: () => handleCloseModal(),
+        onError: () => handleCloseModal(), // Hook sudah menangani toast error
+      });
+    }
+
+    // Logika untuk delete multiple
+    if (action === "deleteMultiple") {
+      if (selectedDocs.length === 0) {
+        handleCloseModal();
+        return;
+      }
+
+      // Gunakan Promise.allSettled agar satu kegagalan tidak menghentikan semua
+      const results = await Promise.allSettled(
+        selectedDocs.map(id => 
+          new Promise((resolve, reject) => 
+            deleteDocument(id, { onSuccess: resolve, onError: reject })
+          )
+        )
+      );
+
+      const successfulDeletes = results.filter(r => r.status === 'fulfilled').length;
+      const failedDeletes = results.filter(r => r.status === 'rejected').length;
+
+      if (successfulDeletes > 0) {
+        toast.success(`Successfully deleted ${successfulDeletes} document(s).`);
+      }
+      if (failedDeletes > 0) {
+        // Toast error sudah ditangani oleh hook-nya, jadi tidak perlu toast lagi di sini
+        console.error(`Failed to delete ${failedDeletes} document(s).`);
+      }
+
+      setSelectedDocs([]); // Kosongkan seleksi
+      handleCloseModal();
+    }
   };
   
+  // 5. Update getModalContent untuk delete
   const getModalContent = () => {
       const { action, data } = modalState;
       switch (action) {
           case "upload":
               return { title: "Confirm Upload", body: `Are you sure you want to upload the file(s) to the "${data.category}" category?`, confirmText: "Upload", confirmColor: "bg-blue-600 hover:bg-blue-700" };
+          case "deleteSingle":
+              return { title: "Confirm Deletion", body: `Are you sure you want to delete "${data?.document_name}"? This action will delete the main document and ALL its versions.`, confirmText: "Delete", confirmColor: "bg-red-600 hover:bg-red-700" };
+          case "deleteMultiple":
+              return { title: "Confirm Deletion", body: `Are you sure you want to delete ${selectedDocs.length} selected document(s)? This action will delete all main documents and ALL their versions.`, confirmText: `Delete (${selectedDocs.length})`, confirmColor: "bg-red-600 hover:bg-red-700" };
           default: return {};
       }
   };
 
   const handleOpenViewFile = async (doc: { document_name: string, filename: string }) => {
-    //
-    // HAPUS BLOK 'if (isVersioningModalOpen)' DARI SINI
-    // if (isVersioningModalOpen) {
-    //   handleCloseModals(); 
-    // }
-    //
-    
     setIsViewModalOpen(true);
     setIsGeneratingUrl(true);
     setViewableTitle(doc.document_name);
@@ -169,12 +216,10 @@ const UploadPage: React.FC = () => {
     }
   };
 
-  // --- FUNGSI INI SUDAH BENAR, TAPI PASTIKAN SEPERTI INI ---
   const handleCloseViewModal = () => {
     setIsViewModalOpen(false);
     setViewableUrl(null); // Reset URL agar iframe bersih saat dibuka lagi
     setViewableTitle("");
-    // Perhatikan bahwa kita TIDAK MENYENTUH isVersioningModalOpen
   };
 
   const handleUpload = () => {
@@ -269,16 +314,17 @@ const UploadPage: React.FC = () => {
           />
         </div>
 
+        {/* 6. Hubungkan props delete ke DocumentsTable */}
         <DocumentsTable
           documents={documents}
           selectedDocs={selectedDocs}
           isLoading={isLoadingDocs}
           isError={isError}
-          isDeleting={false}
+          isDeleting={isDeleting}
           onSelectAll={handleSelectAll}
           onSelectOne={handleSelectOne}
-          onDeleteMultiple={() => {}}
-          onDeleteSingle={() => {}}
+          onDeleteMultiple={() => handleOpenModal("deleteMultiple")}
+          onDeleteSingle={(doc) => handleOpenModal("deleteSingle", doc)} 
           onNewVersion={handleOpenNewVersionModal}
           onViewVersions={handleOpenVersioningModal}
           onViewFile={handleOpenViewFile}
@@ -312,6 +358,7 @@ const UploadPage: React.FC = () => {
         />
       )}
 
+      {/* 7. Hubungkan isDeleting ke ConfirmationModal */}
       <ConfirmationModal
         isOpen={modalState.isOpen}
         onClose={handleCloseModal}
@@ -319,9 +366,11 @@ const UploadPage: React.FC = () => {
         title={modalContent.title}
         confirmText={modalContent.confirmText}
         confirmColor={modalContent.confirmColor}
+        isConfirming={isUploading || isDeleting}
       >
         <p>{modalContent.body}</p>
       </ConfirmationModal>
+      
       <PdfViewModal
         isOpen={isViewModalOpen}
         onClose={handleCloseViewModal}

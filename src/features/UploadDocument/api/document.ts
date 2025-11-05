@@ -65,3 +65,9 @@ export const getDocumentDetails = async (documentId: number) => {
   });
   return response.data;
 };
+
+
+export const deleteDocument = async (documentId: number) => {
+  const response = await instanceApiToken.delete(`/api/documents/${documentId}`);
+  return response.data;
+};

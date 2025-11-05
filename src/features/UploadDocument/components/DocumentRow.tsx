@@ -17,7 +17,7 @@ interface DocumentRowProps {
   document: UploadedDocument;
   isSelected: boolean;
   onSelect: (event: React.ChangeEvent<HTMLInputElement>, docId: number) => void;
-  onDelete: (docId: number) => void;
+  onDelete: (doc: UploadedDocument) => void; // <-- Tipe diubah dari (docId: number)
   onNewVersion: (doc: UploadedDocument) => void;
   onViewVersions: (doc: UploadedDocument) => void;
   onViewFile: (doc: UploadedDocument) => void;
@@ -61,7 +61,7 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
 
   return (
     <tr className="bg-white border-b hover:bg-gray-50 border-gray-200">
-      {/* ... (kolom checkbox, tanggal, nama, dll tetap sama) ... */}
+      {/* Kolom checkbox */}
       <td className="px-4 py-4">
         <input
           type="checkbox"
@@ -70,22 +70,30 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
           className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
         />
       </td>
+      {/* Kolom Uploaded Date */}
       <td className="px-6 py-4">
         {new Date(doc.created_at).toLocaleDateString("id-ID")}
       </td>
+      {/* Kolom Document Name */}
       <td className="px-6 py-4 font-medium text-gray-900 break-words">
         {doc.document_name}
       </td>
+      {/* Kolom Staff */}
       <td className="px-6 py-4">{doc.staff}</td>
+      {/* Kolom Type */}
       <td className="px-6 py-4">{doc.data_type}</td>
+      {/* Kolom Kategori */}
       <td className="px-6 py-4 capitalize">{doc.category}</td>
-      <td className="px-6 py-4">{doc.team}</td>
+      {/* Kolom Team */}
+      <td className="px-6 py-4 ">{doc.team}</td>
+      {/* Kolom Status */}
       <td className="px-6 py-4">{getStatusComponent()}</td>
+      {/* Kolom Action */}
       <td className="px-6 py-4 flex-col justify-center">
         <div className="flex justify-center gap-3">
           <button
-            onClick={() => onViewFile(doc)} // <-- UBAH ONCLICK DI SINI
-            disabled={isRejected} // <-- HANYA DISABLE JIKA REJECTED (loading dihandle halaman)
+            onClick={() => onViewFile(doc)} 
+            disabled={isRejected}
             title={
               isRejected ? "Cannot view a rejected document" : "View Document"
             }
@@ -118,7 +126,7 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
           </button>
 
           <button
-            onClick={() => onDelete(doc.id)}
+            onClick={() => onDelete(doc)} // <-- Perubahan di sini, kirim seluruh 'doc'
             className="font-medium text-red-600 hover:underline cursor-pointer"
             title="Delete Document"
           >

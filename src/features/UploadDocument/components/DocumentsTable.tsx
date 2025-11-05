@@ -4,7 +4,7 @@ import DocumentRow from "./DocumentRow";
 import type { UploadedDocument } from "../types/types";
 import CustomSelect from "../../../shared/components/CustomSelect";
 
-// 👇 Perubahan di sini
+// 👇 Perubahan ada di interface ini
 interface DocumentsTableProps {
   documents: UploadedDocument[];
   selectedDocs: number[];
@@ -17,9 +17,9 @@ interface DocumentsTableProps {
     docId: number
   ) => void;
   onDeleteMultiple: () => void;
-  onDeleteSingle: (docId: number) => void;
-  onNewVersion: (doc: UploadedDocument) => void; // FIX: Renamed from onReplace
-  onViewVersions: (doc: UploadedDocument) => void; // FIX: Added this new prop
+  onDeleteSingle: (doc: UploadedDocument) => void; // <-- Tipe diubah dari (docId: number)
+  onNewVersion: (doc: UploadedDocument) => void;
+  onViewVersions: (doc: UploadedDocument) => void;
   onViewFile: (doc: UploadedDocument) => void
   currentPage: number;
   itemsPerPage: number;
@@ -118,15 +118,14 @@ const DocumentsTable: React.FC<DocumentsTableProps> = (props) => {
               </tr>
             ) : documents.length > 0 ? (
               documents.map((doc) => (
-                // 👇 Perubahan di sini
                 <DocumentRow
                   key={doc.id}
                   document={doc}
                   isSelected={selectedDocs.includes(doc.id)}
                   onSelect={onSelectOne}
-                  onDelete={onDeleteSingle}
-                  onNewVersion={onNewVersion} // Kirim prop yang benar
-                  onViewVersions={onViewVersions} // Kirim prop yang benar
+                  onDelete={onDeleteSingle} // Prop ini sekarang meneruskan fungsi yang benar
+                  onNewVersion={onNewVersion}
+                  onViewVersions={onViewVersions}
                   onViewFile={onViewFile}
                 />
               ))
