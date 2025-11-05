@@ -21,7 +21,8 @@ function Dashboard() {
       </div>
 
       <iframe
-        src={`${import.meta.env.VITE_IFRAME_GRAPHANA_URL}?&theme=light`}
+        // src={`${import.meta.env.VITE_IFRAME_GRAPHANA_URL}?&theme=light`}
+        src="/DashboardBKPM (3).html"
         title="Dashboard"
         onLoad={handleLoad}
         className="w-full h-full border-0 zoomed-iframe"
