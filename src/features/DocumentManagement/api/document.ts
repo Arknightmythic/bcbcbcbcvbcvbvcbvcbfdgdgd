@@ -6,20 +6,22 @@ import type { Document } from "../types/types";
 interface ApiResponse {
     status: string;
     message: string;
+    // PERUBAHAN 1: data sekarang bisa null
     data: {
         documents: Document[];
         total: number;
-    };
+    } | null;
 }
 
 // Tipe ApiResponseBaru (untuk endpoint baru)
 interface ApiAllDetailsResponse {
   status: string;
   message: string;
+  // PERUBAHAN 2: data sekarang bisa null
   data: {
     document_details: Document[]; // Tipe Document kita sudah cocok
     total: number;
-  };
+  } | null;
 }
 
 interface ViewUrlResponse {
@@ -56,14 +58,28 @@ export const rejectDocument = async (detailId: number) => {
     return response.data;
 };
 
-// Fungsi getDocuments (tetap sama)
+// Fungsi getDocuments
 export const getDocuments = async (params: URLSearchParams) => {
     const response = await instanceApiToken.get<ApiResponse>('/api/documents', { params });
+
+    // PERUBAHAN 3: Menangani jika response.data.data adalah null
+    if (!response.data.data) {
+        // Kembalikan struktur data kosong agar sesuai dengan tipe yang diharapkan
+        return { documents: [], total: 0 };
+    }
+    
     return response.data.data;
 };
 
 export const getAllDocumentDetails = async (params: URLSearchParams) => {
   const response = await instanceApiToken.get<ApiAllDetailsResponse>('/api/documents/all-details', { params });
+
+  // PERUBAHAN 4: Menangani jika response.data.data adalah null
+  if (!response.data.data) {
+    // Kembalikan struktur data kosong agar sesuai dengan tipe yang diharapkan
+    return { documents: [], total: 0 };
+  }
+
   // Kembalikan data dengan format yang sama seperti getDocuments
   return {
     documents: response.data.data.document_details,

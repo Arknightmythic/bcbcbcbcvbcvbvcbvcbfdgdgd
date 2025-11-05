@@ -3,7 +3,7 @@ import { Users, Shield, LayoutDashboard, Dock, Database, BotIcon, History, Searc
 import {  useRef } from 'react';
 
 import { AgentPanel } from "./AgentPanel";
-import type { MenuItem } from "../../types/types";
+import type { Chat, MenuItem } from "../../types/types";
 import Tooltip from "../Tooltip";
 
 
@@ -17,7 +17,7 @@ const dummyMenu: MenuItem[] = [
   { path: "/user-management", title: "User Management", icon: User2, identifier: "user-management" },
   { path: "/team-management", title: "Team Management ", icon: Users, identifier: "team-management" },
   { path: "/role-management", title: "Role Management", icon: Shield, identifier: "role-management" },
-  // { path: "/helpdesk", title: "Help Desk", icon: Headset, identifier: "helpdesk" },
+  { path: "/helpdesk", title: "Help Desk", icon: Headset, identifier: "helpdesk" },
 ];
 
 const dummyUser = {
@@ -27,20 +27,24 @@ const dummyUser = {
   status: 'online' as const,
 };
 
-const dummyChats = {
+const dummyChats: {
+  queue: Chat[];
+  active: Chat[];
+  history: Chat[];
+  pending: Chat[];
+} = {
   queue: [
-    { id: 'q1', user_name: 'Antrian User 1', last_message: '', timestamp: new Date().toISOString() },
-    { id: 'q2', user_name: 'Antrian User 2', last_message: '', timestamp: new Date().toISOString() },
+    { id: 'q1', user_name: 'Antrian User 1', last_message: '', timestamp: new Date().toISOString(), channel: 'web' },
+    { id: 'q2', user_name: 'Antrian User 2', last_message: '', timestamp: new Date().toISOString(), channel: 'whatsapp' },
   ],
   active: [
-    { id: 'a1', user_name: 'User Aktif', last_message: '', timestamp: new Date().toISOString() },
+    { id: 'a1', user_name: 'User Aktif', last_message: '', timestamp: new Date().toISOString(), channel: 'web' },
   ],
   history: [
-    { id: 'h1', user_name: 'User Riwayat', last_message: '', timestamp: new Date().toISOString() },
+    { id: 'h1', user_name: 'User Riwayat', last_message: '', timestamp: new Date().toISOString(), channel: 'email' },
   ],
   pending: [],
 };
-
 // --- START: MODIFIED COMPONENT ---
 const NavigationMenu = ({ menuItems, currentPath, isCollapsed }: { menuItems: MenuItem[], currentPath: string, isCollapsed: boolean }) => (
     <div className="space-y-2 px-2 py-6 md:px-4">

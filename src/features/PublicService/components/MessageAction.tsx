@@ -18,7 +18,7 @@ const MessageActions: React.FC<MessageActionsProps> = ({ message, onFeedback }) 
   };
 
   return (
-    <div className="mt-4 pt-3 border-t border-gray-200">
+    <div className="pt-3 border-t border-gray-200">
       <div className="flex items-center justify-between text-sm text-gray-600 gap-2">
         <span className="italic">Apakah ini menjawab pertanyaan Anda?</span>
         <div className="flex items-center gap-2">

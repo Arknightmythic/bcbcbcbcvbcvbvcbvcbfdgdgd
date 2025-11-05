@@ -19,17 +19,16 @@ import ConfirmationModal from '../../../shared/components/ConfirmationModal';
 import RoleManagementModal from '../components/RoleManagementModal';
 import ViewPermissionsModal from '../components/ViewPermissionModal';
 
-// --- HAPUS DUMMY DATA ---
-
+// --- PERUBAHAN 1: Update interface Filters ---
 interface Filters {
-  team: string; // Akan digunakan untuk filter client-side
+  teamId: string; // Akan digunakan untuk filter server-side
 }
 
 const RoleManagementPage = () => {
-    // Hapus state 'roles'
     const [searchInput, setSearchInput] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
-    const [filters, setFilters] = useState<Filters>({ team: '' });
+    // --- PERUBAHAN 2: Update state Filters ---
+    const [filters, setFilters] = useState<Filters>({ teamId: '' });
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
   
@@ -41,13 +40,15 @@ const RoleManagementPage = () => {
     const [roleToDelete, setRoleToDelete] = useState<Role | null>(null);
   
     // --- Integrasi React Query ---
+    // --- PERUBAHAN 3: Update searchParams ---
     const searchParams = useMemo(() => {
         const params = new URLSearchParams();
         params.set('limit', String(itemsPerPage));
         params.set('offset', String((currentPage - 1) * itemsPerPage));
-        if (searchTerm) params.set('search', searchTerm); // <-- TAMBAHKAN BARIS INI
+        if (searchTerm) params.set('search', searchTerm);
+        if (filters.teamId) params.set('team_id', filters.teamId); // Kirim team_id ke API
         return params;
-    }, [currentPage, itemsPerPage, searchTerm]); // <-- TAMBAHKAN 'searchTerm'
+    }, [currentPage, itemsPerPage, searchTerm, filters]); // <-- TAMBAHKAN 'filters'
 
     const { data: rolesData, isLoading: isLoadingRoles } = useGetRoles(searchParams);
     const { 
@@ -65,24 +66,14 @@ const RoleManagementPage = () => {
     const roles = useMemo(() => rolesData?.roles || [], [rolesData]);
     const totalItems = useMemo(() => rolesData?.total || 0, [rolesData]);
 
-    // Filter client-side
-    const filteredRoles = useMemo(() => {
-        return roles.filter(role => {
-          // HAPUS 'searchMatch'
-          
-          const teamMatch = filters.team ? role.team.name === filters.team : true;
-          return teamMatch; // <-- HAPUS 'searchMatch'
-        });
-      }, [roles, filters]); // <-- HAPUS 'searchTerm'
+    // --- PERUBAHAN 4: Hapus 'filteredRoles' dan 'paginatedRoles' ---
+    // const filteredRoles = useMemo(() => { ... });
+    // const paginatedRoles = useMemo(() => { ... });
 
-    const paginatedRoles = useMemo(() => {
-        // Paginasi di-handle backend, filter di client
-        return filteredRoles;
-    }, [filteredRoles]);
-
+    // --- PERUBAHAN 5: Update handleFilterChange ---
     const handleFilterChange = (filterName: keyof Filters, value: string) => {
         setFilters(prev => ({ ...prev, [filterName]: value }));
-        setCurrentPage(1); // Filter client-side
+        setCurrentPage(1); // Reset paginasi karena filter server-side
     };
 
     const handleSearchSubmit = () => {
@@ -103,7 +94,7 @@ const RoleManagementPage = () => {
         }
     };
 
-    // Handler Save baru
+    // Handler Save baru (sudah benar)
     const handleSaveRole = (modalData: RoleModalData, id?: number) => {
         // Konversi modal data ke payload API
         const payload: RolePayload = {
@@ -134,15 +125,16 @@ const RoleManagementPage = () => {
         }
     };
 
-    // Buat opsi filter dari data teams
+    // --- PERUBAHAN 6: Update opsi filter ---
     const filterTeamOptions = useMemo(() => [
         { value: '', label: 'All Teams' },
-        ...teams.map(t => ({ value: t.name, label: t.name }))
+        ...teams.map(t => ({ value: t.id.toString(), label: t.name })) // Gunakan ID
     ], [teams]);
 
 
+    // --- PERUBAHAN 7: Update filterConfig ---
     const filterConfig = [
-        { key: 'team' as keyof Filters, options: filterTeamOptions },
+        { key: 'teamId' as keyof Filters, options: filterTeamOptions },
     ];
   
     // Tampilkan loading utama jika data dependensi modal belum siap
@@ -160,6 +152,7 @@ const RoleManagementPage = () => {
           <div className="bg-gray-50 rounded-t-lg shadow-md">
             <div className="px-4 flex items-center justify-between gap-4">
                 <div className="flex-grow">
+                    {/* --- PERUBAHAN 8: Update props TableControls --- */}
                     <TableControls
                         searchTerm={searchInput}
                         searchPlaceholder="Search by role or team name..."
@@ -184,8 +177,9 @@ const RoleManagementPage = () => {
                 <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
              </div>
           ) : (
+            // --- PERUBAHAN 9: Gunakan 'roles' dari server ---
             <RoleTable
-                roles={paginatedRoles} // Kirim data dari API
+                roles={roles} // Kirim data dari API
                 onAction={handleAction}
                 currentPage={currentPage}
                 itemsPerPage={itemsPerPage}

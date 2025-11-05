@@ -119,7 +119,7 @@ const UploadPage: React.FC = () => {
   const handleConfirmAction = async () => {
     if (modalState.action === "upload") {
       const formData = new FormData();
-      filesToUpload.forEach(file => formData.append('file', file));
+      filesToUpload.forEach(file => formData.append('files', file));
       formData.append('category', selectedCategory as DocumentCategory);
 
       uploadFiles(formData, {
@@ -225,7 +225,7 @@ const UploadPage: React.FC = () => {
     if (!currentDocument) return;
     const formData = new FormData();
     formData.append("id", currentDocument.id.toString());
-    formData.append("file", newFile);
+    formData.append("files", newFile);
     
     replaceDocument(formData, {
         onSuccess: () => {
