@@ -22,7 +22,7 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ isApprove }) => {
   }
   
   return (
-    <span className={`px-2 py-1 text-xs font-semibold rounded-full capitalize ${badgeStyle}`}>
+    <span className={`px-2 py-1 text-[10px] font-semibold rounded-full capitalize ${badgeStyle}`}>
       {statusText}
     </span>
   );

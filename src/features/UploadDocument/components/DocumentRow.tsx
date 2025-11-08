@@ -1,5 +1,4 @@
 import React from "react";
-import toast from "react-hot-toast";
 import {
   Eye,
   Trash2,
@@ -8,7 +7,6 @@ import {
   Clock,
   Info,
   UploadIcon,
-  Loader2,
 } from "lucide-react";
 import type { UploadedDocument } from "../types/types";
 
@@ -17,7 +15,7 @@ interface DocumentRowProps {
   document: UploadedDocument;
   isSelected: boolean;
   onSelect: (event: React.ChangeEvent<HTMLInputElement>, docId: number) => void;
-  onDelete: (doc: UploadedDocument) => void; // <-- Tipe diubah dari (docId: number)
+  onDelete: (doc: UploadedDocument) => void; 
   onNewVersion: (doc: UploadedDocument) => void;
   onViewVersions: (doc: UploadedDocument) => void;
   onViewFile: (doc: UploadedDocument) => void;
@@ -32,42 +30,42 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
   onViewVersions,
   onViewFile,
 }) => {
-  // Menentukan status dokumen
+  
   const isPending = doc.is_approve === null;
   const isRejected = doc.is_approve === false;
 
   const getStatusComponent = () => {
     if (doc.is_approve === true) {
       return (
-        <span className="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-          <CheckCircle2 className="w-3 h-3 mr-1" /> Approved
+        <span className="inline-flex items-center px-2 py-1 text-[10px] font-semibold rounded-full bg-green-100 text-green-800">
+          <CheckCircle2 className="w-2 h-2 mr-1" /> Approved
         </span>
       );
     }
     if (isRejected) {
       return (
-        <span className="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
-          <AlertCircle className="w-3 h-3 mr-1" /> Rejected
+        <span className="inline-flex items-center px-2 py-1 text-[10px] font-semibold rounded-full bg-red-100 text-red-800">
+          <AlertCircle className="w-2 h-2 mr-1" /> Rejected
         </span>
       );
     }
-    // Default-nya adalah pending jika is_approve masih null
+    
     return (
-      <span className="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-        <Clock className="w-3 h-3 mr-1" /> Pending
+      <span className="inline-flex items-center px-2 py-1 text-[10px] font-semibold rounded-full bg-yellow-100 text-yellow-800">
+        <Clock className="w-2 h-2 mr-1" /> Pending
       </span>
     );
   };
 
   return (
-    <tr className="bg-white border-b hover:bg-gray-50 border-gray-200">
+    <tr className="bg-white border-b hover:bg-gray-50 border-gray-200 text-[10px]">
       {/* Kolom checkbox */}
       <td className="px-4 py-4">
         <input
           type="checkbox"
           onChange={(e) => onSelect(e, doc.id)}
           checked={isSelected}
-          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+          className="w-2 h-2 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
         />
       </td>
       {/* Kolom Uploaded Date */}
@@ -126,7 +124,7 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
           </button>
 
           <button
-            onClick={() => onDelete(doc)} // <-- Perubahan di sini, kirim seluruh 'doc'
+            onClick={() => onDelete(doc)} 
             className="font-medium text-red-600 hover:underline cursor-pointer"
             title="Delete Document"
           >

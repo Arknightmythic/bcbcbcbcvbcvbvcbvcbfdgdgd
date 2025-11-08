@@ -19,7 +19,7 @@ function Layout() {
       <Sidebar isCollapsed={isSidebarCollapsed} setOutletBlurred={setIsOutletBlurred}/>
       <div
         className={`flex flex-col flex-1 transition-all duration-300 ${
-          isSidebarCollapsed ? "ml-25" : "ml-72"
+          isSidebarCollapsed ? "ml-25" : "ml-50"
         }`}
       >
         <Header toggleSidebar={toggleSidebar} />

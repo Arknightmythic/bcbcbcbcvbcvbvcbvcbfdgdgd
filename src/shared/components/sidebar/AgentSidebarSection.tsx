@@ -1,3 +1,5 @@
+import { TabCount } from "./TabButton";
+
 // Tipe untuk props
 type ChatListType = 'active' | 'queue' | 'history' | 'pending';
 type AgentStatus = 'online' | 'away' | 'offline';
@@ -16,20 +18,6 @@ interface AgentSidebarSectionProps {
 }
 
 // Sub-komponen untuk menghindari repetisi
-const TabButton = ({ label, count, isActive, onClick }: { label: string, count: number, isActive: boolean, onClick: () => void }) => {
-  const activeStyle = "bg-bOss-red border-bOss-red-200 shadow-sm";
-  const inactiveStyle = "bg-transparent border-transparent";
-  
-  return (
-    <button
-      onClick={onClick}
-      className={`flex-1 rounded-md py-1 text-xs transition-all duration-200 ${isActive ? activeStyle : inactiveStyle}`}
-    >
-      <span className={`block font-bold text-lg ${isActive ? "text-white" : "text-gray-800"}`}>{count}</span>
-      <span className={`capitalize ${isActive ? "text-white" : "text-gray-600"}`}>{label}</span>
-    </button>
-  );
-};
 
 export const AgentSidebarSection = ({
   activeList,
@@ -59,12 +47,12 @@ export const AgentSidebarSection = ({
     <div className="px-5 py-4 border-t border-gray-200 bg-gray-50 hidden md:block">
       {/* Profile Section */}
       <div className="flex items-center mb-3">
-        <div className="w-8 h-8 bg-bOss-red rounded-full flex items-center justify-center text-white text-sm font-bold mr-3">
+        <div className="w-8 h-8 bg-bOss-red rounded-full flex items-center justify-center text-white text-[12px] font-bold mr-3">
           {agentInitial}
         </div>
         <div className="flex-1">
-          <div className="font-semibold text-sm text-gray-700">{agentName}</div>
-          <div className={`text-xs font-semibold ${currentStatus.textColor}`}>
+          <div className="font-semibold text-xs text-gray-700">{agentName}</div>
+          <div className={`text-[10px] font-semibold ${currentStatus.textColor}`}>
             {currentStatus.text}
           </div>
         </div>
@@ -73,10 +61,10 @@ export const AgentSidebarSection = ({
 
       {/* Tabs Section */}
       <div className="flex justify-between text-center bg-gray-200 rounded-lg p-1 space-x-1">
-        <TabButton label="Aktif" count={counts.active} isActive={activeList === 'active'} onClick={() => onTabChange('active')} />
-        <TabButton label="Antrian" count={counts.queue} isActive={activeList === 'queue'} onClick={() => onTabChange('queue')} />
-        <TabButton label="Riwayat" count={counts.history} isActive={activeList === 'history'} onClick={() => onTabChange('history')} />
-        <TabButton label="Pending" count={counts.pending} isActive={activeList === 'pending'} onClick={() => onTabChange('pending')} />
+        <TabCount label="Aktif" count={counts.active} />
+        <TabCount label="Antrian" count={counts.queue}/>
+        <TabCount label="Riwayat" count={counts.history}/>
+        <TabCount label="Pending" count={counts.pending}/>
       </div>
     </div>
   );

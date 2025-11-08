@@ -23,7 +23,7 @@ const TeamBadge: React.FC<TeamBadgeProps> = ({ teamName }) => {
   const badgeStyle = getTeamBadgeStyle(teamName);
 
   return (
-    <span className={`px-2 py-1 text-xs font-semibold rounded-full capitalize ${badgeStyle}`}>
+    <span className={`px-2 py-1 text-[10px] font-semibold rounded-full capitalize ${badgeStyle}`}>
       {teamName || 'No Team'}
     </span>
   );

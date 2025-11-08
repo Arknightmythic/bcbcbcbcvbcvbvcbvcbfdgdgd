@@ -11,7 +11,7 @@ interface TableControlsProps<T extends object> {
   searchPlaceholder: string;
   filters: T; 
   onSearchChange: (value: string) => void;
-  // Handler baru untuk tombol search
+  
   onSearchSubmit: () => void;
   onFilterChange: (filterName: keyof T, value: string) => void; 
   filterConfig: FilterConfig<T>[];
@@ -22,12 +22,12 @@ const TableControls = <T extends object>({
   searchPlaceholder,
   filters,
   onSearchChange,
-  onSearchSubmit, // Prop baru
+  onSearchSubmit, 
   onFilterChange,
   filterConfig,
 }: TableControlsProps<T>) => {
 
-  // Fungsi untuk menangani Enter key pada input search
+  
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
       onSearchSubmit();
@@ -41,21 +41,21 @@ const TableControls = <T extends object>({
         <div className="lg:col-span-2 flex items-center gap-2">
           <div className="relative flex-grow">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
+              <Search className="h-3 w-3 text-gray-400" />
             </div>
             <input
               type="text"
               id="table-search"
-              className="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5"
+              className="bg-white border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5"
               placeholder={searchPlaceholder}
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
-              onKeyDown={handleKeyDown} // Menambahkan event keydown
+              onKeyDown={handleKeyDown} 
             />
           </div>
           <button
             onClick={onSearchSubmit}
-            className="px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             Search
           </button>

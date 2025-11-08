@@ -1,10 +1,10 @@
-// src/features/UploadDocument/hooks/useDocuments.ts
+
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getDocuments, uploadDocument, updateDocument, getDocumentDetails, deleteDocument } from '../api/document'
 import toast from 'react-hot-toast';
 
-// Hook untuk mengambil data dokumen dengan paginasi dan filter
+
 export const useGetDocuments = (params: URLSearchParams) => {
   return useQuery({
     queryKey: ['documents', params.toString()],
@@ -12,19 +12,19 @@ export const useGetDocuments = (params: URLSearchParams) => {
   });
 };
 
-// Hook untuk mutasi (create) dokumen baru
+
 export const useUploadDocument = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: uploadDocument,
     onSuccess: () => {
-      // Invalidate query 'documents' agar tabel di-refresh
+      
       queryClient.invalidateQueries({ queryKey: ['documents'] });
     },
   });
 };
 
-// Hook untuk mutasi (update/versioning) dokumen
+
 export const useUpdateDocument = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -36,23 +36,23 @@ export const useUpdateDocument = () => {
   });
 };
 
-// Hook untuk mengambil riwayat detail dokumen
+
 export const useGetDocumentDetails = (documentId: number | null) => {
     return useQuery({
         queryKey: ['documentDetails', documentId],
         queryFn: () => getDocumentDetails(documentId!),
-        enabled: !!documentId, // Hanya jalankan query jika documentId ada
+        enabled: !!documentId, 
     });
 };
 
 export const useDeleteDocument = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    // Tentukan tipe data yang diharapkan (ID dokumen)
+    
     mutationFn: (id: number) => deleteDocument(id),
     onSuccess: () => {
       toast.success("Document deleted successfully!");
-      // Refresh tabel setelah berhasil
+      
       queryClient.invalidateQueries({ queryKey: ['documents'] });
     },
     onError: (err: any) => {

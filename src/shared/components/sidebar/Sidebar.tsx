@@ -47,24 +47,23 @@ const dummyChats: {
 };
 // --- START: MODIFIED COMPONENT ---
 const NavigationMenu = ({ menuItems, currentPath, isCollapsed }: { menuItems: MenuItem[], currentPath: string, isCollapsed: boolean }) => (
-    <div className="space-y-2 px-2 py-6 md:px-4">
+    <div className="space-y-1 px-2 pb-4 md:px-4">
       {menuItems.map((item) => {
         const isActive = currentPath === item.path || currentPath.startsWith(`${item.path}/`);
         const linkContent = (
           <Link
             key={item.path}
             to={item.path}
-            // MODIFICATION: Removed py-2.5, added fixed height h-14
             className={`group flex items-center rounded-lg px-3 h-12 mx-2 transition-colors duration-200 ${
               isCollapsed ? 'justify-center' : 'justify-start'
             } ${
               isActive ? "bg-bOss-red text-white" : "hover:bg-bOss-red-50 text-gray-600"
             }`}
           >
-            <item.icon className="h-5 w-5 flex-shrink-0" />
+            <item.icon className="h-4 w-4 flex-shrink-0" />
             <span
               className={`
-                font-medium overflow-hidden transition-all duration-300 ease-in-out leading-snug
+                font-medium overflow-hidden transition-all duration-300 ease-in-out leading-snug text-xs
                 ${isCollapsed ? 'w-0 opacity-0 ml-0' : 'w-auto opacity-100 ml-3'}
               `}
             >
@@ -101,7 +100,7 @@ const Sidebar = ({ isCollapsed, setOutletBlurred }: { isCollapsed: boolean, setO
     <nav
       ref={sidebarRef}
       className={`fixed top-0 left-0 z-50 flex h-screen flex-col bg-white text-gray-700 shadow-lg transition-all duration-300 ${
-        isCollapsed ? "w-25" : "w-72"
+        isCollapsed ? "w-25" : "w-50"
       }`}
     >
       <div className={`flex h-20 items-center px-4 mt-4 mb-4 transition-all duration-300 ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
@@ -109,12 +108,12 @@ const Sidebar = ({ isCollapsed, setOutletBlurred }: { isCollapsed: boolean, setO
               <img 
                   src="/LOGO KEMENTERIAN INVESTASI DAN HILIRISASI BKPM-Horizontal.png" 
                   alt="Logo" 
-                  className={`absolute h-15 transition-all duration-300 ease-in-out ${isCollapsed ? 'opacity-0 scale-75' : 'opacity-100 scale-100'}`}
+                  className={`absolute h-10 transition-all duration-300 ease-in-out ${isCollapsed ? 'opacity-0 scale-75' : 'opacity-100 scale-100'}`}
               />
               <img 
                   src="/bkpmlogo.png" 
                   alt="Collapsed Logo" 
-                  className={`absolute h-10 transition-all duration-300 ease-in-out ${isCollapsed ? 'opacity-100 scale-100' : 'opacity-0 scale-75'}`}
+                  className={`absolute h-7 transition-all duration-300 ease-in-out ${isCollapsed ? 'opacity-100 scale-100' : 'opacity-0 scale-75'}`}
               />
           </div>
       </div>

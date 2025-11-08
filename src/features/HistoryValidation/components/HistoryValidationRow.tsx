@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import type { ActionType, ValidationHistoryItem } from '../utils/types';
-import { Eye, CheckCircle, XCircle, FileText } from 'lucide-react';
+import {CheckCircle, XCircle, FileText } from 'lucide-react';
 import StatusBadge from './StatusBadge';
 
 interface HistoryValidationTableRowProps {
@@ -62,7 +62,7 @@ const TruncatedText: React.FC<{ content: string; title: string; onIconClick: () 
         //    Ini akan "mendorong" teks (dan elipsis) ke kiri,
         //    membuat ruang untuk ikon.
         className={`
-          text-sm leading-tight text-gray-700 whitespace-pre-wrap line-clamp-3
+          text-[10px] leading-tight text-gray-700 whitespace-pre-wrap line-clamp-3
           ${isTruncated ? 'pr-6' : ''} 
         `}
         title={isTruncated ? `Klik ikon untuk melihat ${title} selengkapnya` : undefined}
@@ -93,7 +93,7 @@ const TruncatedText: React.FC<{ content: string; title: string; onIconClick: () 
 
 const HistoryValidationTableRow: React.FC<HistoryValidationTableRowProps> = ({ history, onAction, onViewText }) => {
   return (
-    <tr className="hover:bg-gray-50 text-sm text-gray-700">
+    <tr className="hover:bg-gray-50 text-[10px] text-gray-700">
       <td className="px-4 py-3 text-center">{new Date(history.tanggal).toLocaleDateString("en-GB")}</td>
       <td className="px-4 py-3">{history.user}</td>
       <td className="px-4 py-3">{history.session_id}</td>
@@ -131,14 +131,14 @@ const HistoryValidationTableRow: React.FC<HistoryValidationTableRowProps> = ({ h
             className="p-1 text-green-600 hover:bg-green-50 rounded-md transition-colors"
             title="Validate"
           >
-            <CheckCircle className="w-5 h-5" />
+            <CheckCircle className="w-4 h-4" />
           </button>
           <button
             onClick={() => onAction('reject', history)}
             className="p-1 text-red-600 hover:bg-red-50 rounded-md transition-colors"
             title="Not Validate"
           >
-            <XCircle className="w-5 h-5" />
+            <XCircle className="w-4 h-4" />
           </button>
           
         </div>

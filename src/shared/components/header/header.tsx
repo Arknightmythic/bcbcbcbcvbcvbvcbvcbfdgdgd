@@ -42,9 +42,9 @@ const Header = ({ toggleSidebar }: { toggleSidebar: () => void }) => {
     <header className="flex h-22 w-full items-center justify-between bg-white px-6 border-b border-gray-200 pt-5">
       <div className="flex items-center gap-4">
         <button onClick={toggleSidebar} className="text-gray-600 hover:text-gray-800">
-          <Menu className="h-6 w-6" />
+          <Menu className="h-4 w-4" />
         </button>
-        <h1 className="text-2xl font-bold text-gray-800">{title}</h1>
+        <h1 className=" font-bold text-gray-800 text-lg">{title}</h1>
       </div>
 
       <div className="flex items-center gap-6">

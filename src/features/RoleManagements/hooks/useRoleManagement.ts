@@ -1,4 +1,4 @@
-// src/features/RoleManagements/hooks/useRoleManagement.ts
+
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -16,7 +16,7 @@ const QUERY_KEY = "roles";
 const TEAMS_KEY = "allTeamsForRoles";
 const PERMISSIONS_KEY = "allPermissionsForRoles";
 
-// Hook untuk mengambil data role (paginasi)
+
 export const useGetRoles = (params: URLSearchParams) => {
   return useQuery({
     queryKey: [QUERY_KEY, params.toString()],
@@ -25,7 +25,7 @@ export const useGetRoles = (params: URLSearchParams) => {
   });
 };
 
-// Hook untuk membuat role baru
+
 export const useCreateRole = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -40,7 +40,7 @@ export const useCreateRole = () => {
   });
 };
 
-// Hook untuk update role
+
 export const useUpdateRole = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -56,7 +56,7 @@ export const useUpdateRole = () => {
   });
 };
 
-// Hook untuk delete role
+
 export const useDeleteRole = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -71,19 +71,19 @@ export const useDeleteRole = () => {
   });
 };
 
-// --- Hook untuk Data Modal ---
+
 
 export const useGetModalDependencies = () => {
   const { data: teams, isLoading: isLoadingTeams } = useQuery({
     queryKey: [TEAMS_KEY],
     queryFn: getAllTeams,
-    staleTime: 1000 * 60 * 5, // Cache 5 menit
+    staleTime: 1000 * 60 * 5, 
   });
 
   const { data: permissions, isLoading: isLoadingPermissions } = useQuery({
     queryKey: [PERMISSIONS_KEY],
     queryFn: getAllPermissions,
-    staleTime: 1000 * 60 * 5, // Cache 5 menit
+    staleTime: 1000 * 60 * 5, 
   });
 
   return {

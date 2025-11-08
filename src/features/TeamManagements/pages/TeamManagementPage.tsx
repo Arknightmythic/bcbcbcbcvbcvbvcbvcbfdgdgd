@@ -1,10 +1,10 @@
-// src/features/TeamManagements/pages/TeamManagementPage.tsx
+
 
 import { useState, useMemo } from 'react';
 import { Plus, Loader2 } from 'lucide-react';
 import type { ActionType, Team, TeamPayload } from '../utils/types';
 
-// Import hooks
+
 import {
   useGetTeams,
   useCreateTeam,
@@ -17,14 +17,14 @@ import TeamTable from '../components/TeamTable';
 import ConfirmationModal from '../../../shared/components/ConfirmationModal';
 import TeamManagementModal from '../components/TeamManagementModal';
 
-// --- PERUBAHAN 1: Hapus interface Filters ---
-// interface Filters { page: string; }
+
+
 
 const TeamManagementPage = () => {
-    const [searchInput, setSearchInput] = useState(''); // Untuk input
-    const [searchTerm, setSearchTerm] = useState('');   // Untuk filter
-    // --- PERUBAHAN 2: Hapus state 'filters' ---
-    // const [filters, setFilters] = useState<Filters>({ page: '' });
+    const [searchInput, setSearchInput] = useState(''); 
+    const [searchTerm, setSearchTerm] = useState('');   
+    
+    
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
   
@@ -33,8 +33,8 @@ const TeamManagementPage = () => {
     const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
     const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
   
-    // --- Integrasi React Query ---
-    // (searchParams sudah benar, hanya menggunakan searchTerm)
+    
+    
     const searchParams = useMemo(() => {
         const params = new URLSearchParams();
         params.set('limit', String(itemsPerPage));
@@ -53,14 +53,14 @@ const TeamManagementPage = () => {
     const teams = useMemo(() => teamsData?.teams || [], [teamsData]);
     const totalItems = useMemo(() => teamsData?.total || 0, [teamsData]);
 
-    // --- PERUBAHAN 3: Hapus 'filteredTeams' dan 'paginatedTeams' ---
-    // const filteredTeams = useMemo(() => { ... });
-    // const paginatedTeams = useMemo(() => { ... });
+    
+    
+    
 
-    // --- PERUBAHAN 4: Hapus 'handleFilterChange' ---
-    // const handleFilterChange = (filterName: keyof Filters, value: string) => { ... };
+    
+    
 
-    // Handler untuk tombol search (sudah benar)
+    
     const handleSearchSubmit = () => {
         setSearchTerm(searchInput);
         setCurrentPage(1);
@@ -76,13 +76,13 @@ const TeamManagementPage = () => {
         }
     };
 
-    // Handler onSave baru (sudah benar)
+    
     const handleSaveTeam = (teamData: TeamPayload, id?: number) => {
-        if (id) { // Edit mode
+        if (id) { 
             updateTeam({ id, data: teamData }, {
                 onSuccess: () => setTeamModalOpen(false)
             });
-        } else { // Create mode
+        } else { 
             createTeam(teamData, {
                 onSuccess: () => setTeamModalOpen(false)
             });
@@ -100,9 +100,9 @@ const TeamManagementPage = () => {
         }
     };
 
-    // --- PERUBAHAN 5: Hapus 'accessRightsOptions' dan 'filterConfig' ---
-    // const accessRightsOptions = useMemo(() => ... );
-    // const filterConfig = [ ... ];
+    
+    
+    
   
     return (
       <>
@@ -114,19 +114,19 @@ const TeamManagementPage = () => {
                     <TableControls
                         searchTerm={searchInput}
                         searchPlaceholder="Search by team name..."
-                        filters={{}} // Kirim objek kosong
+                        filters={{}} 
                         onSearchChange={setSearchInput}
                         onSearchSubmit={handleSearchSubmit} 
-                        onFilterChange={() => {}} // Kirim fungsi kosong
-                        filterConfig={[]} // Kirim array kosong
+                        onFilterChange={() => {}} 
+                        filterConfig={[]} 
                     />
                 </div>
-                <div className="flex-shrink-0">
+                <div className="flex-shrink-0 text-xs">
                     <button
                         onClick={() => { setSelectedTeam(null); setTeamModalOpen(true); }}
                         className="bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 flex items-center"
                     >
-                        <Plus className="w-5 h-5 mr-2" />
+                        <Plus className="w-3 h-3 mr-2" />
                         Add New Team
                     </button>
                 </div>
@@ -138,13 +138,13 @@ const TeamManagementPage = () => {
                 <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
              </div>
           ) : (
-            // --- PERUBAHAN 7: Gunakan 'teams' dari server ---
+            
             <TeamTable
-                teams={teams} // Kirim data dari API
+                teams={teams} 
                 onAction={handleAction}
                 currentPage={currentPage}
                 itemsPerPage={itemsPerPage}
-                totalItems={totalItems} // Kirim total dari API
+                totalItems={totalItems} 
                 onPageChange={setCurrentPage}
                 onItemsPerPageChange={setItemsPerPage}
             />

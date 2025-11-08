@@ -47,7 +47,7 @@ const VersioningDocumentModal: React.FC<VersioningDocumentModalProps> = ({
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); setIsDragging(true); };
-  // Parameter 'e' yang tidak terpakai dihapus
+  
   const handleDragLeave = () => { setIsDragging(false); };
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -85,7 +85,7 @@ const VersioningDocumentModal: React.FC<VersioningDocumentModalProps> = ({
     <div className="fixed inset-0 z-50 flex justify-center items-center bg-white/30 backdrop-blur-sm p-4" onClick={onClose}>
       <div className="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 m-4 animate-fade-in-up" onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-gray-800">Versioning Document</h2>
+          <h2 className="text-md font-bold text-gray-800">Versioning Document</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-800"><X className="w-6 h-6" /></button>
         </div>
         <p className="text-sm text-gray-600 mb-4">You are versioning: <span className="font-semibold">{document?.document_name}</span></p>
@@ -121,7 +121,7 @@ const VersioningDocumentModal: React.FC<VersioningDocumentModalProps> = ({
                         </div>
                         <div className="mt-2 text-sm text-gray-700">
                             <p><strong>File Name:</strong> {pendingDocument.document_name}</p>
-                            {/* Perbaikan di sini: Menangani kemungkinan nilai null */}
+
                             <p className="flex items-center gap-2"><strong>Status:</strong> {getStatusComponent(pendingDocument.status ?? undefined)}</p>
                         </div>
                     </div>

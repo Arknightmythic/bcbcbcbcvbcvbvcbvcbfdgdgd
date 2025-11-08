@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ThumbsUp, ThumbsDown } from 'lucide-react'; // <-- Hapus 'Copy' dari import
+import { ThumbsUp, ThumbsDown } from 'lucide-react'; 
 import type { ChatMessage } from '../utils/types';
 
 interface MessageActionsProps {
@@ -8,7 +8,7 @@ interface MessageActionsProps {
  
 }
 
-const MessageActions: React.FC<MessageActionsProps> = ({ message, onFeedback }) => { // <-- Hapus props yang tidak dipakai
+const MessageActions: React.FC<MessageActionsProps> = ({ message, onFeedback }) => { 
   const [feedbackGiven, setFeedbackGiven] = useState<'like' | 'dislike' | null>(null);
 
   const handleFeedback = (feedback: 'like' | 'dislike') => {

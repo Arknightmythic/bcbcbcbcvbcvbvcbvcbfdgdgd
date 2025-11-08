@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from "react";
 import toast from "react-hot-toast";
 import { useQueryClient } from "@tanstack/react-query";
-// 1. Impor hook delete
+
 import { useGetDocuments, useUploadDocument, useUpdateDocument, useGetDocumentDetails, useDeleteDocument } from "../hooks/useDocument";
 import UploadZone from "../components/UploadZone";
 import UploadProgress from "../components/UploadProgress";
@@ -10,14 +10,14 @@ import VersioningDocumentModal from "../components/VersioningDocument";
 import VersioningModal from "../components/VersioningModal";
 import ConfirmationModal from "../../../shared/components/ConfirmationModal";
 import TableControls, { type FilterConfig } from "../../../shared/components/TableControls";
-import type { UploadedDocument, DocumentCategory, DocumentVersion } from "../types/types";
+import type { UploadedDocument, DocumentCategory } from "../types/types";
 import { generateViewUrl } from "../api/document"; 
 import PdfViewModal from "../../../shared/components/PDFViewModal";
 
-// 2. Tambahkan aksi delete ke tipe ModalAction
+
 type ModalAction = "upload" | "deleteSingle" | "deleteMultiple";
 
-// Konfigurasi untuk filter tabel
+
 export interface Filters {
   date: string;
   type: string;
@@ -47,29 +47,29 @@ const filterConfig: FilterConfig<Filters>[] = [
         key: "status",
         options: [
             { value: "", label: "All Status" },
-            { value: "approved", label: "Approved" },
-            { value: "pending", label: "Pending" },
-            { value: "rejected", label: "Rejected" },
+            { value: "Approved", label: "Approved" },
+            { value: "Pending", label: "Pending" },
+            { value: "Rejected", label: "Rejected" },
         ],
     },
 ];
 
 
 const UploadPage: React.FC = () => {
-  // State untuk file yang akan diunggah
+  
   const [filesToUpload, setFilesToUpload] = useState<File[]>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState<DocumentCategory | "">("");
 
-  // State untuk tabel dan paginasi
+  
   const [selectedDocs, setSelectedDocs] = useState<number[]>([]);
-  const [searchInput, setSearchInput] = useState(""); // State untuk input
-  const [searchTerm, setSearchTerm] = useState("");   // State untuk query API
+  const [searchInput, setSearchInput] = useState(""); 
+  const [searchTerm, setSearchTerm] = useState("");   
   const [filters, setFilters] = useState<Filters>({ date: "", type: "", category: "", status: "" });
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // State untuk modals
+  
   const [isReplaceModalOpen, setReplaceModalOpen] = useState(false);
   const [isVersioningModalOpen, setVersioningModalOpen] = useState(false);
   const [currentDocument, setCurrentDocument] = useState<UploadedDocument | null>(null);
@@ -85,7 +85,7 @@ const UploadPage: React.FC = () => {
   const [viewableTitle, setViewableTitle] = useState<string>("");
   const [isGeneratingUrl, setIsGeneratingUrl] = useState(false);
 
-  // React Query hooks
+  
   const queryClient = useQueryClient();
 
    const searchParams = useMemo(() => {
@@ -105,22 +105,22 @@ const UploadPage: React.FC = () => {
   const { mutate: replaceDocument, isPending: isReplacing } = useUpdateDocument();
   const { data: versionHistoryData } = useGetDocumentDetails(currentDocumentIdForDetails);
   
-  // 3. Inisialisasi hook delete
+  
   const { mutate: deleteDocument, isPending: isDeleting } = useDeleteDocument();
 
   const documents = useMemo(() => documentsData?.documents || [], [documentsData]);
   const totalItems = useMemo(() => documentsData?.total || 0, [documentsData]);
 
-  // Fungsi baru untuk submit pencarian
+  
   const handleSearchSubmit = () => {
     setSearchTerm(searchInput);
-    setCurrentPage(1); // Reset ke halaman pertama saat search
+    setCurrentPage(1); 
   };
 
   const handleOpenModal = (action: ModalAction, data: any = null) => setModalState({ isOpen: true, action, data });
   const handleCloseModal = () => setModalState({ isOpen: false, action: null, data: null });
 
-  // 4. Update handleConfirmAction untuk menangani delete
+  
   const handleConfirmAction = async () => {
     const { action, data } = modalState;
 
@@ -134,33 +134,33 @@ const UploadPage: React.FC = () => {
           toast.success(`Successfully uploaded ${filesToUpload.length} file(s).`);
           setFilesToUpload([]);
           setSelectedCategory("");
-          handleCloseModal(); // Tutup modal di sini
+          handleCloseModal(); 
         },
         onError: (err: any) => {
           toast.error(err.response?.data?.message || "Upload failed.");
-          handleCloseModal(); // Tutup modal di sini
+          handleCloseModal(); 
         }
       });
-      return; // Biarkan onSuccess/onError yang menutup modal
+      return; 
     }
 
-    // Logika untuk delete single
+    
     if (action === "deleteSingle") {
       if (!data?.id) return;
       deleteDocument(data.id, {
         onSuccess: () => handleCloseModal(),
-        onError: () => handleCloseModal(), // Hook sudah menangani toast error
+        onError: () => handleCloseModal(), 
       });
     }
 
-    // Logika untuk delete multiple
+    
     if (action === "deleteMultiple") {
       if (selectedDocs.length === 0) {
         handleCloseModal();
         return;
       }
 
-      // Gunakan Promise.allSettled agar satu kegagalan tidak menghentikan semua
+      
       const results = await Promise.allSettled(
         selectedDocs.map(id => 
           new Promise((resolve, reject) => 
@@ -176,16 +176,16 @@ const UploadPage: React.FC = () => {
         toast.success(`Successfully deleted ${successfulDeletes} document(s).`);
       }
       if (failedDeletes > 0) {
-        // Toast error sudah ditangani oleh hook-nya, jadi tidak perlu toast lagi di sini
+        
         console.error(`Failed to delete ${failedDeletes} document(s).`);
       }
 
-      setSelectedDocs([]); // Kosongkan seleksi
+      setSelectedDocs([]); 
       handleCloseModal();
     }
   };
   
-  // 5. Update getModalContent untuk delete
+  
   const getModalContent = () => {
       const { action, data } = modalState;
       switch (action) {
@@ -210,7 +210,7 @@ const UploadPage: React.FC = () => {
     } catch (error) {
       console.error("Failed to get view URL:", error);
       toast.error("Could not generate secure URL.");
-      setIsViewModalOpen(false); // Tutup modal jika gagal
+      setIsViewModalOpen(false); 
     } finally {
       setIsGeneratingUrl(false);
     }
@@ -218,7 +218,7 @@ const UploadPage: React.FC = () => {
 
   const handleCloseViewModal = () => {
     setIsViewModalOpen(false);
-    setViewableUrl(null); // Reset URL agar iframe bersih saat dibuka lagi
+    setViewableUrl(null); 
     setViewableTitle("");
   };
 
@@ -270,7 +270,7 @@ const UploadPage: React.FC = () => {
     if (!currentDocument) return;
     const formData = new FormData();
     formData.append("id", currentDocument.id.toString());
-    formData.append("files", newFile);
+    formData.append("file", newFile);
     
     replaceDocument(formData, {
         onSuccess: () => {

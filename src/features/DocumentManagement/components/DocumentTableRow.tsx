@@ -13,12 +13,12 @@ interface DocumentTableRowProps {
 const DocumentTableRow: React.FC<DocumentTableRowProps> = ({ document, hasManagerAccess, onAction, onViewFile }) => {
   // URL untuk mengunduh file
   return (
-    <tr className="hover:bg-gray-50 text-sm text-gray-700">
+    <tr className="hover:bg-gray-50 text-[10px] text-gray-700">
       <td className="px-4 py-3 text-center">{new Date(document.created_at).toLocaleDateString("en-GB")}</td>
       <td className="px-4 py-3 font-medium text-gray-900">{document.document_name}</td>
       <td className="px-4 py-3 text-center">{document.staff}</td>
       <td className="px-4 py-3 text-center">
-        <span className="font-mono text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">
+        <span className="font-mono text-[10px] bg-gray-200 text-gray-700 px-2 py-1 rounded">
           {document.data_type}
         </span>
       </td>

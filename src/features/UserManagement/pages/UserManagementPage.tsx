@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react';
 import { Plus, Loader2 } from 'lucide-react';
-import toast from 'react-hot-toast';
 
 // Import tipe baru dan tipe payload
 import type {
@@ -204,12 +203,12 @@ const UserManagementPage = () => {
                         filterConfig={filterConfig}
                     />
                  </div>
-                <div className="ml-4 flex-shrink-0">
+                <div className="ml-4 flex-shrink-0 text-xs">
                     <button
                         onClick={() => { setSelectedUser(null); setUserModalOpen(true); }}
                         className="bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 flex items-center"
                     >
-                        <Plus className="w-5 h-5 mr-2" />
+                        <Plus className="w-3 h-3 mr-2" />
                         Create User
                     </button>
                 </div>

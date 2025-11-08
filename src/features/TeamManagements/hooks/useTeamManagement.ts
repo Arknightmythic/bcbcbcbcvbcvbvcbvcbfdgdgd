@@ -1,4 +1,4 @@
-// src/features/TeamManagements/hooks/useTeamManagement.ts
+
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -12,7 +12,7 @@ import toast from "react-hot-toast";
 
 const QUERY_KEY = "teams";
 
-// Hook untuk mengambil data team (paginasi)
+
 export const useGetTeams = (params: URLSearchParams) => {
   return useQuery({
     queryKey: [QUERY_KEY, params.toString()],
@@ -21,7 +21,7 @@ export const useGetTeams = (params: URLSearchParams) => {
   });
 };
 
-// Hook untuk membuat team baru
+
 export const useCreateTeam = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -36,7 +36,7 @@ export const useCreateTeam = () => {
   });
 };
 
-// Hook untuk update team
+
 export const useUpdateTeam = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -52,7 +52,7 @@ export const useUpdateTeam = () => {
   });
 };
 
-// Hook untuk delete team
+
 export const useDeleteTeam = () => {
   const queryClient = useQueryClient();
   return useMutation({

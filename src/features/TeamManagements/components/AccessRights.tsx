@@ -10,9 +10,9 @@ const AccessRights: React.FC<AccessRightsProps> = ({ rights }) => {
   }
 
   return (
-    <div className="flex flex-wrap gap-1">
+    <div className="flex flex-wrap gap-1 max-w-xl">
       {rights.map(right => (
-        <span key={right} className="px-2 py-0.5 text-xs bg-gray-200 text-gray-800 rounded-full">
+        <span key={right} className="px-2 py-0.5 text-[10px] bg-gray-200 text-gray-800 rounded-full">
           {right.replace(/_/g, ' ')}
         </span>
       ))}

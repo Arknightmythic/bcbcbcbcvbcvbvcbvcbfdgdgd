@@ -1,5 +1,3 @@
-// [File: src/features/HelpDesk/pages/HelpDeskPage.tsx]
-
 import React from 'react';
 import { Outlet } from 'react-router';
 import HelpDeskListPanel from '../components/HelpDeskListPanel';

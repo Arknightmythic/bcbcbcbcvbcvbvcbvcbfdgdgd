@@ -25,7 +25,7 @@ const PdfViewModal: React.FC<PdfViewModalProps> = ({ isOpen, onClose, url, isLoa
       >
         {/* Header Modal */}
         <div className="flex justify-between items-center pb-4 border-b">
-          <h2 className="text-xl font-bold text-gray-800 truncate" title={title}>
+          <h2 className="text-md font-bold text-gray-800 truncate" title={title}>
             {title}
           </h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-800">

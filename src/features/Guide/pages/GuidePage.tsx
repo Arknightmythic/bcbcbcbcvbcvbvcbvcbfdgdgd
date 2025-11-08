@@ -1,13 +1,9 @@
 import React from 'react';
-
-// URL PDF still points to the file in your public folder
 const pdfUrl = "/Markdown to PDF.pdf";
 
 const GuidePage: React.FC = () => {
   return (
     <div className="flex flex-col h-[800px]">
-     
-      {/* PDF Viewer Container */}
       <div className="flex-1 bg-white rounded-lg shadow-md overflow-hidden">
         <iframe
           src={pdfUrl}

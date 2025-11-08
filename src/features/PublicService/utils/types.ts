@@ -1,29 +1,29 @@
-// Interface untuk sesi chat yang ditampilkan di halaman intro
+
 export interface ChatSession {
-  id: string; // ID unik sesi
-  agent_name?: string; // Nama agen atau bot (opsional)
-  created_at: string; // Timestamp ISO string kapan sesi dibuat
-  // Tambahkan properti lain jika diperlukan, misal: last_message_preview
+  id: string; 
+  agent_name?: string; 
+  created_at: string; 
+  
 }
 
-// Interface untuk pesan dalam chat
+
 export interface ChatMessage {
-  id: string; // ID unik pesan
-  sender: 'user' | 'agent' | 'system'; // Pengirim pesan
-  text: string; // Isi pesan
-  timestamp?: string; // Timestamp ISO string (opsional)
+  id: string; 
+  sender: 'user' | 'agent' | 'system'; 
+  text: string; 
+  timestamp?: string; 
 }
 
-// Interface untuk sitasi/sumber
+
 export interface Citation {
-  messageId: string; // ID pesan yang terkait dengan sitasi ini
-  documentName: string; // Nama dokumen sumber
-  content: string; // Kutipan konten dari dokumen
-  // Tambahkan properti lain jika diperlukan, misal: page_number
+  messageId: string; 
+  documentName: string; 
+  content: string; 
+  
 }
 
-// Tipe untuk mode chat
+
 export type ChatMode = 'bot' | 'agent';
 
-// Tipe untuk state sitasi yang terbuka
-export type OpenCitationsState = Record<string, boolean>; // { [messageId: string]: boolean }
+
+export type OpenCitationsState = Record<string, boolean>; 

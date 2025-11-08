@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { UploadCloud, X, Loader2, ChevronDown } from 'lucide-react';
+import { UploadCloud, X, Loader2} from 'lucide-react';
 import type { DocumentCategory } from '../types/types';
 import { getFileIcon } from '../utils/GetFileIcon';
 import CustomSelect from '../../../shared/components/CustomSelect';
@@ -44,7 +44,7 @@ const UploadZone: React.FC<UploadZoneProps> = ({
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
-      {/* Drag and Drop Area */}
+      
       <div
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -57,14 +57,14 @@ const UploadZone: React.FC<UploadZoneProps> = ({
         <p className="text-xs text-gray-400 mt-2">Supports: PDF, txt.</p>
       </div>
 
-      {/* Staged Files List */}
+      
       {stagedFiles.length > 0 && (
         <div className="mt-4 space-y-2">
           <h3 className="font-semibold text-gray-700">File ready to be uploaded:</h3>
           {stagedFiles.map((file, index) => (
             <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded-md">
               <div className="flex items-center space-x-2">
-                {/* THIS IS THE CORRECTED LINE 👇 */}
+                
                 {getFileIcon(file.name)} 
                 <span className="text-sm text-gray-800">{file.name}</span>
               </div>
@@ -74,9 +74,9 @@ const UploadZone: React.FC<UploadZoneProps> = ({
         </div>
       )}
 
-      {/* Upload Button and Category Dropdown */}
+      
       <div className="flex justify-end items-center mt-6 space-x-4">
-        {/* Dropdown Kategori */}
+        
         <div className="relative min-w-25">
           <CustomSelect
             value={selectedCategory}
@@ -90,11 +90,11 @@ const UploadZone: React.FC<UploadZoneProps> = ({
           </div>
         </div>
         
-        {/* Tombol Upload */}
+        
         <button
           onClick={onUpload}
           disabled={!canUpload}
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center disabled:bg-gray-400 disabled:cursor-not-allowed"
+          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center disabled:bg-gray-400 disabled:cursor-not-allowed text-xs"
         >
           {isUploading ? (
             <><Loader2 className="animate-spin h-5 w-5 mr-2" /> Uploading...</>

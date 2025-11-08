@@ -1,16 +1,16 @@
-// src/features/RoleManagements/pages/RoleManagementPage.tsx
+
 
 import { useState, useMemo } from 'react';
 import { Plus, Loader2 } from 'lucide-react';
-import type { ActionType, Role, RoleModalData, RolePayload, Team } from '../utils/types';
+import type { ActionType, Role, RoleModalData, RolePayload} from '../utils/types';
 
-// Import hooks
+
 import {
   useGetRoles,
   useCreateRole,
   useUpdateRole,
   useDeleteRole,
-  useGetModalDependencies, // Hook baru untuk ambil data modal
+  useGetModalDependencies, 
 } from '../hooks/useRoleManagement';
 
 import TableControls from '../../../shared/components/TableControls';
@@ -19,15 +19,15 @@ import ConfirmationModal from '../../../shared/components/ConfirmationModal';
 import RoleManagementModal from '../components/RoleManagementModal';
 import ViewPermissionsModal from '../components/ViewPermissionModal';
 
-// --- PERUBAHAN 1: Update interface Filters ---
+
 interface Filters {
-  teamId: string; // Akan digunakan untuk filter server-side
+  teamId: string; 
 }
 
 const RoleManagementPage = () => {
     const [searchInput, setSearchInput] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
-    // --- PERUBAHAN 2: Update state Filters ---
+    
     const [filters, setFilters] = useState<Filters>({ teamId: '' });
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -39,16 +39,16 @@ const RoleManagementPage = () => {
     const [selectedRole, setSelectedRole] = useState<Role | null>(null);
     const [roleToDelete, setRoleToDelete] = useState<Role | null>(null);
   
-    // --- Integrasi React Query ---
-    // --- PERUBAHAN 3: Update searchParams ---
+    
+    
     const searchParams = useMemo(() => {
         const params = new URLSearchParams();
         params.set('limit', String(itemsPerPage));
         params.set('offset', String((currentPage - 1) * itemsPerPage));
         if (searchTerm) params.set('search', searchTerm);
-        if (filters.teamId) params.set('team_id', filters.teamId); // Kirim team_id ke API
+        if (filters.teamId) params.set('team_id', filters.teamId); 
         return params;
-    }, [currentPage, itemsPerPage, searchTerm, filters]); // <-- TAMBAHKAN 'filters'
+    }, [currentPage, itemsPerPage, searchTerm, filters]); 
 
     const { data: rolesData, isLoading: isLoadingRoles } = useGetRoles(searchParams);
     const { 
@@ -66,14 +66,14 @@ const RoleManagementPage = () => {
     const roles = useMemo(() => rolesData?.roles || [], [rolesData]);
     const totalItems = useMemo(() => rolesData?.total || 0, [rolesData]);
 
-    // --- PERUBAHAN 4: Hapus 'filteredRoles' dan 'paginatedRoles' ---
-    // const filteredRoles = useMemo(() => { ... });
-    // const paginatedRoles = useMemo(() => { ... });
+    
+    
+    
 
-    // --- PERUBAHAN 5: Update handleFilterChange ---
+    
     const handleFilterChange = (filterName: keyof Filters, value: string) => {
         setFilters(prev => ({ ...prev, [filterName]: value }));
-        setCurrentPage(1); // Reset paginasi karena filter server-side
+        setCurrentPage(1); 
     };
 
     const handleSearchSubmit = () => {
@@ -94,13 +94,13 @@ const RoleManagementPage = () => {
         }
     };
 
-    // Handler Save baru (sudah benar)
+    
     const handleSaveRole = (modalData: RoleModalData, id?: number) => {
-        // Konversi modal data ke payload API
+        
         const payload: RolePayload = {
             name: modalData.name,
-            team_id: Number(modalData.teamId), // Konversi ke number
-            permissions: modalData.permissionIds, // Sudah string[]
+            team_id: Number(modalData.teamId), 
+            permissions: modalData.permissionIds, 
         };
 
         if (id) {
@@ -125,19 +125,19 @@ const RoleManagementPage = () => {
         }
     };
 
-    // --- PERUBAHAN 6: Update opsi filter ---
+    
     const filterTeamOptions = useMemo(() => [
         { value: '', label: 'All Teams' },
-        ...teams.map(t => ({ value: t.id.toString(), label: t.name })) // Gunakan ID
+        ...teams.map(t => ({ value: t.id.toString(), label: t.name })) 
     ], [teams]);
 
 
-    // --- PERUBAHAN 7: Update filterConfig ---
+    
     const filterConfig = [
         { key: 'teamId' as keyof Filters, options: filterTeamOptions },
     ];
   
-    // Tampilkan loading utama jika data dependensi modal belum siap
+    
     if (isLoadingModalDeps) {
         return (
             <div className="flex-1 flex justify-center items-center">
@@ -158,14 +158,14 @@ const RoleManagementPage = () => {
                         searchPlaceholder="Search by role or team name..."
                         filters={filters}
                         onSearchChange={setSearchInput}
-                        onSearchSubmit={handleSearchSubmit} // Hubungkan handler
+                        onSearchSubmit={handleSearchSubmit} 
                         onFilterChange={handleFilterChange}
                         filterConfig={filterConfig}
                     />
                 </div>
-                <div className="flex-shrink-0">
+                <div className="flex-shrink-0 text-xs">
                     <button onClick={() => { setSelectedRole(null); setModalOpen(true); }} className="bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 flex items-center">
-                        <Plus className="w-5 h-5 mr-2" />
+                        <Plus className="w-4 h-4 mr-2" />
                         Add New Role
                     </button>
                 </div>
@@ -177,13 +177,13 @@ const RoleManagementPage = () => {
                 <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
              </div>
           ) : (
-            // --- PERUBAHAN 9: Gunakan 'roles' dari server ---
+            
             <RoleTable
-                roles={roles} // Kirim data dari API
+                roles={roles} 
                 onAction={handleAction}
                 currentPage={currentPage}
                 itemsPerPage={itemsPerPage}
-                totalItems={totalItems} // Kirim total dari API
+                totalItems={totalItems} 
                 onPageChange={setCurrentPage}
                 onItemsPerPageChange={setItemsPerPage}
             />
@@ -195,8 +195,8 @@ const RoleManagementPage = () => {
             onClose={() => setModalOpen(false)} 
             onSave={handleSaveRole} 
             role={selectedRole} 
-            teams={teams} // Kirim data teams
-            permissions={permissions} // Kirim data permissions
+            teams={teams} 
+            permissions={permissions} 
             isLoading={isSaving} 
         />
         <ViewPermissionsModal 
@@ -211,7 +211,7 @@ const RoleManagementPage = () => {
             title="Confirm Deletion" 
             confirmText="Delete" 
             confirmColor="bg-red-600 hover:bg-red-700"
-            isConfirming={isDeleting} // Tambahkan status loading
+            isConfirming={isDeleting} 
         >
           <p>Are you sure you want to delete the role "{roleToDelete?.name}"? This action cannot be undone.</p>
         </ConfirmationModal>

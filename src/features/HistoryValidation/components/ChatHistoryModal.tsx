@@ -22,7 +22,7 @@ const ChatHistoryModal: React.FC<ChatHistoryModalProps> = ({ isOpen, onClose, ch
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center pb-4 border-b">
-          <h2 className="text-xl font-bold text-gray-800">Chat History</h2>
+          <h2 className="text-md font-bold text-gray-800">Chat History</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-800"><X className="w-6 h-6" /></button>
         </div>
         <div className="flex-1 overflow-y-auto p-4 my-4 space-y-4 max-h-[60vh] custom-scrollbar">

@@ -13,14 +13,14 @@ interface VersioningModalProps {
 const VersioningModal: React.FC<VersioningModalProps> = ({ isOpen, onClose, versions, documentTitle, onViewVersion }) => {
   if (!isOpen) return null;
 
-  // Sort versions by ID in descending order (latest first)
+  
   const sortedVersions = [...versions].sort((a, b) => b.id - a.id);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-sm" onClick={onClose}>
       <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl p-6 m-4 animate-fade-in-up" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center pb-4 border-b">
-          <h2 className="text-xl font-bold text-gray-800">Version history for "{documentTitle}"</h2>
+          <h2 className="text-md font-bold text-gray-800">Version history for "{documentTitle}"</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-800"><X className="w-6 h-6" /></button>
         </div>
 
@@ -57,7 +57,7 @@ const VersioningModal: React.FC<VersioningModalProps> = ({ isOpen, onClose, vers
                     {/* Column 5: Action */}
                     <div className="flex justify-end">
                       <button 
-                        onClick={() => onViewVersion(version)} // <-- 4. UBAH DARI <a> KE <button>
+                        onClick={() => onViewVersion(version)} 
                         className="p-2 text-blue-600 hover:bg-blue-100 rounded-md transition-colors"
                         title={`View Version ${sortedVersions.length - index}`}
                       >

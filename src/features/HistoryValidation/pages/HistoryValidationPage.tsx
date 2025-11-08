@@ -1,10 +1,10 @@
-// [File: src/features/HistoryValidation/pages/HistoryValidationPage.tsx]
+
 
 import { useMemo, useState } from "react";
 import type {
   ActionType,
-  // ValidationHistory, // <-- Hapus
-  ValidationHistoryItem, // <-- Ganti
+  
+  ValidationHistoryItem, 
   ChatMessage,
 } from "../utils/types";
 import HistoryValidationTable from "../components/HistoryValidationTable";
@@ -12,16 +12,16 @@ import ChatHistoryModal from "../components/ChatHistoryModal";
 import TableControls, {
   type FilterConfig,
 } from "../../../shared/components/TableControls";
-import toast from "react-hot-toast"; // <-- Impor toast
+import toast from "react-hot-toast"; 
 import TextExpandModal from "../../../shared/components/TextExpandModal";
 
-// Ganti interface Filters
+
 export interface Filters {
   aiAnswer: string;
   validationStatus: string;
 }
 
-// Ganti filterConfig
+
 const filterConfig: FilterConfig<Filters>[] = [
   {
     key: "aiAnswer",
@@ -37,12 +37,12 @@ const filterConfig: FilterConfig<Filters>[] = [
       { value: "", label: "Semua Status Validasi" },
       { value: "Pending", label: "Pending" },
       { value: "Validated", label: "Validated" },
-      { value: "Not Validated", label: "Not Validated" },
+      { value: "Rejected", label: "Rejected" },
     ],
   },
 ];
 
-// Ganti DUMMY_HISTORY
+
 const DUMMY_HISTORY: ValidationHistoryItem[] = [
   {
     id: 1,
@@ -72,7 +72,7 @@ const DUMMY_HISTORY: ValidationHistoryItem[] = [
     pertanyaan: "Berapa batas minimal modal untuk PMA di sektor pertambangan mineral?",
     jawaban_ai: "Batas minimal modal untuk PMA adalah Rp 10 Miliar. (Jawaban ini salah, batasnya lebih tinggi)",
     tidak_terjawab: false,
-    status_validasi: "Not Validated",
+    status_validasi: "Rejected",
   },
   {
     id: 4,
@@ -126,7 +126,7 @@ const HistoryValidationPage = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [histories, setHistories] = useState<ValidationHistoryItem[]>(DUMMY_HISTORY);
 
-  // State baru untuk modal teks
+  
   const [textModalState, setTextModalState] = useState<{
     isOpen: boolean;
     title: string;
@@ -177,7 +177,7 @@ const HistoryValidationPage = () => {
   const handleAction = (action: ActionType, item: ValidationHistoryItem) => {
     if (action === 'view') {
       setChatModalOpen(true);
-      // Logika fetch chat history bisa ditambahkan di sini
+      
     } else if (action === 'approve') {
       setHistories(prev => prev.map(h =>
           h.id === item.id ? { ...h, status_validasi: 'Validated' } : h
@@ -185,7 +185,7 @@ const HistoryValidationPage = () => {
       toast.success(`Pertanyaan telah divalidasi.`);
     } else if (action === 'reject') {
       setHistories(prev => prev.map(h =>
-          h.id === item.id ? { ...h, status_validasi: 'Not Validated' } : h
+          h.id === item.id ? { ...h, status_validasi: 'Rejected' } : h
       ));
       toast.error(`Pertanyaan ditandai tidak valid.`);
     }
@@ -195,7 +195,7 @@ const HistoryValidationPage = () => {
     setChatModalOpen(false);
   };
 
-  // Handler baru untuk modal teks
+  
   const handleViewText = (title: string, content: string) => {
     setTextModalState({ isOpen: true, title, content });
   };
@@ -222,7 +222,7 @@ const HistoryValidationPage = () => {
         <HistoryValidationTable
           histories={paginatedHistories}
           onAction={handleAction}
-          onViewText={handleViewText} // <-- Teruskan handler baru
+          onViewText={handleViewText} 
           currentPage={currentPage}
           itemsPerPage={itemsPerPage}
           totalItems={filteredHistories.length}

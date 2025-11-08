@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 // Skema validasi untuk form login
 export const signInSchema = z.object({
-  email: z.string().email({ message: "Invalid email address" }),
+  email: z.email({ message: "Invalid email address" }),
   password: z.string().min(1, { message: "Password is required" }),
 });
 

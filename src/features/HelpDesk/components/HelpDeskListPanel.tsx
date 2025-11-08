@@ -1,15 +1,13 @@
-// --- PERUBAHAN DI SINI ---
-import React, { useState, useMemo } from 'react'; // Impor useMemo
+import React, { useState, useMemo } from 'react'; 
 import { useNavigate, useParams } from 'react-router';
 import { MessageSquare, Clock, CheckCheck, type LucideIcon } from 'lucide-react';
-// Impor ChatChannel dan CustomSelect
 import type { ChatLists, HelpDeskChatListType, HelpDeskChat, ChatChannel } from '../utils/types';
 import { ChatList } from '../../../shared/components/sidebar/ChatList';
 import toast from 'react-hot-toast'; 
-import CustomSelect from '../../../shared/components/CustomSelect'; // Impor CustomSelect
-// --- AKHIR PERUBAHAN ---
+import CustomSelect from '../../../shared/components/CustomSelect'; 
 
-// (DUMMY_CHAT_LISTS diperbarui dengan 'channel')
+
+
 const DUMMY_CHAT_LISTS: ChatLists = {
   active: [
     { id: 'active-1', user_name: 'User Aktif 1', last_message: '...', timestamp: new Date().toISOString(), channel: 'web' },
@@ -26,7 +24,7 @@ const DUMMY_CHAT_LISTS: ChatLists = {
   ],
 };
 
-// Opsi untuk filter kanal
+
 const channelFilterOptions = [
   { value: "", label: "Semua Kanal" },
   { value: "web", label: "Web" },
@@ -53,7 +51,7 @@ const TabButton = ({ label, count, isActive, onClick }: { label: string, count: 
 const HelpDeskListPanel: React.FC = () => {
   const [activeList, setActiveList] = useState<HelpDeskChatListType>('queue');
   const [chatLists, setChatLists] = useState<ChatLists>(DUMMY_CHAT_LISTS);
-  // --- PERUBAHAN DI SINI: State untuk filter kanal ---
+  
   const [selectedChannel, setSelectedChannel] = useState<ChatChannel | ''>('');
   
   const navigate = useNavigate();
@@ -103,23 +101,23 @@ const HelpDeskListPanel: React.FC = () => {
 
   const currentListConfig = listConfig[activeList];
 
-  // --- PERUBAHAN DI SINI: Logika filtering ---
+  
   const currentChats = useMemo(() => {
     const listByStatus = chatLists[activeList];
     if (!selectedChannel) {
-      return listByStatus; // Tidak ada filter kanal
+      return listByStatus; 
     }
-    // Filter berdasarkan kanal yang dipilih
+    
     return listByStatus.filter(chat => chat.channel === selectedChannel);
   }, [chatLists, activeList, selectedChannel]);
-  // --- AKHIR PERUBAHAN ---
+  
   
   const itemActionType = (activeList === 'queue' || activeList === 'pending') ? 'accept' : undefined;
 
   return (
     <div className="flex flex-col h-full min-h-0">
       <div className="p-4 border-b border-gray-200">
-        <h2 className="text-xl font-bold text-gray-800">Help Desk</h2>
+        <h2 className="text-md font-bold text-gray-800">Help Desk</h2>
       </div>
 
       <div className="flex justify-between text-center bg-gray-200 rounded-lg p-1 space-x-1 m-4">
@@ -145,7 +143,7 @@ const HelpDeskListPanel: React.FC = () => {
         <ChatList
           title={currentListConfig.title}
           icon={currentListConfig.icon}
-          chats={currentChats} // Gunakan data yang sudah difilter
+          chats={currentChats} 
           onItemClick={handleSelectChat}
           emptyMessage={currentListConfig.empty}
           type={activeList}

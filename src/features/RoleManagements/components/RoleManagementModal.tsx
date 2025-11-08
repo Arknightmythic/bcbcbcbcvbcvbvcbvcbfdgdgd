@@ -1,19 +1,19 @@
-// src/features/RoleManagements/components/RoleManagementModal.tsx
+
 
 import React, { useState, useEffect } from 'react';
 import { Loader2, X } from 'lucide-react';
-// Import tipe data yang baru
+
 import type { Role, Permission, Team, RoleModalData } from '../utils/types';
 import CustomSelect from '../../../shared/components/CustomSelect';
 
 interface RoleManagementModalProps {
   isOpen: boolean;
   onClose: () => void;
-  // onSave sekarang mengirim RoleModalData
+  
   onSave: (roleData: RoleModalData, id?: number) => void;
-  role: Role | null; // Tipe Role adalah GetRoleDTO
-  teams: Team[]; // Tipe Team adalah DTO
-  permissions: Permission[]; // Tipe Permission adalah DTO
+  role: Role | null; 
+  teams: Team[]; 
+  permissions: Permission[]; 
   isLoading: boolean;
 }
 
@@ -21,9 +21,9 @@ type Tab = 'operation' | 'manager_master' | 'agent';
 
 const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ isOpen, onClose, onSave, role, teams, permissions, isLoading }) => {
   const [name, setName] = useState('');
-  // Hapus state 'description'
+  
   const [teamId, setTeamId] = useState('');
-  // selectedPermissions sekarang menyimpan ID (string)
+  
   const [selectedPermissions, setSelectedPermissions] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<Tab>('operation');
   
@@ -31,19 +31,19 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ isOpen, onClo
 
   useEffect(() => {
     if (isOpen) {
-      // Sesuaikan dengan struktur GetRoleDTO
+      
       setName(role?.name || '');
       setTeamId(role?.team?.id.toString() || '');
-      // Ubah array object permission menjadi Set of string IDs
+      
       setSelectedPermissions(new Set(role?.permissions.map(p => p.id.toString()) || []));
       setActiveTab('operation');
     }
-  }, [isOpen, role, teams]); // 'teams' tidak lagi dipakai di sini, tapi tidak apa-apa
+  }, [isOpen, role, teams]); 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!teamId) {
-        alert("Please select a team."); // Validasi sederhana
+        alert("Please select a team."); 
         return;
     }
     const modalData: RoleModalData = {
@@ -63,14 +63,14 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ isOpen, onClo
   };
 
   const filterPermissions = (category: Tab) => {
-    // Tipe Permission sekarang { id: number, name: string }
+    
     if(category === 'operation') return permissions.filter(p => ["create", "read", "update", "delete"].some(k => p.name.includes(k)) && !p.name.includes("agent"));
     if(category === 'manager_master') return permissions.filter(p => ["manager", "master"].some(k => p.name.includes(k)));
     if(category === 'agent') return permissions.filter(p => p.name.includes("agent-dashboard"));
     return [];
   };
   
-  // Opsi tim sekarang dari data API
+  
   const teamOptions = teams.map(t => ({ value: t.id.toString(), label: t.name }));
   const currentPermissions = filterPermissions(activeTab);
 
@@ -92,7 +92,7 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({ isOpen, onClo
                     value={teamId}
                     onChange={setTeamId}
                     options={[{ value: '', label: 'Select a team'}, ...teamOptions]}
-                    disabled={isEditMode} // Tim tidak bisa diubah saat edit
+                    disabled={isEditMode} 
                 />
             </div>
             <div>

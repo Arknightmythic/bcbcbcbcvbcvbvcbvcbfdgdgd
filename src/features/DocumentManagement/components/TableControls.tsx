@@ -27,9 +27,9 @@ const categoryOptions = [
 
 const statusOptions = [
   { value: '', label: 'All Status' },
-  { value: 'approved', label: 'Approved' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'rejected', label: 'Rejected' },
+  { value: 'Approved', label: 'Approved' },
+  { value: 'Pending', label: 'Pending' },
+  { value: 'Rejected', label: 'Rejected' },
 ];
 
 const typeOptions = [

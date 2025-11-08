@@ -4,7 +4,7 @@ import DocumentRow from "./DocumentRow";
 import type { UploadedDocument } from "../types/types";
 import CustomSelect from "../../../shared/components/CustomSelect";
 
-// 👇 Perubahan ada di interface ini
+
 interface DocumentsTableProps {
   documents: UploadedDocument[];
   selectedDocs: number[];
@@ -17,7 +17,7 @@ interface DocumentsTableProps {
     docId: number
   ) => void;
   onDeleteMultiple: () => void;
-  onDeleteSingle: (doc: UploadedDocument) => void; // <-- Tipe diubah dari (docId: number)
+  onDeleteSingle: (doc: UploadedDocument) => void; 
   onNewVersion: (doc: UploadedDocument) => void;
   onViewVersions: (doc: UploadedDocument) => void;
   onViewFile: (doc: UploadedDocument) => void
@@ -35,7 +35,7 @@ const itemsPerPageOptions = [
 ];
 
 const DocumentsTable: React.FC<DocumentsTableProps> = (props) => {
-  // Ambil props yang sudah diperbarui
+  
   const {
     documents,
     selectedDocs,
@@ -65,7 +65,7 @@ const DocumentsTable: React.FC<DocumentsTableProps> = (props) => {
   return (
     <div className="bg-white p-6 rounded-b-lg shadow">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">Document Saved</h2>
+        <h2 className="text-md font-bold">Document Saved</h2>
         {selectedDocs.length > 0 && (
           <button
             onClick={onDeleteMultiple}
@@ -84,13 +84,14 @@ const DocumentsTable: React.FC<DocumentsTableProps> = (props) => {
 
       <div className="relative overflow-x-auto">
         <table className="w-full text-sm text-left text-gray-500">
-          <thead className="text-xs text-gray-700 uppercase bg-gray-100 sticky top-0">
+          <thead className="text-[10px] text-gray-700 uppercase bg-gray-100 sticky top-0">
             <tr>
               <th className="px-4 py-4 w-1/24">
                 <input
                   type="checkbox"
                   onChange={onSelectAll}
                   checked={allSelected}
+                  className="h-3 w-3"
                 />
               </th>
               <th className="px-6 py-4">Uploaded Date</th>
@@ -123,7 +124,7 @@ const DocumentsTable: React.FC<DocumentsTableProps> = (props) => {
                   document={doc}
                   isSelected={selectedDocs.includes(doc.id)}
                   onSelect={onSelectOne}
-                  onDelete={onDeleteSingle} // Prop ini sekarang meneruskan fungsi yang benar
+                  onDelete={onDeleteSingle} 
                   onNewVersion={onNewVersion}
                   onViewVersions={onViewVersions}
                   onViewFile={onViewFile}
@@ -145,7 +146,7 @@ const DocumentsTable: React.FC<DocumentsTableProps> = (props) => {
         className="flex items-center justify-between pt-4"
         aria-label="Table navigation"
       >
-        <span className="text-sm font-normal text-gray-500">
+        <span className="text-xs font-normal text-gray-500">
           Showing{" "}
           <span className="font-semibold text-gray-900">
             {startItem}-{endItem}
@@ -153,7 +154,7 @@ const DocumentsTable: React.FC<DocumentsTableProps> = (props) => {
           of <span className="font-semibold text-gray-900">{totalItems}</span>
         </span>
         <div className="flex items-center space-x-3">
-          <span className="text-sm font-normal text-gray-500">
+          <span className="text-xs font-normal text-gray-500">
             Rows per page:
           </span>
           <CustomSelect
@@ -163,21 +164,21 @@ const DocumentsTable: React.FC<DocumentsTableProps> = (props) => {
             selectedType="pagerow"
             direction="up"
           />
-          <ul className="inline-flex -space-x-px text-sm">
+          <ul className="inline-flex -space-x-px text-xs">
             <li>
               <button
                 onClick={() => onPageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="flex items-center justify-center h-9 px-3 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50"
+                className="flex items-center justify-center h-[30px] px-3 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50"
               >
                 <span className="sr-only">Previous</span>
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="w-3 h-3" />
               </button>
             </li>
             <li>
               <span
                 aria-current="page"
-                className="flex items-center justify-center h-9 px-4 leading-tight text-gray-700 bg-white border border-gray-300"
+                className="flex items-center justify-center h-[30px] px-4 leading-tight text-gray-700 bg-white border border-gray-300"
               >
                 Page {currentPage} of {totalPages > 0 ? totalPages : 1}
               </span>
@@ -186,10 +187,10 @@ const DocumentsTable: React.FC<DocumentsTableProps> = (props) => {
               <button
                 onClick={() => onPageChange(currentPage + 1)}
                 disabled={currentPage === totalPages || totalPages === 0}
-                className="flex items-center justify-center h-9 px-3 leading-tight text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50"
+                className="flex items-center justify-center h-[30px] px-3 leading-tight text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50"
               >
                 <span className="sr-only">Next</span>
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-3 h-3" />
               </button>
             </li>
           </ul>

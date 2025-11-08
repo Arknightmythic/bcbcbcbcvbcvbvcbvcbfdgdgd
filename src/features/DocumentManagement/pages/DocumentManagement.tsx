@@ -4,7 +4,7 @@ import { Loader2 } from "lucide-react";
 import type { ActionType, Document, DocumentCategory } from "../types/types";
 // 1. Import hook 'useDeleteDocument'
 import { useGetDocuments, useApproveDocument, useRejectDocument, useDeleteDocument } from "../hooks/useDocument";
-import { generateViewUrl, getDocumentDetails } from "../api/document";
+import { generateViewUrl} from "../api/document";
 import DocumentTable from "../components/DocumentTable";
 import ConfirmationModal from "../../../shared/components/ConfirmationModal";
 import TableControls, { type FilterConfig } from "../../../shared/components/TableControls";
@@ -38,9 +38,9 @@ const filterConfig: FilterConfig<Filters>[] = [
         key: "status",
         options: [
             { value: "", label: "All Status" },
-            { value: "approved", label: "Approved" },
-            { value: "pending", label: "Pending" },
-            { value: "rejected", label: "Rejected" },
+            { value: "Approved", label: "Approved" },
+            { value: "Pending", label: "Pending" },
+            { value: "Rejected", label: "Rejected" },
         ],
     },
 ];

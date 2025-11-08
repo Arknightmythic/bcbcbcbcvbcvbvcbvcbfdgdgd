@@ -40,7 +40,7 @@ const HistoryValidationTable: React.FC<HistoryValidationTableProps> = ({
       <div className="overflow-y-auto">
         <table className="min-w-full">
           <thead className="bg-gray-100">
-            <tr className="text-left text-sm font-semibold text-gray-600">
+            <tr className="text-left text-[10px] font-semibold text-gray-600">
               <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">TANGGAL</th>
               <th className="px-4 py-3 sticky top-0 bg-gray-100">USER</th>
               <th className="px-4 py-3 sticky top-0 bg-gray-100">SESSION ID</th>
@@ -76,39 +76,39 @@ const HistoryValidationTable: React.FC<HistoryValidationTableProps> = ({
         className="flex items-center justify-between pt-4"
         aria-label="Table navigation"
       >
-        <span className="text-sm font-normal text-gray-500">
+        <span className="text-xs font-normal text-gray-500">
           Showing{" "}
           <span className="font-semibold text-gray-900">
-            {totalItems > 0 ? startItem : 0}-{endItem}
+            {startItem}-{endItem}
           </span>{" "}
           of <span className="font-semibold text-gray-900">{totalItems}</span>
         </span>
         <div className="flex items-center space-x-3">
-          <span className="text-sm font-normal text-gray-500">
+          <span className="text-xs font-normal text-gray-500">
             Rows per page:
           </span>
           <CustomSelect
-              selectedType="pagerow"
-              direction="up"
-              value={String(itemsPerPage)}
-              onChange={(value) => onItemsPerPageChange(Number(value))}
-              options={itemsPerPageOptions}
-            />
-          <ul className="inline-flex -space-x-px text-sm">
+            value={String(itemsPerPage)}
+            onChange={(value) => onItemsPerPageChange(Number(value))}
+            options={itemsPerPageOptions}
+            selectedType="pagerow"
+            direction="up"
+          />
+          <ul className="inline-flex -space-x-px text-xs">
             <li>
               <button
                 onClick={() => onPageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="flex items-center justify-center h-9 px-3 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50"
+                className="flex items-center justify-center h-[30px] px-3 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50"
               >
                 <span className="sr-only">Previous</span>
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="w-3 h-3" />
               </button>
             </li>
             <li>
               <span
                 aria-current="page"
-                className="flex items-center justify-center h-9 px-4 leading-tight text-gray-700 bg-white border border-gray-300"
+                className="flex items-center justify-center h-[30px] px-4 leading-tight text-gray-700 bg-white border border-gray-300"
               >
                 Page {currentPage} of {totalPages > 0 ? totalPages : 1}
               </span>
@@ -117,10 +117,10 @@ const HistoryValidationTable: React.FC<HistoryValidationTableProps> = ({
               <button
                 onClick={() => onPageChange(currentPage + 1)}
                 disabled={currentPage === totalPages || totalPages === 0}
-                className="flex items-center justify-center h-9 px-3 leading-tight text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50"
+                className="flex items-center justify-center h-[30px] px-3 leading-tight text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50"
               >
                 <span className="sr-only">Next</span>
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-3 h-3" />
               </button>
             </li>
           </ul>

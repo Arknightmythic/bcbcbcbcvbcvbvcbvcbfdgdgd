@@ -17,7 +17,7 @@ const UserTableRow: React.FC<UserTableRowProps> = ({ user, onAction }) => {
   const roleName = user.role?.name;
 
   return (
-    <tr className="hover:bg-gray-50 text-sm text-gray-700">
+    <tr className="hover:bg-gray-50 text-[10px] text-gray-700">
       <td className="px-4 py-3 font-medium text-gray-900">{user.name}</td>
       <td className="px-4 py-3">{user.email}</td>
       <td className="px-4 py-3 capitalize">{user.account_type || 'N/A'}</td>

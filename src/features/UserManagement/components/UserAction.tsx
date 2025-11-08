@@ -15,14 +15,14 @@ const UserActions: React.FC<UserActionsProps> = ({ user, onAction }) => {
         className="p-1 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
         title="Edit User"
       >
-        <Edit className="w-5 h-5" />
+        <Edit className="w-4 h-4" />
       </button>
       <button
         onClick={() => onAction('delete', user)}
         className="p-1 text-red-600 hover:bg-red-50 rounded-md transition-colors"
         title="Delete User"
       >
-        <Trash2 className="w-5 h-5" />
+        <Trash2 className="w-4 h-4" />
       </button>
     </div>
   );

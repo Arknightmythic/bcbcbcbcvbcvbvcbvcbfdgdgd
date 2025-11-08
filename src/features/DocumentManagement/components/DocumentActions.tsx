@@ -1,6 +1,4 @@
-import React, { useState } from "react";
-import toast from "react-hot-toast";
-import { Trash2, CheckCircle, XCircle, Eye, Loader2 } from "lucide-react";
+import {CheckCircle, XCircle, Eye} from "lucide-react";
 import type { ActionType, Document } from "../types/types";
 
 interface DocumentActionsProps {
@@ -30,7 +28,7 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
         }`}
         title={isRejected ? "Cannot view a rejected document" : "View"}
       >
-        <Eye className="w-5 h-5" />
+        <Eye className="w-4 h-4" />
       </button>
 
       {hasManagerAccess && (
@@ -43,7 +41,7 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
             }`}
             title="Approve"
           >
-            <CheckCircle className="w-5 h-5" />
+            <CheckCircle className="w-4 h-4" />
           </button>
           <button
             onClick={() => onAction("reject", document)}
@@ -53,7 +51,7 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
             }`}
             title="Reject"
           >
-            <XCircle className="w-5 h-5" />
+            <XCircle className="w-4 h-4" />
           </button>
         </>
       )}

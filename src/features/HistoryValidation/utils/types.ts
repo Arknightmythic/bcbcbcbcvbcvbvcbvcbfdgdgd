@@ -1,10 +1,10 @@
-// Ubah ValidationStatus dari 'open' | 'closed'
-export type ValidationStatus = 'Pending' | 'Validated' | 'Not Validated';
-// Tambahkan tipe baru untuk filter
+
+export type ValidationStatus = 'Pending' | 'Validated' | 'Rejected';
+
 export type AnswerStatus = 'Answered' | 'Unanswered';
 export type ActionType = 'view' | 'approve' | 'reject';
 
-// Ganti interface ValidationHistory
+
 export interface ValidationHistoryItem {
   id: number;
   tanggal: string;

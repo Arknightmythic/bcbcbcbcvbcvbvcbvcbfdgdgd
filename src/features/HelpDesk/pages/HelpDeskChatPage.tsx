@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from 'react'; // <-- 1. Impor 'useRef'
 import { useParams, useNavigate } from 'react-router';
-import { Send, CornerDownLeft, Check } from 'lucide-react'; // Hapus 'ArrowLeft' jika tidak dipakai
+import { Send, Check } from 'lucide-react'; // Hapus 'ArrowLeft' jika tidak dipakai
 import type { HelpDeskMessage } from '../utils/types';
 import toast from 'react-hot-toast';
 

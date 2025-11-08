@@ -17,15 +17,15 @@ const SessionCard: React.FC<SessionCardProps> = ({ session, onSelect }) => {
       className="text-left p-4 border border-gray-200 rounded-lg hover:bg-gray-50 flex items-center justify-between transition-colors duration-150 shadow-sm hover:shadow-md"
     >
       <div>
-        <p className="font-semibold text-gray-800">
+        <p className="font-semibold text-gray-800 text-sm">
           Lanjutkan Sesi
           {session.agent_name ? ` dengan ${session.agent_name}` : ''}
         </p>
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-[10px] text-gray-500 mt-1">
           Dimulai pada: {new Date(session.created_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
         </p>
       </div>
-      <MessageSquareText className="w-5 h-5 text-blue-500 flex-shrink-0 ml-4" />
+      <MessageSquareText className="w-4 h-4 text-blue-500 flex-shrink-0 ml-4" />
     </button>
   );
 };
@@ -57,7 +57,7 @@ const PublicServiceIntroPage: React.FC = () => {
         ) : (
           // Konten utama jika tidak loading
           <>
-            <h2 className="text-2xl font-bold text-gray-800 mb-3">
+            <h2 className="text-lg font-bold text-gray-800 mb-3">
               Selamat Datang!
             </h2>
             <p className="text-gray-600 mb-6 text-sm">
@@ -67,7 +67,7 @@ const PublicServiceIntroPage: React.FC = () => {
             {/* Bagian menampilkan sesi yang ada */}
             {activeSessions && activeSessions.length > 0 && (
               <>
-                <h3 className="text-sm font-semibold text-gray-500 mb-3 text-left uppercase tracking-wide">Sesi Tersimpan</h3>
+                <h3 className="text-xs font-semibold text-gray-500 mb-3 text-left uppercase tracking-wide">Sesi Tersimpan</h3>
                 {/* Container untuk list sesi dengan scroll jika banyak */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
                   {activeSessions.map(session => (
@@ -87,14 +87,16 @@ const PublicServiceIntroPage: React.FC = () => {
             )}
 
             {/* Tombol untuk membuat sesi baru */}
-            <button
+           <div className='w-full flex justify-center'>
+              <button
               onClick={handleCreateNewSession}
               disabled={isLoading} // Disable tombol saat loading
-              className="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center transition-colors duration-150 disabled:bg-gray-400"
+              className="w-md bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center transition-colors duration-150 disabled:bg-gray-400"
             >
               <MessageSquarePlus className="w-5 h-5 mr-2" />
               Buat Sesi Baru
             </button>
+           </div>
           </>
         )}
       </div>

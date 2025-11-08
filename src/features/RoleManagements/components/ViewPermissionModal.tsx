@@ -1,8 +1,8 @@
-// src/features/RoleManagements/components/ViewPermissionModal.tsx
+
 
 import React from 'react';
 import { ShieldCheck, X } from 'lucide-react';
-import type { Role } from '../utils/types'; // Tipe Role adalah GetRoleDTO
+import type { Role } from '../utils/types'; 
 
 interface ViewPermissionsModalProps {
   isOpen: boolean;
