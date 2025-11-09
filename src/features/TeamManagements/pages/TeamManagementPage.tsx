@@ -108,9 +108,9 @@ const TeamManagementPage = () => {
       <>
         <div className="flex flex-col flex-1 min-h-0">
           <div className="bg-gray-50 rounded-t-lg shadow-md">
-            <div className="px-4 flex items-center justify-between gap-4">
+            {/* --- PERUBAHAN DI SINI: Bungkus dengan flex container --- */}
+            <div className="px-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div className="flex-grow">
-                    {/* --- PERUBAHAN 6: Update props TableControls --- */}
                     <TableControls
                         searchTerm={searchInput}
                         searchPlaceholder="Search by team name..."
@@ -121,10 +121,12 @@ const TeamManagementPage = () => {
                         filterConfig={[]} 
                     />
                 </div>
-                <div className="flex-shrink-0 text-xs">
+                {/* --- PERUBAHAN DI SINI: Atur lebar tombol --- */}
+                <div className="w-full lg:w-auto flex-shrink-0 text-xs">
                     <button
                         onClick={() => { setSelectedTeam(null); setTeamModalOpen(true); }}
-                        className="bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 flex items-center"
+                        /* Tambahkan w-full lg:w-auto dan justify-center */
+                        className="bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 flex items-center justify-center w-full lg:w-auto"
                     >
                         <Plus className="w-3 h-3 mr-2" />
                         Add New Team

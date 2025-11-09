@@ -4,7 +4,7 @@ import {  useRef } from 'react';
 
 import { AgentPanel } from "./AgentPanel";
 import type { Chat, MenuItem } from "../../types/types";
-import Tooltip from "../Tooltip";
+import Tooltip from "../Tooltip"; // Pastikan ini adalah versi dengan React Portal
 
 
 const dummyMenu: MenuItem[] = [
@@ -45,7 +45,7 @@ const dummyChats: {
   ],
   pending: [],
 };
-// --- START: MODIFIED COMPONENT ---
+
 const NavigationMenu = ({ menuItems, currentPath, isCollapsed }: { menuItems: MenuItem[], currentPath: string, isCollapsed: boolean }) => (
     <div className="space-y-1 px-2 pb-4 md:px-4">
       {menuItems.map((item) => {
@@ -82,7 +82,6 @@ const NavigationMenu = ({ menuItems, currentPath, isCollapsed }: { menuItems: Me
       })}
     </div>
   );
-// --- END: MODIFIED COMPONENT ---
 
 const Sidebar = ({ isCollapsed, setOutletBlurred }: { isCollapsed: boolean, setOutletBlurred: (isBlurred: boolean) => void }) => {
   const location = useLocation();
@@ -102,7 +101,9 @@ const Sidebar = ({ isCollapsed, setOutletBlurred }: { isCollapsed: boolean, setO
       className={`fixed top-0 left-0 z-50 flex h-screen flex-col bg-white text-gray-700 shadow-lg transition-all duration-300 ${
         isCollapsed ? "w-25" : "w-50"
       }`}
+      // --- PERUBAHAN: HAPUS overflow-y-auto DARI SINI ---
     >
+      {/* 1. LOGO (Fixed height, tidak scroll) */}
       <div className={`flex h-20 items-center px-4 mt-4 mb-4 transition-all duration-300 ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
           <div className="relative flex items-center justify-center h-12 w-full">
               <img 
@@ -118,11 +119,17 @@ const Sidebar = ({ isCollapsed, setOutletBlurred }: { isCollapsed: boolean, setO
           </div>
       </div>
 
-      <div className={`flex flex-1 flex-col ${isCollapsed ? 'overflow-visible' : 'overflow-hidden'}`}>
-        <div className={`flex-1 ${isCollapsed ? 'overflow-visible' : 'overflow-y-auto'}`}>
+      {/* --- PERUBAHAN: Container ini akan mengelola layout --- */}
+      <div className={`flex flex-1 flex-col overflow-hidden`}>
+        
+        {/* 2. AREA MENU (Scrollable) */}
+        {/* 'flex-1' membuatnya mengisi ruang */}
+        {/* 'overflow-y-auto' membuatnya bisa di-scroll */}
+        <div className={`flex-1 overflow-y-auto custom-scrollbar-overlay`}>
           <NavigationMenu menuItems={accessibleMenu} currentPath={location.pathname} isCollapsed={isCollapsed} />
         </div>
 
+        {/* 3. AGENT PANEL (Fixed height, 'mt-auto' mendorongnya ke bawah) */}
         {showAgentSection && (
           <div style={{ height: 'auto' }} className="mt-auto">
             <AgentPanel

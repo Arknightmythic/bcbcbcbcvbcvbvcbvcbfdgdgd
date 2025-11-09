@@ -58,14 +58,14 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
   };
 
   return (
-    <tr className="bg-white border-b hover:bg-gray-50 border-gray-200 text-[10px]">
+    <tr className="group bg-white hover:bg-gray-50 text-[10px]">
       {/* Kolom checkbox */}
       <td className="px-4 py-4">
         <input
           type="checkbox"
           onChange={(e) => onSelect(e, doc.id)}
           checked={isSelected}
-          className="w-2 h-2 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+          className="w-3 h-3 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
         />
       </td>
       {/* Kolom Uploaded Date */}
@@ -86,8 +86,9 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
       <td className="px-6 py-4 ">{doc.team}</td>
       {/* Kolom Status */}
       <td className="px-6 py-4">{getStatusComponent()}</td>
-      {/* Kolom Action */}
-      <td className="px-6 py-4 flex-col justify-center">
+      
+      {/* Sel Action Sticky */}
+      <td className="px-6 py-4 text-center sticky right-0 bg-white group-hover:bg-gray-50 z-10 border-l border-gray-200">
         <div className="flex justify-center gap-3">
           <button
             onClick={() => onViewFile(doc)} 

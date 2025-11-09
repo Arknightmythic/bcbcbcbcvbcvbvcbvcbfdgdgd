@@ -36,9 +36,10 @@ const TableControls = <T extends object>({
 
   return (
     <div className="py-4 bg-gray-50 rounded-t-lg">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        {/* Search Input and Button */}
-        <div className="lg:col-span-2 flex items-center gap-2">
+
+      <div className="flex flex-col lg:flex-row items-center">
+
+        <div className="flex items-center gap-2 w-full lg:w-2/5">
           <div className="relative flex-grow">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Search className="h-3 w-3 text-gray-400" />
@@ -61,17 +62,25 @@ const TableControls = <T extends object>({
           </button>
         </div>
 
-        {/* Filter yang dirender secara dinamis */}
-        {filterConfig.map((config) => (
-          <div key={config.key}>
-            <CustomSelect
-              selectedType="default"
-              value={String(filters[config.key] ?? '')}
-              onChange={(value) => onFilterChange(config.key, value)}
-              options={config.options}
-            />
-          </div>
-        ))}
+        {/* --- BARIS 2 (Mobile) / KOLOM 2 (Desktop) : Filters --- */}
+        {/* - 'grid-cols-3' (Mobile/Tablet): Filter akan menjadi 3 kolom.
+          - 'w-full' (Mobile/Tablet): Kontainer grid akan mengambil lebar penuh.
+          - 'lg:w-3/5' (Desktop): Kontainer grid akan mengambil 3/5 lebar.
+          - 'lg:grid-cols-3' (Desktop): Tetap 3 kolom di desktop.
+        */}
+        <div className="grid grid-cols-3 gap-4 w-full lg:w-3/5 mt-4 lg:mt-0 ml-0 lg:ml-4">
+          {filterConfig.map((config) => (
+            <div key={config.key}>
+              <CustomSelect
+                selectedType="default"
+                value={String(filters[config.key] ?? '')}
+                onChange={(value) => onFilterChange(config.key, value)}
+                options={config.options}
+              />
+            </div>
+          ))}
+        </div>
+        
       </div>
     </div>
   );

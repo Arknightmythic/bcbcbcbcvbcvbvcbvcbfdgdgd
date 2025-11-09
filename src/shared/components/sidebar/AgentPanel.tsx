@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router';
-import { Clock, MessageSquare, History, X } from 'lucide-react';
+import { Clock, MessageSquare, History, X, MessageSquareWarning, MessageSquareDiff } from 'lucide-react';
 
 import { ChatList } from './ChatList';
 import type { Chat } from '../../types/types';
@@ -25,6 +25,33 @@ interface AgentPanelProps {
   isCollapsed: boolean;
   setOutletBlurred: (isBlurred: boolean) => void;
 }
+
+const CollapsedTabButton = ({ 
+  icon: Icon, 
+  count, 
+  tooltipText, 
+  onClick 
+}: { 
+  icon: LucideIcon, 
+  count: number, 
+  tooltipText: string, 
+  onClick: () => void 
+}) => (
+  <Tooltip text={`${tooltipText} (${count})`}>
+    <button
+      onClick={onClick}
+      className="relative flex items-center justify-center w-8 h-10 bg-gray-100 rounded-lg text-gray-600 hover:bg-bOss-red-50 hover:text-bOss-red transition-colors"
+    >
+      <Icon className="w-4 h-4" />
+      {count > 0 && (
+        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-bOss-red text-white text-[10px] font-bold">
+          {count}
+        </span>
+      )}
+    </button>
+  </Tooltip>
+);
+
 
 export const AgentPanel = ({
   agentName,
@@ -85,10 +112,43 @@ export const AgentPanel = ({
 
   if (isCollapsed) {
     return (
-      <div className="flex flex-col items-center py-4 space-y-4">
-        <Tooltip text={agentName}>
-          <div className="relative">
-            <div className="w-10 h-10 bg-bOss-red rounded-full flex items-center justify-center text-white text-lg font-bold">
+      <div className="flex flex-col items-center py-2 space-y-4 bg-gray-200 rouned rounded-t-md">
+        
+        {/* Tab Vertikal */}
+        <div className="flex flex-col items-center space-y-2 mt-2">
+          <CollapsedTabButton
+            icon={MessageSquare}
+            count={chats.active.length}
+            tooltipText="Active Chats"
+            onClick={() => {
+              setIsCollapsedPanelOpen(true);
+              setActiveList('active');
+            }}
+          />
+          <CollapsedTabButton
+            icon={MessageSquareDiff}
+            count={chats.queue.length}
+            tooltipText="Queue"
+            onClick={() => {
+              setIsCollapsedPanelOpen(true);
+              setActiveList('queue');
+            }}
+          />
+          <CollapsedTabButton
+            icon={MessageSquareWarning} // Anda bisa ganti ikon jika mau
+            count={chats.pending.length}
+            tooltipText="Pending"
+            onClick={() => {
+              setIsCollapsedPanelOpen(true);
+              setActiveList('pending');
+            }}
+          />
+        </div>
+
+        {/* Ikon Agen (Budi Santoso) */}
+        <Tooltip text={`${agentName} (${agentStatus})`}>
+          <div className="relative cursor-pointer">
+            <div className="w-8 h-8 bg-bOss-red rounded-full flex items-center justify-center text-white text-sm font-bold">
               {agentInitial}
             </div>
             <span className={`absolute bottom-0 right-0 block h-3 w-3 rounded-full ${currentStatus.color} border-2 border-white`} />
@@ -96,20 +156,15 @@ export const AgentPanel = ({
         </Tooltip>
 
         <div className="relative">
-          {/* <button
-            onClick={() => setIsCollapsedPanelOpen(!isCollapsedPanelOpen)}
-            className="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-full"
-          >
-            <MessageSquare className="w-5 h-5 text-gray-600" />
-          </button> */}
+          {/* Panel pop-up saat ikon tab diklik */}
           {isCollapsedPanelOpen && (
-             <div className="absolute bottom-0 left-full ml-10 bg-white rounded-lg shadow-lg border w-72 flex flex-col">
+             <div className="absolute bottom-0 left-full ml-3 bg-white rounded-lg shadow-lg border w-72 flex flex-col z-50">
               <div className="p-2 border-b flex justify-between items-center">
                 <h3 className="text-sm font-semibold">{listConfig[activeList].title}</h3>
                 <button onClick={() => setIsCollapsedPanelOpen(false)}><X className="w-4 h-4" /></button>
               </div>
                <div className="flex justify-around p-1 bg-gray-100">
-                 {(Object.keys(listConfig) as ChatListType[]).map((key) => {
+                 {(['active', 'queue', 'pending'] as ChatListType[]).map((key) => {
                    const Icon = listConfig[key].icon;
                    return (
                      <button
@@ -122,7 +177,8 @@ export const AgentPanel = ({
                    );
                  })}
                </div>
-               <div className="overflow-y-auto" style={{ height: '220px' }}>
+               {/* --- PERUBAHAN DI SINI: Terapkan kelas scrollbar baru --- */}
+               <div className="overflow-y-auto custom-scrollbar-overlay" style={{ height: '220px' }}>
                  <div style={{minHeight: '220px'}}>
                     <ChatList
                       title={currentList.title}
@@ -142,9 +198,9 @@ export const AgentPanel = ({
     );
   }
 
+  // Tampilan "Expanded" (tidak berubah)
   return (
     <div ref={panelRef} className="flex flex-col min-h-0 border-t border-gray-200">
-      {/* Drag handle dan ChatList dihilangkan */}
       <AgentSidebarSection
         agentName={agentName}
         agentStatus={agentStatus}

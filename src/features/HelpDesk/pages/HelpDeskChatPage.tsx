@@ -1,8 +1,6 @@
-// [File: src/features/HelpDesk/pages/HelpDeskChatPage.tsx]
-
-import React, { useState, useRef } from 'react'; // <-- 1. Impor 'useRef'
+import React, { useState, useRef } from 'react'; 
 import { useParams, useNavigate } from 'react-router';
-import { Send, Check } from 'lucide-react'; // Hapus 'ArrowLeft' jika tidak dipakai
+import { Send, Check, ArrowLeft } from 'lucide-react'; 
 import type { HelpDeskMessage } from '../utils/types';
 import toast from 'react-hot-toast';
 
@@ -33,34 +31,27 @@ const HelpDeskChatPage: React.FC = () => {
   const navigate = useNavigate();
   const [input, setInput] = useState('');
   
-  // 2. Tambahkan ref untuk textarea
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   const isResolved = sessionId?.startsWith('resolve-');
   const messages = DUMMY_MESSAGES[sessionId || ''] || [];
   const currentChatUser = sessionId ? `Chat dengan ${sessionId}` : 'Sesi Chatbot';
 
-  // 3. Tambahkan handler input dari PublicServiceChatPage
+  // (handler input, send, resolve tetap sama)
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const textarea = e.target;
     setInput(textarea.value);
-
-    // Atur tinggi otomatis
-    textarea.style.height = 'auto'; // Reset tinggi
-    const maxHeight = 160; // Tentukan batas tinggi maks (misal 160px)
-    // Atur tinggi baru, tapi tidak melebihi maxHeight
+    textarea.style.height = 'auto'; 
+    const maxHeight = 160; 
     textarea.style.height = `${Math.min(textarea.scrollHeight, maxHeight)}px`;
   };
 
-  // 4. Perbarui handleSend
   const handleSend = () => {
     if (!input.trim()) return;
     toast.success(`Pesan terkirim ke ${sessionId}: ${input}`);
     setInput('');
-
-    // Reset tinggi textarea setelah mengirim
     if (textareaRef.current) {
-        textareaRef.current.style.height = '44px'; // Kembali ke tinggi awal
+        textareaRef.current.style.height = '44px'; 
     }
   };
 
@@ -69,11 +60,24 @@ const HelpDeskChatPage: React.FC = () => {
     navigate('/helpdesk');
   };
 
+  const handleGoBack = () => {
+    navigate('/helpdesk');
+  };
+
   return (
     <div className="flex flex-col h-full min-h-0 bg-white">
-      {/* Header Chat Panel (tetap sama) */}
+      {/* Header Chat Panel */}
       <div className="p-3 border-b border-gray-200 flex items-center justify-between bg-gray-50">
         <div className="flex items-center gap-3">
+          {/* --- PERUBAHAN DI SINI: ganti md:hidden -> lg:hidden --- */}
+          <button
+            onClick={handleGoBack}
+            className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-full lg:hidden"
+            aria-label="Kembali ke daftar chat"
+            title="Kembali"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
           <h2 className="text-md font-semibold text-gray-800">{currentChatUser}</h2>
         </div>
         <div>
@@ -89,7 +93,7 @@ const HelpDeskChatPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Area Bubble Chat (tetap sama) */}
+      {/* Area Bubble Chat (tidak berubah) */}
       <div className="flex-1 py-4 px-12 overflow-y-auto custom-scrollbar space-y-4">
         {messages.map((msg) => (
           <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-start' : 'justify-end'}`}>
@@ -105,44 +109,31 @@ const HelpDeskChatPage: React.FC = () => {
             </div>
           </div>
         ))}
-        {/* {sessionId === 'active-1' && (
-             <div className="flex justify-start">
-                <button className="bg-blue-100 text-blue-700 font-semibold px-4 py-2 rounded-lg text-sm flex items-center gap-2">
-                    <CornerDownLeft className="w-4 h-4" />
-                    Talk to Agent
-                </button>
-             </div>
-        )} */}
       </div>
 
-      {/* Input Area (Hanya tampil jika TIDAK resolved) */}
+      {/* Input Area (tidak berubah) */}
       {!isResolved && (
         <div className="p-4 border-t border-gray-200 bg-gray-50 space-y-3">
-          {/* Quick Response (tetap sama) */}
           <div className="flex gap-2">
             <QuickResponseButton text="Greeting" />
             <QuickResponseButton text="Checking" />
             <QuickResponseButton text="Followup" />
           </div>
-
-          {/* --- 5. GANTI <input> DENGAN <textarea> --- */}
-          {/* Ganti 'items-center' menjadi 'items-end' agar tombol Send sejajar bawah */}
           <div className="flex gap-3 items-end"> 
             <textarea
               ref={textareaRef}
               value={input}
-              onChange={handleInputChange} // Gunakan handler baru
+              onChange={handleInputChange} 
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault(); // Mencegah baris baru
+                  e.preventDefault(); 
                   handleSend(); 
                 }
               }}
-              // Tambahkan 'resize-none', 'overflow-y-auto' dan 'custom-scrollbar'
               className="flex-1 py-2.5 px-4 border border-gray-300 rounded-lg text-sm resize-none min-h-[44px] overflow-y-auto focus:outline-none focus:ring-2 focus:ring-blue-500 custom-scrollbar" 
               placeholder="Ketik pertanyaan Anda..."
               rows={1}
-              style={{ height: '44px' }} // Tinggi awal (sesuai min-h-[44px])
+              style={{ height: '44px' }} 
             />
             <button
               onClick={handleSend}

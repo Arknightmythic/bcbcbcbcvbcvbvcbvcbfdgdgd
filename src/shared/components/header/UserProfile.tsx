@@ -32,7 +32,7 @@ const UserProfile = () => {
       </div>
 
       {isMenuOpen && (
-        <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-20">
+        <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50">
           <div className="px-4 py-3">
             <p className="text-sm font-medium text-gray-900 truncate">
               {user?.name || 'Guest'}

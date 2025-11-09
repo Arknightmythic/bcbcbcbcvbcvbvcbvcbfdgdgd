@@ -1,5 +1,3 @@
-// src/features/UserManagement/components/UserTableRow.tsx
-
 import React from 'react';
 import TeamBadge from './TeamBadge';
 import type { ActionType, User } from '../utils/types'; // Tipe User diimpor dari types.ts
@@ -17,7 +15,7 @@ const UserTableRow: React.FC<UserTableRowProps> = ({ user, onAction }) => {
   const roleName = user.role?.name;
 
   return (
-    <tr className="hover:bg-gray-50 text-[10px] text-gray-700">
+    <tr className="group hover:bg-gray-50 text-[10px] text-gray-700">
       <td className="px-4 py-3 font-medium text-gray-900">{user.name}</td>
       <td className="px-4 py-3">{user.email}</td>
       <td className="px-4 py-3 capitalize">{user.account_type || 'N/A'}</td>
@@ -28,8 +26,11 @@ const UserTableRow: React.FC<UserTableRowProps> = ({ user, onAction }) => {
       <td className="px-4 py-3 capitalize">
         {roleName || <span className="text-gray-400">No Role</span>}
       </td>
-      <td className="px-4 py-3 text-center">
-        <UserActions user={user} onAction={onAction} />
+      <td className="px-4 py-3 text-center sticky right-0 bg-white group-hover:bg-gray-50 z-10 border-l border-gray-200">
+        {/* --- PERUBAHAN DI SINI: Menambahkan div wrapper --- */}
+        <div className="flex items-center justify-center gap-x-3">
+          <UserActions user={user} onAction={onAction} />
+        </div>
       </td>
     </tr>
   );

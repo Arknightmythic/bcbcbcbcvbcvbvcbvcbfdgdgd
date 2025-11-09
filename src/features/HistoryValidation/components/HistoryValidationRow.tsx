@@ -1,5 +1,3 @@
-// [File: src/features/HistoryValidation/components/HistoryValidationRow.tsx]
-
 import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import type { ActionType, ValidationHistoryItem } from '../utils/types';
 import {CheckCircle, XCircle, FileText } from 'lucide-react';
@@ -93,7 +91,8 @@ const TruncatedText: React.FC<{ content: string; title: string; onIconClick: () 
 
 const HistoryValidationTableRow: React.FC<HistoryValidationTableRowProps> = ({ history, onAction, onViewText }) => {
   return (
-    <tr className="hover:bg-gray-50 text-[10px] text-gray-700">
+    /* --- PERUBAHAN DI SINI: Tambahkan 'group' --- */
+    <tr className="group hover:bg-gray-50 text-[10px] text-gray-700">
       <td className="px-4 py-3 text-center">{new Date(history.tanggal).toLocaleDateString("en-GB")}</td>
       <td className="px-4 py-3">{history.user}</td>
       <td className="px-4 py-3">{history.session_id}</td>
@@ -124,7 +123,8 @@ const HistoryValidationTableRow: React.FC<HistoryValidationTableRowProps> = ({ h
       <td className="px-4 py-3 capitalize text-center">
         <StatusBadge status={history.status_validasi} />
       </td>
-      <td className="px-4 py-3 text-center">
+      {/* --- PERUBAHAN DI SINI: Buat sel Action sticky --- */}
+      <td className="px-4 py-3 text-center sticky right-0 bg-white group-hover:bg-gray-50 z-10 border-l border-gray-200">
         <div className="flex items-center justify-center gap-x-2">
           <button
             onClick={() => onAction('approve', history)}

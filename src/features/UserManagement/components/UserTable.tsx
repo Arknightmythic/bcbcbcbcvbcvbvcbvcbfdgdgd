@@ -35,16 +35,18 @@ const UserTable: React.FC<UserTableProps> = ({
 
   return (
     <div className="bg-white p-6 rounded-b-lg shadow-md">
-      <div className="overflow-y-auto">
-        <table className="min-w-full">
-          <thead className="bg-gray-100">
+      {/* --- PERUBAHAN DI SINI: ganti overflow-y-auto -> overflow-x-auto --- */}
+      <div className="overflow-x-auto relative">
+        <table className="min-w-full min-w-[900px]"> {/* Tambah min-w */}
+          <thead className="bg-gray-100 sticky top-0 "> {/* Tambah sticky & z-index */}
             <tr className="text-left text-[10px] font-semibold text-gray-600">
               <th className="px-4 py-3 sticky top-0 bg-gray-100">Name</th>
               <th className="px-4 py-3 sticky top-0 bg-gray-100">Email</th>
               <th className="px-4 py-3 sticky top-0 bg-gray-100">Account Type</th>
               <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">Team</th>
               <th className="px-4 py-3 sticky top-0 bg-gray-100">Role</th>
-              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">Actions</th>
+              {/* --- PERUBAHAN DI SINI: Buat header Action sticky --- */}
+              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center right-0 z-10">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -63,8 +65,9 @@ const UserTable: React.FC<UserTableProps> = ({
         </table>
       </div>
 
+      {/* --- PERUBAHAN DI SINI: Kontrol Paginasi Responsif --- */}
       <nav
-        className="flex items-center justify-between pt-4"
+        className="flex flex-col md:flex-row items-center justify-between pt-4 gap-4 md:gap-0"
         aria-label="Table navigation"
       >
         <span className="text-xs font-normal text-gray-500">

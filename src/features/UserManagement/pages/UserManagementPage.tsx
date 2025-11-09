@@ -188,25 +188,27 @@ const UserManagementPage = () => {
 
   return (
     <>
-      <div className="flex flex-col flex-1 min-h-0">
+     <div className="flex flex-col flex-1 min-h-0">
         <div className="px-4 bg-gray-50 rounded-t-lg shadow-md">
-            <div className="flex justify-between items-center">
+            {/* --- PERUBAHAN DI SINI: Bungkus dengan flex container --- */}
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                  <div className="flex-grow">
-                    {/* (Props TableControls sudah benar) */}
                     <TableControls
-                        searchTerm={searchInput} // <-- Prop 'searchTerm' diisi oleh 'searchInput'
+                        searchTerm={searchInput}
                         searchPlaceholder="Search by name or email..."
                         filters={filters}
-                        onSearchChange={setSearchInput} // <-- 'onSearchChange' mengubah 'searchInput'
-                        onSearchSubmit={handleSearchSubmit} // <-- 'onSearchSubmit' memanggil handler baru
+                        onSearchChange={setSearchInput}
+                        onSearchSubmit={handleSearchSubmit}
                         onFilterChange={handleFilterChange}
                         filterConfig={filterConfig}
                     />
                  </div>
-                <div className="ml-4 flex-shrink-0 text-xs">
+                {/* --- PERUBAHAN DI SINI: Atur lebar tombol --- */}
+                <div className="w-full lg:w-auto flex-shrink-0 text-xs">
                     <button
                         onClick={() => { setSelectedUser(null); setUserModalOpen(true); }}
-                        className="bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 flex items-center"
+                        /* Tambahkan w-full lg:w-auto dan justify-center */
+                        className="bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 flex items-center justify-center w-full lg:w-auto"
                     >
                         <Plus className="w-3 h-3 mr-2" />
                         Create User

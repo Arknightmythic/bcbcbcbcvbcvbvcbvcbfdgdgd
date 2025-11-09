@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import { Eye, Edit, Trash2 } from 'lucide-react';
 import type { ActionType, Role } from '../utils/types';
@@ -12,7 +10,7 @@ interface RoleTableRowProps {
 
 const RoleTableRow: React.FC<RoleTableRowProps> = ({ role, onAction }) => {
   return (
-    <tr className="hover:bg-gray-50 text-[10px] text-gray-700">
+    <tr className="group hover:bg-gray-50 text-[10px] text-gray-700">
       <td className="px-4 py-3 font-medium text-gray-900 capitalize">{role.name}</td>
       <td className="px-4 py-3">
         {/* Baca dari objek team */}
@@ -32,16 +30,19 @@ const RoleTableRow: React.FC<RoleTableRowProps> = ({ role, onAction }) => {
           )}
         </div>
       </td>
-      <td className="px-4 py-3 text-center">
-        <button onClick={() => onAction('view', role)} className="text-green-600 hover:text-green-800 mr-4" title="View Details">
-          <Eye className="w-4 h-4" />
-        </button>
-        <button onClick={() => onAction('edit', role)} className="text-blue-600 hover:text-blue-800 mr-4" title="Edit">
-          <Edit className="w-4 h-4" />
-        </button>
-        <button onClick={() => onAction('delete', role)} className="text-red-600 hover:text-red-800" title="Delete">
-          <Trash2 className="w-4 h-4" />
-        </button>
+      <td className="px-4 py-3 text-center sticky right-0 bg-white group-hover:bg-gray-50 z-10 border-l border-gray-200">
+        {/* --- PERUBAHAN DI SINI: Menambahkan div wrapper --- */}
+        <div className="flex items-center justify-center gap-x-3">
+          <button onClick={() => onAction('view', role)} className="text-green-600 hover:text-green-800" title="View Details">
+            <Eye className="w-4 h-4" />
+          </button>
+          <button onClick={() => onAction('edit', role)} className="text-blue-600 hover:text-blue-800" title="Edit">
+            <Edit className="w-4 h-4" />
+          </button>
+          <button onClick={() => onAction('delete', role)} className="text-red-600 hover:text-red-800" title="Delete">
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
       </td>
     </tr>
   );

@@ -37,9 +37,10 @@ const HistoryValidationTable: React.FC<HistoryValidationTableProps> = ({
 
   return (
     <div className="bg-white p-6 rounded-b-lg shadow-md">
-      <div className="overflow-y-auto">
-        <table className="min-w-full">
-          <thead className="bg-gray-100">
+      {/* --- PERUBAHAN DI SINI: ganti overflow-y-auto -> overflow-x-auto --- */}
+      <div className="overflow-x-auto relative">
+        <table className="min-w-full min-w-[1024px]"> {/* Tambah min-w */}
+          <thead className="bg-gray-100 sticky top-0 "> {/* Tambah sticky & z-index */}
             <tr className="text-left text-[10px] font-semibold text-gray-600">
               <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">TANGGAL</th>
               <th className="px-4 py-3 sticky top-0 bg-gray-100">USER</th>
@@ -48,7 +49,8 @@ const HistoryValidationTable: React.FC<HistoryValidationTableProps> = ({
               <th className="px-4 py-3 sticky top-0 bg-gray-100">JAWABAN AI</th>
               <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">TIDAK TERJAWAB (AI)</th>
               <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">STATUS VALIDASI</th>
-              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">AKSI</th>
+              {/* --- PERUBAHAN DI SINI: Buat header Action sticky --- */}
+              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center right-0 z-10">AKSI</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -72,8 +74,9 @@ const HistoryValidationTable: React.FC<HistoryValidationTableProps> = ({
         </table>
       </div>
 
+      {/* --- PERUBAHAN DI SINI: Kontrol Paginasi Responsif --- */}
       <nav
-        className="flex items-center justify-between pt-4"
+        className="flex flex-col md:flex-row items-center justify-between pt-4 gap-4 md:gap-0"
         aria-label="Table navigation"
       >
         <span className="text-xs font-normal text-gray-500">

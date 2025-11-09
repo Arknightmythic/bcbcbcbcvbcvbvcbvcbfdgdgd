@@ -13,7 +13,8 @@ interface DocumentTableRowProps {
 const DocumentTableRow: React.FC<DocumentTableRowProps> = ({ document, hasManagerAccess, onAction, onViewFile }) => {
   // URL untuk mengunduh file
   return (
-    <tr className="hover:bg-gray-50 text-[10px] text-gray-700">
+    /* --- PERUBAHAN DI SINI: Tambahkan 'group' --- */
+    <tr className="group hover:bg-gray-50 text-[10px] text-gray-700">
       <td className="px-4 py-3 text-center">{new Date(document.created_at).toLocaleDateString("en-GB")}</td>
       <td className="px-4 py-3 font-medium text-gray-900">{document.document_name}</td>
       <td className="px-4 py-3 text-center">{document.staff}</td>
@@ -26,8 +27,8 @@ const DocumentTableRow: React.FC<DocumentTableRowProps> = ({ document, hasManage
       <td className="px-4 py-3 text-center">
         <StatusBadge isApprove={document.is_approve} />
       </td>
-      <td className="px-4 py-3 text-center">
-        {/* Komponen DocumentActions diganti dengan logika inline untuk view/download */}
+      {/* --- PERUBAHAN DI SINI: Buat sel Action sticky --- */}
+      <td className="px-4 py-3 text-center sticky right-0 bg-white group-hover:bg-gray-50 z-10 border-l border-gray-200">
         <div className="flex items-center justify-center gap-x-3">
           <DocumentActions
             document={document} 

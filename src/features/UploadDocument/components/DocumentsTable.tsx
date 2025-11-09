@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Loader2, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import DocumentRow from "./DocumentRow";
@@ -82,8 +83,9 @@ const DocumentsTable: React.FC<DocumentsTableProps> = (props) => {
         )}
       </div>
 
+      {/* Wrapper untuk overflow/scroll horizontal */}
       <div className="relative overflow-x-auto">
-        <table className="w-full text-sm text-left text-gray-500">
+        <table className="w-full text-sm text-left text-gray-500 min-w-[900px]">
           <thead className="text-[10px] text-gray-700 uppercase bg-gray-100 sticky top-0">
             <tr>
               <th className="px-4 py-4 w-1/24">
@@ -101,10 +103,10 @@ const DocumentsTable: React.FC<DocumentsTableProps> = (props) => {
               <th className="px-6 py-4">Kategori</th>
               <th className="px-6 py-4 ">Team</th>
               <th className="px-6 py-4">Status</th>
-              <th className="px-6 py-4 text-center">Action</th>
+              <th className="px-6 py-4 text-center sticky right-0 bg-gray-100 z-10">Action</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-gray-200">
             {isLoading ? (
               <tr>
                 <td colSpan={9} className="text-center py-10">
@@ -141,9 +143,9 @@ const DocumentsTable: React.FC<DocumentsTableProps> = (props) => {
         </table>
       </div>
 
-      {/* Pagination Controls */}
+      {/* Pagination Controls - Responsive */}
       <nav
-        className="flex items-center justify-between pt-4"
+        className="flex flex-col md:flex-row items-center justify-between pt-4 gap-4 md:gap-0"
         aria-label="Table navigation"
       >
         <span className="text-xs font-normal text-gray-500">
