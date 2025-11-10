@@ -1,9 +1,44 @@
+// [GANTI: src/features/PublicService/pages/PublicServiceChatPage.tsx]
+
+import React, { useState, useEffect } from 'react'; // Impor useEffect
 import { Loader2, Send, ArrowLeft, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
 import type { ChatMessage, Citation } from '../utils/types';
 import MessageActions from '../components/MessageAction';
-import { usePublicServiceChat } from '../hooks/useServicePublicChat';
 import CitationModal from '../components/CitationModal';
+import { useServicePublicChat } from '../hooks/useServicePublicChat';
+import { useAuthStore } from '../../../shared/store/authStore';
+
+// --- KOMPONEN BANNER (Request 1) ---
+// (Tetap sama, hanya dipindahkan ke sini untuk kerapian)
+interface ConnectToAgentBannerProps {
+  onYes: () => void;
+  onNo: () => void;
+}
+const ConnectToAgentBanner: React.FC<ConnectToAgentBannerProps> = ({ onYes, onNo }) => (
+  // Diberi style agar pas di tengah
+  <div className="mt-2 w-full max-w-lg p-3 bg-gray-100 rounded-lg animate-fade-in-up shadow-sm border border-gray-200">
+    <p className="text-sm text-gray-800 mb-3 text-center">
+      silahkan pilih "ya, hubungkan" untuk berbicara ke Agent Layanan atau "Tidak" untuk membatalkan
+    </p>
+    <div className="flex gap-3">
+      <button
+        onClick={onYes}
+        className="flex-1 bg-blue-600 text-white text-sm font-semibold py-2 px-4 rounded-lg hover:bg-blue-700"
+      >
+        Ya, hubungkan
+      </button>
+      <button
+        onClick={onNo}
+        className="flex-1 bg-gray-200 text-gray-800 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-gray-300"
+      >
+        Tidak
+      </button>
+    </div>
+  </div>
+);
+// --- AKHIR KOMPONEN BANNER ---
+
 
 interface MessageBubbleProps {
   message: ChatMessage;
@@ -15,9 +50,13 @@ interface MessageBubbleProps {
   onFeedback: (messageId: string, feedback: 'like' | 'dislike') => void;
   onCopy: (question?: ChatMessage, answer?: ChatMessage) => void;
   userInitial: string;
+  isLastMessage: boolean;
+  // --- HAPUS PROP BANNER DARI SINI ---
+  // onConnectToAgent: () => void; (Dihapus)
+  // ---------------------------------
 }
 
-// --- START: MODIFIED MessageBubble COMPONENT ---
+// --- MessageBubble (Disederhanakan) ---
 const MessageBubble: React.FC<MessageBubbleProps> = ({
   message,
   previousMessage,
@@ -27,10 +66,16 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   onOpenCitationModal,
   onFeedback,
   onCopy,
-  userInitial
+  userInitial,
+  isLastMessage,
 }) => {
   const messageCitations = citations.filter(c => c.messageId === message.id);
   const hasCitations = messageCitations.length > 0;
+
+  const [displayedLines, setDisplayedLines] = useState<string[]>([]);
+  const [isTextComplete, setIsTextComplete] = useState(false);
+  const [isCitationVisible, setIsCitationVisible] = useState(false);
+  const [isActionVisible, setIsActionVisible] = useState(false);
 
   const handleCopyClick = () => {
     if (message.sender === 'user') {
@@ -39,8 +84,69 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
       onCopy(previousMessage, message);
     }
   };
-  
-  // Conditionally render nothing for system messages
+
+  useEffect(() => {
+    const textToDisplay = message.text || "";
+
+    if (message.sender !== 'agent' || !isLastMessage) {
+      setDisplayedLines(textToDisplay.split('\n'));
+      setIsTextComplete(true);
+      setIsCitationVisible(true);
+      setIsActionVisible(true);
+      return;
+    }
+
+    setDisplayedLines([]);
+    setIsTextComplete(false);
+    setIsCitationVisible(false);
+    setIsActionVisible(false);
+    // Hapus setIsBannerVisible(false) dari sini
+
+    const lines = textToDisplay.split('\n');
+    let currentLineIndex = 0;
+    
+    let timeouts: ReturnType<typeof setTimeout>[] = [];
+
+    const revealLine = () => {
+      setDisplayedLines(prev => [...prev, lines[currentLineIndex]]);
+      currentLineIndex++;
+
+      if (currentLineIndex < lines.length) {
+        timeouts.push(setTimeout(revealLine, 150));
+      } else {
+        timeouts.push(setTimeout(() => setIsTextComplete(true), 100));
+      }
+    };
+
+    timeouts.push(setTimeout(revealLine, 100));
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+    };
+  }, [message.id, message.text, message.sender, isLastMessage]);
+
+  useEffect(() => {
+    if (isTextComplete) {
+      const delay = hasCitations ? 200 : 0;
+      const timer = setTimeout(() => setIsCitationVisible(true), delay);
+      return () => clearTimeout(timer);
+    }
+  }, [isTextComplete, hasCitations]);
+
+  useEffect(() => {
+    if (isCitationVisible) {
+      const timer = setTimeout(() => {
+        setIsActionVisible(true);
+        // Hapus logika banner dari sini
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [isCitationVisible, message.is_answered]);
+
+  if (!message.text && message.sender !== 'system') {
+    return null;
+  }
+
   if (message.sender === 'system') {
     return (
         <div key={message.id} className="mb-4 flex justify-center">
@@ -53,36 +159,42 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
 
   return (
     <div key={message.id} className={`relative group mb-4 flex gap-3 ${message.sender === 'user' ? 'flex-row-reverse' : ''}`}>
-      {/* Avatar */}
       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 text-white ${message.sender === 'user' ? 'bg-bOss-blue' : 'bg-bOss-red'}`}>
         {message.sender === 'user' ? userInitial : 'AI'}
       </div>
 
-      {/* Wrapper for Bubble + Actions */}
       <div className="flex flex-col max-w-[75%] items-start">
-        {/* The Bubble */}
         <div className={`relative p-3 rounded-lg leading-relaxed shadow-sm w-fit ${
             message.sender === 'user' ? 'bg-gray-100 text-gray-800 rounded-br-none' : 'bg-bOss-blue text-white rounded-bl-none'
         }`}>
-          <p className="whitespace-pre-wrap m-0 text-sm">{message.text}</p>
           
-          {message.sender === 'agent' && hasCitations && (
-            <div className="mt-3 pt-2 border-t text-xs border-gray-200">
-              <button onClick={() => onToggleCitation(message.id)} className="w-full flex justify-between items-center text-left font-semibold text-white mb-1 focus:outline-none">
-                <span>Sumber ({messageCitations.length})</span>
-                <span className={`transform transition-transform duration-200 ${isOpen ? 'rotate-180' : 'rotate-0'}`}>▼</span>
-              </button>
-              <div className={`overflow-hidden transition-all ease-in-out duration-300 ${isOpen ? 'max-h-40 pt-1' : 'max-h-0'}`}>
-                <div className="flex flex-col gap-1.5">
-                  {messageCitations.map((citation, index) => (
-                    <div key={index} onClick={() => onOpenCitationModal(citation)} className="bg-gray-200 text-gray-700 px-2 py-1 rounded cursor-pointer hover:bg-gray-300 transition-colors truncate" title={citation.documentName}>
-                      {citation.documentName}
-                    </div>
-                  ))}
+          <div className="whitespace-pre-wrap m-0 text-sm">
+            {displayedLines.map((line, index) => (
+              <p key={index} className={isLastMessage ? "animate-fade-in-up" : ""}>
+                {line || '\u200B'}
+              </p>
+            ))}
+          </div>
+          
+          <div className={`transition-opacity duration-300 ${isCitationVisible ? 'opacity-100' : 'opacity-0'}`}>
+            {message.sender === 'agent' && hasCitations && (
+              <div className="mt-3 pt-2 border-t text-xs border-gray-200">
+                <button onClick={() => onToggleCitation(message.id)} className="w-full flex justify-between items-center text-left font-semibold text-white mb-1 focus:outline-none">
+                  <span>Sumber ({messageCitations.length})</span>
+                  <span className={`transform transition-transform duration-200 ${isOpen ? 'rotate-180' : 'rotate-0'}`}>▼</span>
+                </button>
+                <div className={`overflow-hidden transition-all ease-in-out duration-300 ${isOpen ? 'max-h-40 pt-1' : 'max-h-0'}`}>
+                  <div className="flex flex-col gap-1.5">
+                    {messageCitations.map((citation, index) => (
+                      <div key={index} onClick={() => onOpenCitationModal(citation)} className="bg-gray-200 text-gray-700 px-2 py-1 rounded cursor-pointer hover:bg-gray-300 transition-colors truncate" title={citation.documentName}>
+                        {citation.documentName}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           <button
               onClick={handleCopyClick}
@@ -96,17 +208,20 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           </button>
         </div>
 
-        {/* Actions, now correctly constrained by the wrapper's max-width */}
-        {message.sender === 'agent' && (
-          <div className="mt-2 w-full">
-            <MessageActions message={message} onFeedback={onFeedback} />
-          </div>
-        )}
+        <div className={`transition-opacity duration-300 w-full ${isActionVisible ? 'opacity-100' : 'opacity-0'}`}>
+          {message.sender === 'agent' && (
+            <div className="mt-2 w-full">
+              <MessageActions message={message} onFeedback={onFeedback} />
+            </div>
+          )}
+        </div>
+        
+        {/* --- HAPUS BANNER DARI SINI --- */}
       </div>
     </div>
   );
 };
-// --- END: MODIFIED MessageBubble COMPONENT ---
+// --- AKHIR MessageBubble ---
 
 
 const PublicServiceChatPage: React.FC = () => {
@@ -116,17 +231,41 @@ const PublicServiceChatPage: React.FC = () => {
     handleSendMessage: sendMessageFromHook, 
     handleGoBackToIntro, messagesEndRef,
     textareaRef, isRestoringSession,
-  } = usePublicServiceChat();
+  } = useServicePublicChat();
+
+  // --- State Baru: Visibilitas Banner (Request 1) ---
+  const [isBannerVisible, setIsBannerVisible] = useState(false);
+  // -------------------------------------------------
+  
+  // --- Effect Baru: Kontrol Visibilitas Banner (Request 1) ---
+  useEffect(() => {
+    if (messages.length === 0) {
+      setIsBannerVisible(false);
+      return;
+    }
+    const lastMessage = messages[messages.length - 1];
+
+    // Tampilkan banner HANYA JIKA pesan terakhir dari AI dan tidak terjawab
+    if (
+      lastMessage.sender === 'agent' &&
+      (lastMessage.is_answered === false || lastMessage.is_answered === null)
+    ) {
+      // Tunggu sebentar setelah animasi teks selesai
+      const timer = setTimeout(() => setIsBannerVisible(true), 600); // 600ms = 100ms (mulai) + 150ms (baris) + 100ms (teks) + 200ms (action)
+      return () => clearTimeout(timer);
+    } else {
+      // Sembunyikan banner jika pesan terakhir dari user,
+      // atau jika pesan AI tapi terjawab
+      setIsBannerVisible(false);
+    }
+  }, [messages]); // Dijalankan setiap kali 'messages' array berubah
+  // -------------------------------------------------------
 
   
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const textarea = e.target;
     setInput(textarea.value);
-
-    
     textarea.style.height = 'auto';
-
-    
     const maxHeight = 160; 
     textarea.style.height = `${Math.min(textarea.scrollHeight, maxHeight)}px`;
   };
@@ -134,28 +273,28 @@ const PublicServiceChatPage: React.FC = () => {
   const handleSendMessage = (e: React.FormEvent | React.KeyboardEvent) => {
     e.preventDefault(); 
     if (!input.trim() || isBotLoading) return; 
-
     sendMessageFromHook(); 
-
-    
     if (textareaRef.current) {
         textareaRef.current.style.height = 'auto'; 
     }
+    setIsBannerVisible(false); // Sembunyikan banner saat kirim pesan baru
   };
   
-
   const handleFeedback = (messageId: string, feedback: 'like' | 'dislike') => {
     console.log(`Feedback for message ${messageId}: ${feedback}`);
     const feedbackText = feedback === 'like' ? 'Suka' : 'Tidak Suka';
     toast.success(`Terima kasih atas masukan Anda! (${feedbackText})`);
   };
 
+  // --- PERBAIKAN FUNGSI COPY (Request 2) ---
   const handleCopy = (question?: ChatMessage, answer?: ChatMessage) => {
      let textToCopy = "";
      if (question && answer) {
-         textToCopy = `Pertanyaan:\n${question.text}\n\nJawaban:\n${answer.text}`;
+         // Hanya salin teks, tanpa prefix
+         textToCopy = `${question.text}\n\n${answer.text}`;
      } else if (answer) {
-        textToCopy = answer.sender === 'user' ? `Pesan Pengguna:\n${answer.text}` : `Jawaban:\n${answer.text}`;
+        // Hanya salin teks, tanpa prefix
+        textToCopy = answer.text;
      } else {
          return;
      }
@@ -181,9 +320,16 @@ const PublicServiceChatPage: React.FC = () => {
       }
     });
   };
+  // --- AKHIR PERBAIKAN COPY ---
 
+  // --- Handler untuk Banner (Request 1) ---
+  const handleConnectToAgent = () => {
+    toast.success("Fitur 'Connect to Agent' sedang dalam pengembangan.");
+    // TODO: Panggil API "connect to agent" di sini
+  };
+  // -------------------------------------
 
-  const userInitial = 'U';
+  const userInitial = useAuthStore((state) => state.user?.name.charAt(0).toUpperCase()) || 'U';
 
   if (isRestoringSession) {
     return (
@@ -205,11 +351,14 @@ const PublicServiceChatPage: React.FC = () => {
       <div className="flex-1 p-4 overflow-y-auto custom-scrollbar">
         {messages.map((msg, index) => {
           const previousMsg = index > 0 && messages[index - 1].sender === 'user' ? messages[index - 1] : undefined;
+          const isLastMessage = index === messages.length - 1;
+          
           return (
             <MessageBubble
               key={msg.id}
               message={msg}
               previousMessage={previousMsg}
+              isLastMessage={isLastMessage}
               citations={citations}
               isOpen={!!openCitations[msg.id]}
               onToggleCitation={toggleCitations}
@@ -217,9 +366,25 @@ const PublicServiceChatPage: React.FC = () => {
               onFeedback={handleFeedback}
               onCopy={handleCopy}
               userInitial={userInitial}
+              // --- Hapus prop onConnectToAgent ---
             />
           );
         })}
+
+        {/* --- PINDAHKAN BANNER KE SINI (Request 1) --- */}
+        {isBannerVisible && (
+          <div className="flex justify-center py-2">
+            <ConnectToAgentBanner
+              onYes={() => {
+                handleConnectToAgent();
+                setIsBannerVisible(false);
+              }}
+              onNo={() => setIsBannerVisible(false)}
+            />
+          </div>
+        )}
+        {/* --------------------------------------------- */}
+
         {isBotLoading && (
           <div className="mb-4 flex gap-3">
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 bg-bOss-red text-white">AI</div>
@@ -233,10 +398,8 @@ const PublicServiceChatPage: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Area Input Pesan */}
       <div className="p-4 bg-white border-t border-gray-200">
         <form onSubmit={handleSendMessage} className="flex gap-3 items-end">
-          {/* --- START MARK: Modifikasi Textarea --- */}
           <textarea
             ref={textareaRef}
             value={input}
@@ -253,7 +416,6 @@ const PublicServiceChatPage: React.FC = () => {
             style={{ height: '44px' }} 
             disabled={isBotLoading}
           />
-          {/* --- END MARK: Modifikasi Textarea --- */}
           <button
             type="submit"
             className="w-11 h-11 bg-bOss-blue rounded-full text-white cursor-pointer flex items-center justify-center self-end hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-bOss-blue focus:ring-offset-2 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors" 
@@ -268,7 +430,23 @@ const PublicServiceChatPage: React.FC = () => {
       <CitationModal citation={selectedCitation} onClose={handleCloseModal} />
 
       <style>{`
-        /* ... styles lama tidak berubah ... */
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.4s ease-out forwards;
+        }
+        .animate-fade-in-up {
+          animation: fadeInUp 0.4s ease-out forwards;
+          opacity: 0; 
+          animation-fill-mode: forwards;
+        }
+
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }

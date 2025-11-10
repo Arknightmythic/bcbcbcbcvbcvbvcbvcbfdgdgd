@@ -1,27 +1,29 @@
-
+// [GANTI: src/features/HistoryValidation/pages/HistoryValidationPage.tsx]
 
 import { useMemo, useState } from "react";
 import type {
   ActionType,
-  
-  ValidationHistoryItem, 
-  ChatMessage,
+  ValidationHistoryItem,
+  ChatPair,
+  ValidationStatus,
+  Filters, // Sekarang diimpor dari types
 } from "../utils/types";
+import {
+  useGetValidationHistory,
+  useUpdateFeedback,
+  useGetChatHistory,
+} from "../hooks/useHistoryValidation";
+
 import HistoryValidationTable from "../components/HistoryValidationTable";
 import ChatHistoryModal from "../components/ChatHistoryModal";
 import TableControls, {
   type FilterConfig,
 } from "../../../shared/components/TableControls";
-import toast from "react-hot-toast"; 
+import toast from "react-hot-toast";
 import TextExpandModal from "../../../shared/components/TextExpandModal";
+import { Loader2 } from "lucide-react";
 
-
-export interface Filters {
-  aiAnswer: string;
-  validationStatus: string;
-}
-
-
+// Filter config (tidak berubah)
 const filterConfig: FilterConfig<Filters>[] = [
   {
     key: "aiAnswer",
@@ -42,104 +44,67 @@ const filterConfig: FilterConfig<Filters>[] = [
   },
 ];
 
+const mapChatPairToValidationItem = (
+  pair: ChatPair
+): ValidationHistoryItem => {
+  let status: ValidationStatus = "Pending";
+  if (pair.feedback === true) status = "Validated";
+  if (pair.feedback === false) status = "Rejected";
 
-const DUMMY_HISTORY: ValidationHistoryItem[] = [
-  {
-    id: 1,
-    tanggal: "2025-10-29T10:00:00Z",
-    user: "Ani Susanti",
-    session_id: "sess_90123",
-    pertanyaan: "Bagaimana prosedur terbaru untuk pengajuan izin investasi sektor energi terbarukan?",
-    jawaban_ai: "Prosedur terbaru melibatkan sistem OSS RBA dan memerlukan dokumen studi kelayakan proyek.",
-    tidak_terjawab: false,
-    status_validasi: "Pending",
-  },
-  {
-    id: 2,
-    tanggal: "2025-10-28T11:30:00Z",
-    user: "Bambang Wijaya",
-    session_id: "sess_45678",
-    pertanyaan: "Apa saja insentif pajak yang tersedia untuk investasi di Kawasan Ekonomi Khusus (KEK)?",
-    jawaban_ai: "Insentifnya meliputi tax holiday, pengurangan PPh Badan, dan pembebasan PPN/PPnBM tertentu.",
-    tidak_terjawab: false,
-    status_validasi: "Validated",
-  },
-  {
-    id: 3,
-    tanggal: "2025-10-27T14:15:00Z",
-    user: "Citra Dewi",
-    session_id: "sess_11223",
-    pertanyaan: "Berapa batas minimal modal untuk PMA di sektor pertambangan mineral?",
-    jawaban_ai: "Batas minimal modal untuk PMA adalah Rp 10 Miliar. (Jawaban ini salah, batasnya lebih tinggi)",
-    tidak_terjawab: false,
-    status_validasi: "Rejected",
-  },
-  {
-    id: 4,
-    tanggal: "2025-10-26T09:05:00Z",
-    user: "Dedi Firmansyah",
-    session_id: "sess_55667",
-    pertanyaan: "Bagaimana cara mendaftar sebagai mitra hilirisasi di BKPM?",
-    jawaban_ai: "Pendaftaran dapat dilakukan melalui portal layanan perizinan terpadu dengan mengisi formulir mitra.",
-    tidak_terjawab: false,
-    status_validasi: "Pending",
-  },
-  {
-    id: 5,
-    tanggal: "2025-10-25T16:45:00Z",
-    user: "Eko Prasetyo",
-    session_id: "sess_77889",
-    pertanyaan: "Apa kebijakan fiskal terbaru yang akan diimplementasikan pada kuartal depan?",
-    jawaban_ai: "Maaf, saya tidak dapat menemukan informasi relevan saat ini.",
-    tidak_terjawab: true,
-    status_validasi: "Pending",
-  },
-  {
-      id: 6,
-      tanggal: "2025-10-24T10:00:00Z",
-      user: "Budi Santoso",
-      session_id: "sess_10001",
-      pertanyaan: "Saya ingin menanyakan tentang regulasi terbaru mengenai standar emisi kendaraan bermotor untuk kendaraan listrik di Indonesia. Apakah ada perubahan signifikan dalam beberapa tahun terakhir dan bagaimana dampaknya terhadap produsen mobil yang ingin berinvestasi di pasar Indonesia? Mohon berikan informasi detail mengenai ambang batas emisi, proses sertifikasi, dan insentif yang diberikan pemerintah untuk adopsi kendaraan rendah emisi. Saya juga tertarik dengan perbandingan regulasi ini dengan negara-negara maju seperti Jepang atau Eropa.",
-      jawaban_ai: "Regulasi emisi kendaraan bermotor di Indonesia untuk kendaraan listrik saat ini masih dalam tahap pengembangan yang cepat. Pemerintah telah mengeluarkan beberapa kebijakan untuk mendorong penggunaan kendaraan listrik, termasuk insentif pajak dan pembebasan bea masuk untuk komponen tertentu. Perubahan signifikan terjadi pada Peraturan Menteri Perindustrian No. XX Tahun 2023 yang memperkenalkan standar EURO 4 untuk kendaraan ICE baru dan kerangka kerja awal untuk kendaraan listrik. Proses sertifikasi melibatkan uji tipe dan verifikasi teknis yang ketat. Dibandingkan dengan Jepang atau Eropa, Indonesia masih memiliki celah dalam hal infrastruktur pengisian daya dan jumlah stasiun pengisian. Namun, komitmen pemerintah untuk mencapai target net-zero emission diharapkan akan mempercepat adopsi regulasi yang lebih komprehensif di masa mendatang. Ada juga diskusi untuk memperkenalkan skema insentif berbasis karbon. Kami akan terus memantau perkembangannya.",
-      tidak_terjawab: false,
-      status_validasi: "Pending",
-    },
-];
-
-const DUMMY_CHAT_HISTORY: ChatMessage[] = [
-  { id: "1", sender: "user", text: "Halo, saya mau tanya tentang produk A." },
-  {
-    id: "2",
-    sender: "agent",
-    text: "Tentu, produk A adalah produk terbaik kami. Ada yang spesifik yang ingin anda tanyakan?",
-  },
-  { id: "3", sender: "user", text: "Berapa harganya?" },
-  { id: "4", sender: "agent", text: "Harganya 100 ribu rupiah." },
-];
+  return {
+    id: pair.question_id,
+    answerId: pair.answer_id,
+    tanggal: pair.question_time,
+    user: "User", // Dummy
+    session_id: pair.session_id,
+    pertanyaan: pair.question_content,
+    jawaban_ai: pair.answer_content,
+    tidak_terjawab: pair.is_cannot_answer === true,
+    status_validasi: status,
+  };
+};
 
 const HistoryValidationPage = () => {
   const [chatModalOpen, setChatModalOpen] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [filters, setFilters] = useState<Filters>({ aiAnswer: "", validationStatus: "" });
+  const [filters, setFilters] = useState<Filters>({
+    aiAnswer: "",
+    validationStatus: "",
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [histories, setHistories] = useState<ValidationHistoryItem[]>(DUMMY_HISTORY);
 
-  
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
+    null
+  );
   const [textModalState, setTextModalState] = useState<{
     isOpen: boolean;
     title: string;
     content: string;
-  }>({ isOpen: false, title: '', content: '' });
+  }>({ isOpen: false, title: "", content: "" });
 
-  const handleSearchSubmit = () => {
-    setSearchTerm(searchInput);
-    setCurrentPage(1);
-  };
+  const searchParams = useMemo(() => {
+    const params = new URLSearchParams();
+    params.set("page", String(currentPage));
+    params.set("page_size", String(itemsPerPage));
+    return params;
+  }, [currentPage, itemsPerPage]);
+
+  const { data: historyData, isLoading: isLoadingTable } =
+    useGetValidationHistory(searchParams);
+
+  // --- PERBAIKAN: Hapus 'isPending' yang tidak terpakai ---
+  const { mutate: updateFeedback } = useUpdateFeedback();
+  // ----------------------------------------------------
+
+  const { data: chatHistoryForModal, isLoading: isLoadingModal } =
+    useGetChatHistory(selectedSessionId);
 
   const filteredHistories = useMemo(() => {
-    return histories.filter((history) => {
+    const tableData = historyData?.data.map(mapChatPairToValidationItem) || [];
+
+    return tableData.filter((history) => {
       const lowerSearchTerm = searchTerm.toLowerCase();
       const searchMatch =
         history.user.toLowerCase().includes(lowerSearchTerm) ||
@@ -148,7 +113,9 @@ const HistoryValidationPage = () => {
         history.jawaban_ai.toLowerCase().includes(lowerSearchTerm);
 
       const answerMatch = filters.aiAnswer
-        ? (filters.aiAnswer === 'answered' ? !history.tidak_terjawab : history.tidak_terjawab)
+        ? filters.aiAnswer === "answered"
+          ? !history.tidak_terjawab
+          : history.tidak_terjawab
         : true;
       const statusMatch = filters.validationStatus
         ? history.status_validasi === filters.validationStatus
@@ -156,16 +123,23 @@ const HistoryValidationPage = () => {
 
       return searchMatch && answerMatch && statusMatch;
     });
-  }, [searchTerm, filters, histories]);
+  }, [searchTerm, filters, historyData]);
 
   const paginatedHistories = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return filteredHistories.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredHistories, currentPage, itemsPerPage]);
+    return filteredHistories;
+  }, [filteredHistories]);
+  
+  const totalItems = historyData?.total || 0;
 
+  const handleSearchSubmit = () => {
+    setSearchTerm(searchInput);
+    setCurrentPage(1);
+  };
 
   const handleFilterChange = (filterName: keyof Filters, value: string) => {
-    setFilters((prev) => ({ ...prev, [filterName]: value }));
+    // --- PERBAIKAN: Tipe 'prev' ditambahkan ---
+    setFilters((prev: Filters) => ({ ...prev, [filterName]: value }));
+    // ------------------------------------
     setCurrentPage(1);
   };
 
@@ -175,33 +149,41 @@ const HistoryValidationPage = () => {
   };
 
   const handleAction = (action: ActionType, item: ValidationHistoryItem) => {
-    if (action === 'view') {
+    if (action === "view") {
+      setSelectedSessionId(item.session_id);
       setChatModalOpen(true);
-      
-    } else if (action === 'approve') {
-      setHistories(prev => prev.map(h =>
-          h.id === item.id ? { ...h, status_validasi: 'Validated' } : h
-      ));
-      toast.success(`Pertanyaan telah divalidasi.`);
-    } else if (action === 'reject') {
-      setHistories(prev => prev.map(h =>
-          h.id === item.id ? { ...h, status_validasi: 'Rejected' } : h
-      ));
-      toast.error(`Pertanyaan ditandai tidak valid.`);
+    } else if (action === "approve") {
+      updateFeedback(
+        { id: item.answerId, feedback: true },
+        {
+          onSuccess: () => toast.success("Pertanyaan telah divalidasi."),
+          onError: (e: any) =>
+            toast.error(e.response?.data?.message || "Gagal memvalidasi."),
+        }
+      );
+    } else if (action === "reject") {
+      updateFeedback(
+        { id: item.answerId, feedback: false },
+        {
+          onSuccess: () => toast.success("Pertanyaan ditandai tidak valid."),
+          onError: (e: any) =>
+            toast.error(e.response?.data?.message || "Gagal menolak."),
+        }
+      );
     }
   };
 
   const handleCloseChatModal = () => {
     setChatModalOpen(false);
+    setSelectedSessionId(null);
   };
 
-  
   const handleViewText = (title: string, content: string) => {
     setTextModalState({ isOpen: true, title, content });
   };
 
   const handleCloseTextModal = () => {
-    setTextModalState({ isOpen: false, title: '', content: '' });
+    setTextModalState({ isOpen: false, title: "", content: "" });
   };
 
   return (
@@ -219,25 +201,32 @@ const HistoryValidationPage = () => {
           />
         </div>
 
-        <HistoryValidationTable
-          histories={paginatedHistories}
-          onAction={handleAction}
-          onViewText={handleViewText} 
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          totalItems={filteredHistories.length}
-          onPageChange={setCurrentPage}
-          onItemsPerPageChange={handleItemsPerPageChange}
-        />
+        {isLoadingTable && (
+          <div className="flex-1 flex justify-center items-center p-10">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+          </div>
+        )}
+
+        {!isLoadingTable && (
+          <HistoryValidationTable
+            histories={paginatedHistories}
+            onAction={handleAction}
+            onViewText={handleViewText}
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={totalItems}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={handleItemsPerPageChange}
+          />
+        )}
       </div>
 
       <ChatHistoryModal
         isOpen={chatModalOpen}
         onClose={handleCloseChatModal}
-        chatHistory={DUMMY_CHAT_HISTORY}
+        chatHistory={isLoadingModal ? [] : chatHistoryForModal || []}
       />
 
-      {/* Render modal teks di sini */}
       <TextExpandModal
         isOpen={textModalState.isOpen}
         onClose={handleCloseTextModal}

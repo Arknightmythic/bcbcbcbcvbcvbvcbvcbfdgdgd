@@ -1,9 +1,8 @@
+// [GANTI: src/features/Dashboard/components/FilterCustom.tsx]
+
 import React, { useState, useEffect } from 'react';
+import type { Period } from '../utils/types';
 
-// Tentukan tipe untuk periode waktu agar lebih aman
-type Period = 'today' | 'monthly' | 'yearly' | 'custom';
-
-// Tentukan props yang akan diterima komponen ini dari parent
 interface DashboardHeaderProps {
   onPeriodChange: (period: Period) => void;
   onCustomDateApply: (dates: { startDate: string; endDate: string }) => void;
@@ -12,15 +11,19 @@ interface DashboardHeaderProps {
   defaultEndDate?: string;
 }
 
+// Helper untuk mendapatkan tanggal YYYY-MM-DD
+const getTodayDateString = () => new Date().toISOString().split('T')[0];
+
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   onPeriodChange,
   onCustomDateApply,
-  defaultPeriod = 'monthly',
-  defaultStartDate = '2025-01-01',
-  defaultEndDate = '2025-01-31',
+  // --- PERUBAHAN: Ubah default ke 'daily' ---
+  defaultPeriod = 'daily',
+  defaultStartDate = getTodayDateString(),
+  defaultEndDate = getTodayDateString(),
 }) => {
-  // --- State Internal Komponen ---
   const [currentTime, setCurrentTime] = useState(new Date());
+  // State internal untuk UI (dikontrol oleh props)
   const [activePeriod, setActivePeriod] = useState<Period>(defaultPeriod);
   const [isCustomDateVisible, setIsCustomDateVisible] = useState(
     defaultPeriod === 'custom'
@@ -28,13 +31,18 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const [startDate, setStartDate] = useState(defaultStartDate);
   const [endDate, setEndDate] = useState(defaultEndDate);
 
-  // --- Effects ---
+  // Efek untuk menyinkronkan state internal jika props default berubah (setelah load dari localStorage)
+  useEffect(() => {
+    setActivePeriod(defaultPeriod);
+    setStartDate(defaultStartDate);
+    setEndDate(defaultEndDate);
+    setIsCustomDateVisible(defaultPeriod === 'custom');
+  }, [defaultPeriod, defaultStartDate, defaultEndDate]);
+
   useEffect(() => {
     const timerId = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
-
-    // Cleanup function untuk membersihkan interval saat komponen di-unmount
     return () => clearInterval(timerId);
   }, []);
 
@@ -47,28 +55,23 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     second: '2-digit',
   });
 
-  // --- Handlers ---
   const handlePeriodClick = (period: Period) => {
-    setActivePeriod(period);
+    setActivePeriod(period); // Update state internal UI
 
     if (period === 'custom') {
       setIsCustomDateVisible(true);
-      // Jangan panggil onPeriodChange dulu, tunggu sampai 'Apply' diklik
+      // Jangan panggil onPeriodChange, tunggu 'Apply'
     } else {
       setIsCustomDateVisible(false);
-      // Langsung panggil event handler dari parent
-      onPeriodChange(period);
+      onPeriodChange(period); // Panggil parent (Dashboard.tsx)
     }
   };
 
   const handleApplyClick = () => {
-    // Panggil event handler dari parent dengan tanggal yang dipilih
     onCustomDateApply({ startDate, endDate });
-    // Set periode 'custom' sebagai aktif setelah apply
-    onPeriodChange('custom'); 
+    onPeriodChange('custom'); // Panggil parent (Dashboard.tsx)
   };
 
-  // --- Definisi Kelas Tailwind (untuk readability) ---
   const buttonBaseClasses =
     'py-2 px-3 md:py-1.5 md:px-5 rounded font-medium transition-all duration-300 text-xs flex-1';
   const buttonInactiveClasses =
@@ -76,9 +79,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const buttonActiveClasses = 'bg-blue-600 text-white shadow-md';
 
   return (
-    /* --- PERUBAHAN DI SINI: Tambahkan 'flex-wrap' --- */
     <div className="bg-white p-5 px-6 rounded-lg mb-5 border border-gray-200 shadow-sm flex flex-col md:flex-row md:justify-between md:items-center gap-4 flex-wrap">
-      {/* Bagian Kiri: Judul dan Waktu */}
       <div className="flex-shrink-0">
         <h1 className="text-slate-800 text-lg font-semibold mb-1">
           🤖 AI Helpdesk Analytics Dashboard
@@ -94,18 +95,21 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         transition-[grid-template-rows] duration-300 ease-in-out
         ${isCustomDateVisible ? 'grid-rows-[auto_1fr]' : 'grid-rows-[auto_0fr]'}
       `}>
-        {/* Filter Tombol Periode (Row 1) */}
         <div className="flex gap-2 bg-gray-50 p-1 rounded-md border border-gray-200 items-center w-full">
+          
+          {/* --- PERUBAHAN: 'Today' -> 'Daily' --- */}
           <button
-            onClick={() => handlePeriodClick('today')}
+            onClick={() => handlePeriodClick('daily')}
             className={`${buttonBaseClasses} ${
-              activePeriod === 'today'
+              activePeriod === 'daily'
                 ? buttonActiveClasses
                 : buttonInactiveClasses
             }`}
           >
-            Today
+            Daily
           </button>
+          {/* ------------------------------------- */}
+
           <button
             onClick={() => handlePeriodClick('monthly')}
             className={`${buttonBaseClasses} ${
@@ -138,14 +142,12 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           </button>
         </div>
 
-        {/* Filter Kustom (Date Picker) (Row 2, 0fr or 1fr) */}
         <div className="overflow-hidden">
           <div className={`
             flex flex-col md:flex-row flex-wrap gap-2 items-center 
             transition-all duration-300 ease-in-out
             ${isCustomDateVisible ? 'opacity-100 pt-4' : 'opacity-0 pt-0'}
           `}>
-            {/* Input 'From' */}
             <div className="flex items-center gap-1.5 bg-white py-2 px-3 rounded-md border border-gray-200 w-full md:flex-1">
               <label
                 htmlFor="startDate"
@@ -162,7 +164,6 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               />
             </div>
 
-            {/* Input 'To' */}
             <div className="flex items-center gap-1.5 bg-white py-2 px-3 rounded-md border border-gray-200 w-full md:flex-1">
               <label
                 htmlFor="endDate"
@@ -179,7 +180,6 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               />
             </div>
 
-            {/* Tombol Apply */}
             <button
               onClick={handleApplyClick}
               className="bg-blue-600 text-white py-2.5 px-5 rounded-md text-sm font-medium transition-all duration-300 hover:bg-blue-700 hover:shadow-md w-full md:w-auto"
