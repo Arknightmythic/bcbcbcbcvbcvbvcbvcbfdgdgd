@@ -1,7 +1,9 @@
 import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
+import { createPortal } from 'react-dom'; // 1. Impor createPortal
 import type { ActionType, ValidationHistoryItem } from '../utils/types';
-import {CheckCircle, XCircle, FileText } from 'lucide-react';
+import { CheckCircle, XCircle, FileText, MoreVertical } from 'lucide-react'; // 2. Impor MoreVertical
 import StatusBadge from './StatusBadge';
+import { useClickOutside } from '../../../shared/hooks/useClickOutside'; // 3. Impor hook
 
 interface HistoryValidationTableRowProps {
   history: ValidationHistoryItem;
@@ -9,7 +11,7 @@ interface HistoryValidationTableRowProps {
   onViewText: (title: string, content: string) => void; 
 }
 
-// --- Komponen Helper TruncatedText yang Diperbarui ---
+// --- Komponen Helper TruncatedText (Tidak Berubah) ---
 const TruncatedText: React.FC<{ content: string; title: string; onIconClick: () => void }> = ({ content, title, onIconClick }) => {
   const [isTruncated, setIsTruncated] = useState(false);
   const textRef = useRef<HTMLParagraphElement>(null);
@@ -17,10 +19,7 @@ const TruncatedText: React.FC<{ content: string; title: string; onIconClick: () 
   const checkTruncation = () => {
     const el = textRef.current;
     if (el) {
-      // Periksa apakah tinggi total konten (scrollHeight) 
-      // lebih besar dari tinggi yang terlihat (clientHeight)
       const isOverflowing = el.scrollHeight > el.clientHeight;
-      
       setIsTruncated(prev => {
         if (prev !== isOverflowing) {
           return isOverflowing;
@@ -42,23 +41,17 @@ const TruncatedText: React.FC<{ content: string; title: string; onIconClick: () 
         checkTruncation();
       }, 150);
     };
-
     window.addEventListener('resize', handleResize);
-
     return () => {
       window.removeEventListener('resize', handleResize);
       clearTimeout(debounceTimer);
     };
-  }, []); // Dependensi kosong agar listener hanya dipasang sekali
+  }, []); 
 
   return (
-    // 1. Container tetap 'relative'
     <div className="relative">
       <p 
         ref={textRef}
-        // 2. Tambahkan padding-right (pr-6) HANYA JIKA terpotong.
-        //    Ini akan "mendorong" teks (dan elipsis) ke kiri,
-        //    membuat ruang untuk ikon.
         className={`
           text-[10px] leading-tight text-gray-700 whitespace-pre-wrap line-clamp-3
           ${isTruncated ? 'pr-6' : ''} 
@@ -68,15 +61,12 @@ const TruncatedText: React.FC<{ content: string; title: string; onIconClick: () 
         {content}
       </p>
       
-      {/* 3. Tampilkan tombol HANYA JIKA isTruncated bernilai true */}
       {isTruncated && (
         <button
           onClick={(e) => {
             e.stopPropagation();
             onIconClick();
           }}
-          // 4. Posisikan ikon di dalam area padding yang baru saja kita buat.
-          //    'bg-white' telah dihapus.
           className="absolute bottom-0 right-0 p-0.5 text-blue-600 hover:bg-blue-50"
           title={`Lihat ${title} Lengkap`}
         >
@@ -90,8 +80,79 @@ const TruncatedText: React.FC<{ content: string; title: string; onIconClick: () 
 
 
 const HistoryValidationTableRow: React.FC<HistoryValidationTableRowProps> = ({ history, onAction, onViewText }) => {
+  
+  // --- 4. State & Ref untuk Dropdown Portal ---
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [position, setPosition] = useState<{ top?: number, bottom?: number, right?: number }>({});
+  const moreButtonRef = useRef<HTMLButtonElement>(null);
+  
+  const dropdownRef = useClickOutside<HTMLDivElement>(() => {
+    setIsDropdownOpen(false);
+  });
+
+  // --- 5. Handler untuk Dropdown ---
+  const handleDropdownToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isDropdownOpen) {
+      setIsDropdownOpen(false);
+      return;
+    }
+
+    if (moreButtonRef.current) {
+      const rect = moreButtonRef.current.getBoundingClientRect();
+      const dropdownHeight = 90; // Perkiraan tinggi: 2 item * 44px
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+
+      let newPos: { top?: number, bottom?: number, right?: number } = {
+        right: window.innerWidth - rect.right + 8,
+      };
+
+      if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
+        newPos.bottom = window.innerHeight - rect.top;
+      } else {
+        newPos.top = rect.bottom;
+      }
+      
+      setPosition(newPos);
+      setIsDropdownOpen(true);
+    }
+  };
+
+  // --- 6. Konten Dropdown (untuk Portal) ---
+  const DropdownContent = () => (
+    <div
+      ref={dropdownRef}
+      className="fixed z-[9999] w-48 bg-white rounded-md shadow-lg border border-gray-200"
+      style={{
+        top: position.top ? `${position.top}px` : 'auto',
+        right: position.right ? `${position.right}px` : 'auto',
+        bottom: position.bottom ? `${position.bottom}px` : 'auto',
+      }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="flex flex-col py-1">
+        <button
+          onClick={() => { onAction('approve', history); setIsDropdownOpen(false); }}
+          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-green-600 hover:bg-green-50"
+          title="Validate"
+        >
+          <CheckCircle className="w-4 h-4" />
+          <span>Validate</span>
+        </button>
+        <button
+          onClick={() => { onAction('reject', history); setIsDropdownOpen(false); }}
+          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+          title="Not Validate"
+        >
+          <XCircle className="w-4 h-4" />
+          <span>Not Validate</span>
+        </button>
+      </div>
+    </div>
+  );
+  
   return (
-    /* --- PERUBAHAN DI SINI: Tambahkan 'group' --- */
     <tr className="group hover:bg-gray-50 text-[10px] text-gray-700">
       <td className="px-4 py-3 text-center">{new Date(history.tanggal).toLocaleDateString("en-GB")}</td>
       <td className="px-4 py-3">{history.user}</td>
@@ -123,9 +184,12 @@ const HistoryValidationTableRow: React.FC<HistoryValidationTableRowProps> = ({ h
       <td className="px-4 py-3 capitalize text-center">
         <StatusBadge status={history.status_validasi} />
       </td>
-      {/* --- PERUBAHAN DI SINI: Buat sel Action sticky --- */}
+      
+      {/* --- 7. PERUBAHAN UTAMA DI SINI --- */}
       <td className="px-4 py-3 text-center sticky right-0 bg-white group-hover:bg-gray-50 z-10 border-l border-gray-200">
-        <div className="flex items-center justify-center gap-x-2">
+        
+        {/* Layout Desktop */}
+        <div className="hidden md:flex items-center justify-center gap-x-2">
           <button
             onClick={() => onAction('approve', history)}
             className="p-1 text-green-600 hover:bg-green-50 rounded-md transition-colors"
@@ -140,8 +204,21 @@ const HistoryValidationTableRow: React.FC<HistoryValidationTableRowProps> = ({ h
           >
             <XCircle className="w-4 h-4" />
           </button>
-          
         </div>
+
+        {/* Layout Mobile */}
+        <div className="md:hidden">
+          <button
+            ref={moreButtonRef}
+            onClick={handleDropdownToggle}
+            className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-full"
+          >
+            <MoreVertical className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Render Portal */}
+        {isDropdownOpen && createPortal(<DropdownContent />, document.body)}
       </td>
     </tr>
   );

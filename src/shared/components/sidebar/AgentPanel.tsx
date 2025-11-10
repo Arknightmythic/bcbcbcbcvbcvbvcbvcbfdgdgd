@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router';
-import { Clock, MessageSquare, History, X, MessageSquareWarning, MessageSquareDiff } from 'lucide-react';
+import { Clock, MessageSquare, History, MessageSquareWarning, MessageSquareDiff } from 'lucide-react';
 
-import { ChatList } from './ChatList';
+
 import type { Chat } from '../../types/types';
 import { AgentSidebarSection } from './AgentSidebarSection';
 import { useDraggable } from '../../hooks/useDraggable';
@@ -30,16 +30,15 @@ const CollapsedTabButton = ({
   icon: Icon, 
   count, 
   tooltipText, 
-  onClick 
 }: { 
   icon: LucideIcon, 
   count: number, 
   tooltipText: string, 
-  onClick: () => void 
+
 }) => (
   <Tooltip text={`${tooltipText} (${count})`}>
-    <button
-      onClick={onClick}
+    <div
+     
       className="relative flex items-center justify-center w-8 h-10 bg-gray-100 rounded-lg text-gray-600 hover:bg-bOss-red-50 hover:text-bOss-red transition-colors"
     >
       <Icon className="w-4 h-4" />
@@ -48,7 +47,7 @@ const CollapsedTabButton = ({
           {count}
         </span>
       )}
-    </button>
+    </div>
   </Tooltip>
 );
 
@@ -120,28 +119,19 @@ export const AgentPanel = ({
             icon={MessageSquare}
             count={chats.active.length}
             tooltipText="Active Chats"
-            onClick={() => {
-              setIsCollapsedPanelOpen(true);
-              setActiveList('active');
-            }}
+          
           />
           <CollapsedTabButton
             icon={MessageSquareDiff}
             count={chats.queue.length}
             tooltipText="Queue"
-            onClick={() => {
-              setIsCollapsedPanelOpen(true);
-              setActiveList('queue');
-            }}
+            
           />
           <CollapsedTabButton
             icon={MessageSquareWarning} // Anda bisa ganti ikon jika mau
             count={chats.pending.length}
             tooltipText="Pending"
-            onClick={() => {
-              setIsCollapsedPanelOpen(true);
-              setActiveList('pending');
-            }}
+           
           />
         </div>
 
@@ -155,45 +145,7 @@ export const AgentPanel = ({
           </div>
         </Tooltip>
 
-        <div className="relative">
-          {/* Panel pop-up saat ikon tab diklik */}
-          {isCollapsedPanelOpen && (
-             <div className="absolute bottom-0 left-full ml-3 bg-white rounded-lg shadow-lg border w-72 flex flex-col z-50">
-              <div className="p-2 border-b flex justify-between items-center">
-                <h3 className="text-sm font-semibold">{listConfig[activeList].title}</h3>
-                <button onClick={() => setIsCollapsedPanelOpen(false)}><X className="w-4 h-4" /></button>
-              </div>
-               <div className="flex justify-around p-1 bg-gray-100">
-                 {(['active', 'queue', 'pending'] as ChatListType[]).map((key) => {
-                   const Icon = listConfig[key].icon;
-                   return (
-                     <button
-                       key={key}
-                       onClick={() => setActiveList(key)}
-                       className={`p-1 rounded-md ${activeList === key ? 'bg-bOss-red text-white' : ''}`}
-                     >
-                       <Icon className="w-5 h-5" />
-                     </button>
-                   );
-                 })}
-               </div>
-               {/* --- PERUBAHAN DI SINI: Terapkan kelas scrollbar baru --- */}
-               <div className="overflow-y-auto custom-scrollbar-overlay" style={{ height: '220px' }}>
-                 <div style={{minHeight: '220px'}}>
-                    <ChatList
-                      title={currentList.title}
-                      icon={currentList.icon}
-                      chats={chats[activeList]}
-                      onItemClick={handleItemClick}
-                      emptyMessage={currentList.empty}
-                      type={activeList}
-                      selectedChatId={selectedChatId ?? undefined}
-                    />
-                 </div>
-               </div>
-            </div>
-          )}
-        </div>
+       
       </div>
     );
   }

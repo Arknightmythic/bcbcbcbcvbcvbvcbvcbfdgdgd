@@ -5,7 +5,7 @@ import UserProfile from "./UserProfile";
 
 const menuConfig = [
   { path: "/dashboard", title: "Dashboard" },
-  { path: "/upload-document", title: "Knowledge base" },
+  { path: "/knowledge-base", title: "Knowledge base" },
   { path: "/document-management", title: "Document Management" },
   { path: "/public-service", title: "Public Service" },
   { path: "/validation-history", title: "Validation History" },

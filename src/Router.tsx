@@ -65,7 +65,7 @@ const Router = createBrowserRouter([
         element: <DocumentManagementPage />,
       },
       {
-        path: "upload-document",
+        path: "knowledge-base",
         element: <UploadPage />,
       },
       {

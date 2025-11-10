@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import { X, Loader2 } from 'lucide-react';
 
@@ -19,8 +17,9 @@ const PdfViewModal: React.FC<PdfViewModalProps> = ({ isOpen, onClose, url, isLoa
       className="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-sm p-4" 
       onClick={onClose}
     >
+      {/* --- PERUBAHAN DI SINI: hapus m-4, ubah p-6 -> p-4 md:p-6, tambah max-h --- */}
       <div 
-        className="bg-white rounded-lg shadow-xl w-full max-w-4xl h-[90vh] p-6 m-4 flex flex-col" 
+        className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[95vh] h-[90vh] p-4 md:p-6 flex flex-col" 
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header Modal */}

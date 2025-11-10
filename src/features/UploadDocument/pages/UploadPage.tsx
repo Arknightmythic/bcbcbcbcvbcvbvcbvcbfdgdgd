@@ -227,7 +227,29 @@ const UploadPage: React.FC = () => {
     handleOpenModal("upload", { category: selectedCategory });
   };
 
-  const handleFileSelect = useCallback((selectedFiles: FileList) => setFilesToUpload((prev) => [...prev, ...Array.from(selectedFiles)]), []);
+  const handleFileSelect = useCallback((selectedFiles: FileList) => {
+    const allowedTypes = ["application/pdf", "text/plain"];
+    const validFiles: File[] = [];
+    const invalidFiles: string[] = [];
+
+    Array.from(selectedFiles).forEach(file => {
+      if (allowedTypes.includes(file.type)) {
+        validFiles.push(file);
+      } else {
+        invalidFiles.push(file.name);
+      }
+    });
+
+    // Tampilkan pesan error jika ada file yang tidak valid
+    if (invalidFiles.length > 0) {
+      toast.error(`File type not supported for: ${invalidFiles.join(", ")}. Only PDF and TXT are allowed.`);
+    }
+
+    // Tambahkan hanya file yang valid ke state
+    if (validFiles.length > 0) {
+      setFilesToUpload((prev) => [...prev, ...validFiles]);
+    }
+  }, []);
   const handleRemoveFile = useCallback((fileName: string) => setFilesToUpload((prev) => prev.filter((f) => f.name !== fileName)), []);
 
   const handleFilterChange = (filterName: string, value: string) => {

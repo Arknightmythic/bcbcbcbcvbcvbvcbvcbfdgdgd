@@ -38,21 +38,32 @@ const VersioningDocumentModal: React.FC<VersioningDocumentModalProps> = ({
 
   const handleFileSelect = (selectedFile: File | undefined) => {
     if (!selectedFile) return;
-    const allowedTypes = ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "image/jpeg", "image/png", "text/plain"];
+    
+    // --- PERUBAHAN 1: Perbarui allowedTypes ---
+    const allowedTypes = ["application/pdf", "text/plain"];
+    
     if (allowedTypes.includes(selectedFile.type)) {
       setFile(selectedFile);
     } else {
-      toast.error("File type not supported. Only Word, PDF, JPG, PNG & TXT.");
+      // --- PERUBAHAN 2: Perbarui pesan error ---
+      toast.error("File type not supported. Only PDF & TXT are allowed.");
     }
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); setIsDragging(true); };
   
   const handleDragLeave = () => { setIsDragging(false); };
+  
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+    
+    // --- PERUBAHAN 3: Terapkan aturan 1 file ---
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      if (e.dataTransfer.files.length > 1) {
+        toast.error("Only one file can be uploaded for versioning.");
+      }
+      // Selalu proses HANYA file pertama
       handleFileSelect(e.dataTransfer.files[0]);
     }
   };
@@ -83,7 +94,7 @@ const VersioningDocumentModal: React.FC<VersioningDocumentModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex justify-center items-center bg-white/30 backdrop-blur-sm p-4" onClick={onClose}>
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 m-4 animate-fade-in-up" onClick={e => e.stopPropagation()}>
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-lg p-4 md:p-6 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-md font-bold text-gray-800">Versioning Document</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-800"><X className="w-6 h-6" /></button>
@@ -100,12 +111,14 @@ const VersioningDocumentModal: React.FC<VersioningDocumentModalProps> = ({
                     onDrop={handleDrop} 
                     className={`p-6 border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-center transition-colors duration-300 ${isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300"} ${hasPending && "bg-gray-100 border-gray-200 cursor-not-allowed opacity-60"}`}
                 >
+                    {/* --- PERUBAHAN 4: Perbarui 'accept' (input sudah benar tidak 'multiple') --- */}
                     <input type="file" ref={fileInputRef} id="versioning-file-input" className="hidden" onChange={(e) => handleFileSelect(e.target.files?.[0])} accept=".pdf,.txt" disabled={hasPending} />
                     <UploadCloud className="w-10 h-10 text-gray-400 mb-3" />
                     <p className="text-gray-600">
                         Drag a file, or <label htmlFor="versioning-file-input" className={`font-semibold ${hasPending ? 'text-gray-500' : 'text-blue-600 cursor-pointer hover:underline'}`}>choose file</label>
                     </p>
-                    <p className="text-xs text-gray-400 mt-1">Only 1 file is allowed.</p>
+                    {/* --- PERUBAHAN 5: Perbarui teks petunjuk --- */}
+                    <p className="text-xs text-gray-400 mt-1">Only 1 PDF or TXT file is allowed.</p>
                 </div>
 
                 {hasPending && pendingDocument && (

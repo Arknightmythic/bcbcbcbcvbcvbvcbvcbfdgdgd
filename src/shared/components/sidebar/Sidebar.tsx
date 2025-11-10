@@ -4,12 +4,13 @@ import {  useRef } from 'react';
 
 import { AgentPanel } from "./AgentPanel";
 import type { Chat, MenuItem } from "../../types/types";
-import Tooltip from "../Tooltip"; // Pastikan ini adalah versi dengan React Portal
+import Tooltip from "../Tooltip"; // Pastikan ini adalah versi Tooltip.tsx dengan React Portal
 
 
+// ... (dummyMenu, dummyUser, dummyChats, NavigationMenu tetap sama) ...
 const dummyMenu: MenuItem[] = [
   { path: "/dashboard", title: "Dashboard", icon: LayoutDashboard, identifier: "dashboard" },
-  { path: "/upload-document", title: "Knowledge base", icon: Database, identifier: "upload-document"},
+  { path: "/knowledge-base", title: "Knowledge base", icon: Database, identifier: "knowledge-base"},
   { path: "/document-management", title: "Document Management", icon: Dock, identifier: "document-management" },
   { path: "/public-service", title: "Public service", icon: BotIcon, identifier: "public-service" },
   { path: "/validation-history", title: "Validation History", icon: History, identifier: "validation-history" },
@@ -23,7 +24,7 @@ const dummyMenu: MenuItem[] = [
 const dummyUser = {
   name: "Budi Santoso",
   isSuperAdmin: false,
-  permissions: ["dashboard:access", "document-management:access", "agent-dashboard:access", "user-management:master", "upload-document:access", "public-service:access", "validation-history:access","guide:access", "team-management", "role-management", "helpdesk:access"],
+  permissions: ["dashboard:access", "document-management:access", "agent-dashboard:access", "user-management:master", "knowledge-base:access", "public-service:access", "validation-history:access","guide:access", "team-management", "role-management", "helpdesk:access"],
   status: 'online' as const,
 };
 
@@ -82,8 +83,14 @@ const NavigationMenu = ({ menuItems, currentPath, isCollapsed }: { menuItems: Me
       })}
     </div>
   );
+// --- AKHIR NavigationMenu ---
 
-const Sidebar = ({ isCollapsed, setOutletBlurred }: { isCollapsed: boolean, setOutletBlurred: (isBlurred: boolean) => void }) => {
+const Sidebar = ({ isCollapsed, isMobileOpen, isDesktop, setOutletBlurred }: { 
+  isCollapsed: boolean, 
+  isMobileOpen: boolean,
+  isDesktop: boolean,
+  setOutletBlurred: (isBlurred: boolean) => void 
+}) => {
   const location = useLocation();
   const sidebarRef = useRef<HTMLElement>(null);
   const agentPanelRef = useRef<HTMLDivElement>(null);
@@ -98,12 +105,20 @@ const Sidebar = ({ isCollapsed, setOutletBlurred }: { isCollapsed: boolean, setO
   return (
     <nav
       ref={sidebarRef}
-      className={`fixed top-0 left-0 z-50 flex h-screen flex-col bg-white text-gray-700 shadow-lg transition-all duration-300 ${
+      className={`fixed top-0 left-0 flex h-screen flex-col bg-white text-gray-700 shadow-lg transition-all duration-300 ${
         isCollapsed ? "w-25" : "w-50"
-      }`}
-      // --- PERUBAHAN: HAPUS overflow-y-auto DARI SINI ---
+      } 
+      /* --- PERUBAHAN DI SINI: z-index dinamis --- */
+      ${
+        isDesktop
+          ? 'z-50' // z-50 (standar) di desktop
+          : isMobileOpen
+            ? 'z-[60]' // z-[60] (di atas overlay blur z-[55])
+            : 'z-50 -translate-x-full' // Sembunyi
+      }
+      `}
     >
-      {/* 1. LOGO (Fixed height, tidak scroll) */}
+      {/* 1. LOGO */}
       <div className={`flex h-20 items-center px-4 mt-4 mb-4 transition-all duration-300 ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
           <div className="relative flex items-center justify-center h-12 w-full">
               <img 
@@ -119,17 +134,15 @@ const Sidebar = ({ isCollapsed, setOutletBlurred }: { isCollapsed: boolean, setO
           </div>
       </div>
 
-      {/* --- PERUBAHAN: Container ini akan mengelola layout --- */}
+      {/* 2. Container untuk layout internal */}
       <div className={`flex flex-1 flex-col overflow-hidden`}>
         
-        {/* 2. AREA MENU (Scrollable) */}
-        {/* 'flex-1' membuatnya mengisi ruang */}
-        {/* 'overflow-y-auto' membuatnya bisa di-scroll */}
+        {/* 3. AREA MENU (Scrollable) */}
         <div className={`flex-1 overflow-y-auto custom-scrollbar-overlay`}>
           <NavigationMenu menuItems={accessibleMenu} currentPath={location.pathname} isCollapsed={isCollapsed} />
         </div>
 
-        {/* 3. AGENT PANEL (Fixed height, 'mt-auto' mendorongnya ke bawah) */}
+        {/* 4. AGENT PANEL (Didorong ke bawah) */}
         {showAgentSection && (
           <div style={{ height: 'auto' }} className="mt-auto">
             <AgentPanel

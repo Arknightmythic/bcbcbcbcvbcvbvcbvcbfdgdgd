@@ -20,25 +20,15 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   defaultEndDate = '2025-01-31',
 }) => {
   // --- State Internal Komponen ---
-
-  // State untuk mengelola waktu saat ini
   const [currentTime, setCurrentTime] = useState(new Date());
-
-  // State untuk melacak tombol periode yang aktif
   const [activePeriod, setActivePeriod] = useState<Period>(defaultPeriod);
-
-  // State untuk menampilkan/menyembunyikan date picker kustom
   const [isCustomDateVisible, setIsCustomDateVisible] = useState(
     defaultPeriod === 'custom'
   );
-
-  // State untuk nilai date picker
   const [startDate, setStartDate] = useState(defaultStartDate);
   const [endDate, setEndDate] = useState(defaultEndDate);
 
   // --- Effects ---
-
-  // useEffect untuk memperbarui jam setiap detik
   useEffect(() => {
     const timerId = setInterval(() => {
       setCurrentTime(new Date());
@@ -48,7 +38,6 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     return () => clearInterval(timerId);
   }, []);
 
-  // Format waktu ke string yang diinginkan
   const formattedTime = currentTime.toLocaleString('id-ID', {
     year: 'numeric',
     month: 'long',
@@ -59,7 +48,6 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   });
 
   // --- Handlers ---
-
   const handlePeriodClick = (period: Period) => {
     setActivePeriod(period);
 
@@ -81,17 +69,17 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   };
 
   // --- Definisi Kelas Tailwind (untuk readability) ---
-
   const buttonBaseClasses =
-    'py-1.5 px-5 rounded text-sm font-medium transition-all duration-300 text-xs';
+    'py-2 px-3 md:py-1.5 md:px-5 rounded font-medium transition-all duration-300 text-xs flex-1';
   const buttonInactiveClasses =
     'bg-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-200';
   const buttonActiveClasses = 'bg-blue-600 text-white shadow-md';
 
   return (
-    <div className="bg-white p-5 px-6 rounded-lg mb-5 border border-gray-200 shadow-sm flex justify-between items-center flex-wrap gap-4">
+    /* --- PERUBAHAN DI SINI: Tambahkan 'flex-wrap' --- */
+    <div className="bg-white p-5 px-6 rounded-lg mb-5 border border-gray-200 shadow-sm flex flex-col md:flex-row md:justify-between md:items-center gap-4 flex-wrap">
       {/* Bagian Kiri: Judul dan Waktu */}
-      <div>
+      <div className="flex-shrink-0">
         <h1 className="text-slate-800 text-lg font-semibold mb-1">
           🤖 AI Helpdesk Analytics Dashboard
         </h1>
@@ -101,10 +89,13 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         </p>
       </div>
 
-      {/* Bagian Kanan: Filter */}
-      <div className="flex flex-wrap items-center gap-4">
-        {/* Filter Tombol Periode */}
-        <div className="flex gap-2 bg-gray-50 p-1 rounded-md border border-gray-200 items-center">
+      <div className={`
+        grid w-full md:w-auto 
+        transition-[grid-template-rows] duration-300 ease-in-out
+        ${isCustomDateVisible ? 'grid-rows-[auto_1fr]' : 'grid-rows-[auto_0fr]'}
+      `}>
+        {/* Filter Tombol Periode (Row 1) */}
+        <div className="flex gap-2 bg-gray-50 p-1 rounded-md border border-gray-200 items-center w-full">
           <button
             onClick={() => handlePeriodClick('today')}
             className={`${buttonBaseClasses} ${
@@ -147,11 +138,15 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           </button>
         </div>
 
-        {/* Filter Kustom (Date Picker) - Tampil kondisional */}
-        {isCustomDateVisible && (
-          <div className="flex flex-wrap gap-2 items-center">
+        {/* Filter Kustom (Date Picker) (Row 2, 0fr or 1fr) */}
+        <div className="overflow-hidden">
+          <div className={`
+            flex flex-col md:flex-row flex-wrap gap-2 items-center 
+            transition-all duration-300 ease-in-out
+            ${isCustomDateVisible ? 'opacity-100 pt-4' : 'opacity-0 pt-0'}
+          `}>
             {/* Input 'From' */}
-            <div className="flex items-center gap-1.5 bg-white py-2 px-3 rounded-md border border-gray-200">
+            <div className="flex items-center gap-1.5 bg-white py-2 px-3 rounded-md border border-gray-200 w-full md:flex-1">
               <label
                 htmlFor="startDate"
                 className="text-gray-500 text-xs font-medium"
@@ -163,12 +158,12 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 id="startDate"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="bg-transparent border-none text-slate-800 text-sm cursor-pointer p-0.5 focus:ring-0 focus:outline-none"
+                className="bg-transparent border-none text-slate-800 text-sm cursor-pointer p-0.5 focus:ring-0 focus:outline-none w-full"
               />
             </div>
 
             {/* Input 'To' */}
-            <div className="flex items-center gap-1.5 bg-white py-2 px-3 rounded-md border border-gray-200">
+            <div className="flex items-center gap-1.5 bg-white py-2 px-3 rounded-md border border-gray-200 w-full md:flex-1">
               <label
                 htmlFor="endDate"
                 className="text-gray-500 text-xs font-medium"
@@ -180,21 +175,20 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 id="endDate"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="bg-transparent border-none text-slate-800 text-sm cursor-pointer p-0.5 focus:ring-0 focus:outline-none"
+                className="bg-transparent border-none text-slate-800 text-sm cursor-pointer p-0.5 focus:ring-0 focus:outline-none w-full"
               />
             </div>
 
             {/* Tombol Apply */}
             <button
               onClick={handleApplyClick}
-              className="bg-blue-600 text-white py-2.5 px-5 rounded-md text-sm font-medium transition-all duration-300 hover:bg-blue-700 hover:shadow-md"
+              className="bg-blue-600 text-white py-2.5 px-5 rounded-md text-sm font-medium transition-all duration-300 hover:bg-blue-700 hover:shadow-md w-full md:w-auto"
             >
               Apply
             </button>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
 };
-

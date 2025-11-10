@@ -33,8 +33,11 @@ function Dashboard() {
     // fetchData('custom', dates.startDate, dates.endDate);
   };
 
+  /* --- PERUBAHAN DI SINI: Ubah layout dari h-screen ke flex-col --- */
+  // Ganti `h-screen overflow-hidden` dengan `h-full flex flex-col`
+  // Ini akan bekerja karena parent-nya (<main>) adalah flex-col
   return (
-    <div className="relative w-full h-screen overflow-hidden">
+    <div className="relative w-full h-full flex flex-col">
       <div
         className={`
           absolute inset-0 flex items-center justify-center bg-white z-10 
@@ -50,12 +53,13 @@ function Dashboard() {
         defaultPeriod="monthly" // Anda bisa set default period di sini
       />
 
+      {/* --- PERUBAHAN DI SINI: Ganti h-full menjadi flex-1 --- */}
       <iframe
         // src={`${import.meta.env.VITE_IFRAME_GRAPHANA_URL}?&theme=light`}
         src="/DashboardBKPM (3).html"
         title="Dashboard"
         onLoad={handleLoad}
-        className="w-full h-full border-0 zoomed-iframe"
+        className="w-full flex-1 border-0 zoomed-iframe" // flex-1 akan membuatnya mengisi sisa ruang
       ></iframe>
     </div>
   );

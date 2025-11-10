@@ -1,7 +1,9 @@
-import React from 'react';
-import { Eye, Edit, Trash2 } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import { Eye, Edit, Trash2, MoreVertical } from 'lucide-react';
 import type { ActionType, Role } from '../utils/types';
 import TeamBadge from '../../UserManagement/components/TeamBadge'; 
+import { useClickOutside } from '../../../shared/hooks/useClickOutside';
 
 interface RoleTableRowProps {
   role: Role; 
@@ -9,16 +11,93 @@ interface RoleTableRowProps {
 }
 
 const RoleTableRow: React.FC<RoleTableRowProps> = ({ role, onAction }) => {
+  // --- State & Ref untuk Dropdown Portal ---
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [position, setPosition] = useState<{ top?: number, bottom?: number, right?: number }>({});
+  const moreButtonRef = useRef<HTMLButtonElement>(null);
+  
+  const dropdownRef = useClickOutside<HTMLDivElement>(() => {
+    setIsDropdownOpen(false);
+  });
+
+  // Handler untuk membuka/menutup dan menghitung posisi dropdown
+  const handleDropdownToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isDropdownOpen) {
+      setIsDropdownOpen(false);
+      return;
+    }
+
+    if (moreButtonRef.current) {
+      const rect = moreButtonRef.current.getBoundingClientRect();
+      const dropdownHeight = 130; // Perkiraan tinggi: 3 item * 44px
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+
+      let newPos: { top?: number, bottom?: number, right?: number } = {
+        right: window.innerWidth - rect.right + 8,
+      };
+
+      if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
+        newPos.bottom = window.innerHeight - rect.top;
+      } else {
+        newPos.top = rect.bottom;
+      }
+      
+      setPosition(newPos);
+      setIsDropdownOpen(true);
+    }
+  };
+
+  // --- Komponen Konten Dropdown (untuk Portal) ---
+  const DropdownContent = () => (
+    <div
+      ref={dropdownRef}
+      className="fixed z-[9999] w-48 bg-white rounded-md shadow-lg border border-gray-200"
+      style={{
+        top: position.top ? `${position.top}px` : 'auto',
+        right: position.right ? `${position.right}px` : 'auto',
+        bottom: position.bottom ? `${position.bottom}px` : 'auto',
+      }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="flex flex-col py-1">
+        <button
+          onClick={() => { onAction('view', role); setIsDropdownOpen(false); }}
+          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+          title="View Details"
+        >
+          <Eye className="w-4 h-4" />
+          <span>View Details</span>
+        </button>
+        <button
+          onClick={() => { onAction('edit', role); setIsDropdownOpen(false); }}
+          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+          title="Edit Role"
+        >
+          <Edit className="w-4 h-4" />
+          <span>Edit Role</span>
+        </button>
+        <button
+          onClick={() => { onAction('delete', role); setIsDropdownOpen(false); }}
+          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+          title="Delete Role"
+        >
+          <Trash2 className="w-4 h-4" />
+          <span>Delete Role</span>
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <tr className="group hover:bg-gray-50 text-[10px] text-gray-700">
       <td className="px-4 py-3 font-medium text-gray-900 capitalize">{role.name}</td>
       <td className="px-4 py-3">
-        {/* Baca dari objek team */}
         <TeamBadge teamName={role.team.name} />
       </td>
       <td className="px-4 py-3">
         <div className="flex flex-wrap gap-1">
-          {/* role.permissions sekarang array of object Permission */}
           {role.permissions.slice(0, 3).map(p => (
             <span key={p.id} className="px-2 py-0.5 text-[10px] bg-gray-200 text-gray-800 rounded-full">{p.name}</span>
           ))}
@@ -31,8 +110,9 @@ const RoleTableRow: React.FC<RoleTableRowProps> = ({ role, onAction }) => {
         </div>
       </td>
       <td className="px-4 py-3 text-center sticky right-0 bg-white group-hover:bg-gray-50 z-10 border-l border-gray-200">
-        {/* --- PERUBAHAN DI SINI: Menambahkan div wrapper --- */}
-        <div className="flex items-center justify-center gap-x-3">
+        
+        {/* Layout Desktop */}
+        <div className="hidden md:flex items-center justify-center gap-x-3">
           <button onClick={() => onAction('view', role)} className="text-green-600 hover:text-green-800" title="View Details">
             <Eye className="w-4 h-4" />
           </button>
@@ -43,6 +123,20 @@ const RoleTableRow: React.FC<RoleTableRowProps> = ({ role, onAction }) => {
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
+
+        {/* Layout Mobile */}
+        <div className="md:hidden">
+          <button
+            ref={moreButtonRef}
+            onClick={handleDropdownToggle}
+            className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-full"
+          >
+            <MoreVertical className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Render Portal */}
+        {isDropdownOpen && createPortal(<DropdownContent />, document.body)}
       </td>
     </tr>
   );
