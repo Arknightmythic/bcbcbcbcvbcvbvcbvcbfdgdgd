@@ -1,0 +1,15 @@
+dev-bkpm.cloud-ioh.com {
+    tls /etc/certs/caddy.crt /etc/certs/caddy.key
+
+    # Proxy API/Internal
+    reverse_proxy /api/* http://10.184.0.20:30800
+    reverse_proxy /auth/* http://10.184.0.20:30800 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    # Proxy Frontend
+    reverse_proxy /* dokuprime-fe:5005
+}

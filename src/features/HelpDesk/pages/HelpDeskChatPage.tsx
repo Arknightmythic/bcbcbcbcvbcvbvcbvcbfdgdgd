@@ -98,7 +98,7 @@ const HelpDeskChatPage: React.FC = () => {
         {messages.map((msg) => (
           <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-start' : 'justify-end'}`}>
             <div className={`relative p-3 rounded-lg max-w-[75%] shadow-sm ${
-                msg.sender === 'user' ? 'bg-blue-600 text-white rounded-bl-none' : 'bg-gray-100 text-gray-800 rounded-br-none'
+                msg.sender === 'user' ? 'bg-gray-100 text-gray-800 rounded-br-none' : 'bg-blue-600 text-white rounded-bl-none'
             }`}>
               <p className="text-sm">{msg.text}</p>
               <div className={`absolute w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold text-white ${

@@ -165,7 +165,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
 
       <div className="flex flex-col max-w-[75%] items-start">
         <div className={`relative p-3 rounded-lg leading-relaxed shadow-sm w-fit ${
-            message.sender === 'user' ? 'bg-gray-100 text-gray-800 rounded-br-none' : 'bg-bOss-blue text-white rounded-bl-none'
+            message.sender === 'user' ? 'bg-bOss-blue text-white rounded-bl-none':'bg-gray-100 text-gray-800 rounded-br-none'
         }`}>
           
           <div className="whitespace-pre-wrap m-0 text-sm">

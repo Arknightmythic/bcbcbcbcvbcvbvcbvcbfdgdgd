@@ -1,14 +1,42 @@
 version: '3.8'
 
 services:
+  # 1. SERVICE APLIKASI FRONTEND ANDA
   dokuprime-fe:
     build:
       context: .
       dockerfile: Dockerfile
+    image: dokuprime-fe:latest
     container_name: dokuprime_fe
-    image: dokuprime-fe
-    ports:
-      - "5173:5173"
+    restart: always
     env_file:
       - .env
-    restart: always
+    # 'ports' dihapus. Caddy akan menangani akses.
+    networks:
+      - dokuprime_net # Hubungkan ke network internal
+
+  # 2. SERVICE CADDY (REVERSE PROXY)
+  caddy:
+    image: caddy:latest
+    container_name: caddy_proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"    # Diperlukan oleh Let's Encrypt untuk HTTP challenge
+      - "443:443"  # Port HTTPS untuk domain Anda
+    volumes:
+      # Mount Caddyfile yang Anda buat
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      # Volume untuk menyimpan sertifikat SSL
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - dokuprime_net
+
+# Network internal agar service bisa saling bicara
+networks:
+  dokuprime_net:
+
+# Volume untuk menyimpan data Caddy (sertifikat)
+volumes:
+  caddy_data:
+  caddy_config:

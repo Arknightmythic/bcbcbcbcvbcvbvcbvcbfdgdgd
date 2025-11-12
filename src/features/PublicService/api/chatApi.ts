@@ -42,7 +42,7 @@ export const askQuestion = async (payload: AskPayload): Promise<AskResponse> => 
   // Tambahkan timeout 90 detik (90000 ms) khusus untuk request ini
   // karena AI membutuhkan waktu lama untuk merespons.
   const response = await instanceApiToken.post("/api/chat/ask", payload, {
-    timeout: 90000,
+    timeout: 600000,
   });
   // --- AKHIR PERUBAHAN ---
 
