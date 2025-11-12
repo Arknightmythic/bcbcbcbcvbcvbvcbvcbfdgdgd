@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Helpdesk Dashboard - Light Theme</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f6f8;
+            color: #2c3e50;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .dashboard-header {
+            background: #ffffff;
+            padding: 20px 25px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #e1e4e8;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header-left h1 {
+            color: #2c3e50;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .header-left p {
+            color: #6c757d;
+            font-size: 13px;
+        }
+
+        .time-filter {
+            display: flex;
+            gap: 10px;
+            background: #f8f9fa;
+            padding: 5px;
+            border-radius: 6px;
+            border: 1px solid #e1e4e8;
+            align-items: center;
+        }
+
+        .time-filter button {
+            background: transparent;
+            border: none;
+            color: #6c757d;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .time-filter button:hover {
+            color: #2c3e50;
+            background: #e9ecef;
+        }
+
+        .time-filter button.active {
+            background: #0066cc;
+            color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 102, 204, 0.3);
+        }
+
+        .date-picker-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .date-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #e1e4e8;
+        }
+
+        .date-input-wrapper label {
+            color: #6c757d;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .date-input-wrapper input[type="date"] {
+            background: transparent;
+            border: none;
+            color: #2c3e50;
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .apply-btn {
+            background: #0066cc;
+            border: none;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .apply-btn:hover {
+            background: #0052a3;
+            box-shadow: 0 2px 4px rgba(0, 102, 204, 0.3);
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .metric-card {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e1e4e8;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #28a745, #0066cc);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-color: #d1d5db;
+        }
+
+        .metric-card:hover::before {
+            opacity: 1;
+        }
+
+        .metric-card h3 {
+            font-size: 13px;
+            color: #6c757d;
+            font-weight: 500;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-value {
+            font-size: 42px;
+            font-weight: 600;
+            color: #28a745;
+            line-height: 1;
+        }
+
+        .metric-card.warning .metric-value {
+            color: #ffc107;
+        }
+
+        .metric-card.danger .metric-value {
+            color: #dc3545;
+        }
+
+        .metric-card.info .metric-value {
+            color: #0066cc;
+        }
+
+        .chart-container {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e1e4e8;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+            margin-bottom: 20px;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .chart-header h3 {
+            font-size: 14px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .period-label {
+            color: #0066cc;
+            font-size: 11px;
+            font-weight: 400;
+            margin-left: 5px;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+        }
+
+        .gauge-container {
+            position: relative;
+            height: 250px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .gauge-value {
+            position: absolute;
+            font-size: 48px;
+            font-weight: 600;
+            color: #28a745;
+        }
+
+        .pie-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .table-container {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e1e4e8;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table thead {
+            background: #f8f9fa;
+        }
+
+        table th {
+            padding: 12px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e1e4e8;
+        }
+
+        table td {
+            padding: 12px;
+            font-size: 13px;
+            color: #2c3e50;
+            border-bottom: 1px solid #f1f3f5;
+        }
+
+        table tbody tr {
+            transition: background 0.2s;
+        }
+
+        table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .bar-cell {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .bar-wrapper {
+            flex: 1;
+            background: #e9ecef;
+            height: 20px;
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0066cc, #28a745);
+            transition: width 0.8s ease;
+            position: relative;
+        }
+
+        .bar-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 3px;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .percentage {
+            min-width: 50px;
+            text-align: right;
+            color: #6c757d;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .loading {
+            opacity: 0.5;
+            pointer-events: none;
+            position: relative;
+        }
+
+        .loading::after {
+            content: 'Loading...';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #0066cc;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .metric-card, .chart-container, .table-container {
+            animation: fadeIn 0.5s ease;
+        }
+
+        @media (max-width: 768px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .time-filter {
+                width: 100%;
+                flex-wrap: wrap;
+            }
+
+            .date-picker-container {
+                width: 100%;
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-header">
+        <div class="header-left">
+            <h1>🤖 AI Helpdesk Analytics Dashboard</h1>
+            <p>Real-time monitoring and performance metrics | <span id="currentTime"></span></p>
+        </div>
+        <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+            <div class="time-filter">
+                <button class="active" onclick="changeTimePeriod('today')">Today</button>
+                <button onclick="changeTimePeriod('monthly')">Monthly</button>
+                <button onclick="changeTimePeriod('yearly')">Yearly</button>
+                <button onclick="toggleCustomDate()">Custom</button>
+            </div>
+            <div class="date-picker-container" id="customDatePicker" style="display: none;">
+                <div class="date-input-wrapper">
+                    <label>From:</label>
+                    <input type="date" id="startDate" value="2025-01-01">
+                </div>
+                <div class="date-input-wrapper">
+                    <label>To:</label>
+                    <input type="date" id="endDate" value="2025-01-31">
+                </div>
+                <button class="apply-btn" onclick="applyCustomDate()">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Metric Cards -->
+    <div class="grid-container">
+        <div class="metric-card">
+            <h3>Total Interactions</h3>
+            <div class="metric-value" id="totalInteractions">65,450</div>
+        </div>
+        <div class="metric-card">
+            <h3>AI Success Rate (%)</h3>
+            <div class="metric-value" id="aiSuccessRate">85</div>
+        </div>
+        <div class="metric-card warning">
+            <h3>Unanswered Questions (%)</h3>
+            <div class="metric-value" id="unansweredRate">11</div>
+        </div>
+        <div class="metric-card info">
+            <h3>Escalation Rate (%)</h3>
+            <div class="metric-value" id="escalationRate">9</div>
+        </div>
+    </div>
+
+    <!-- Charts Row 1 -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-bottom: 20px;">
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3>Interactions Trend <span class="period-label" id="trendLabel">(Daily)</span></h3>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="interactionsTrendChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3>Questions Answered Automatically</h3>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="questionsAnsweredChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3>AI Performance Trend <span class="period-label" id="perfLabel">(Daily)</span></h3>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="aiPerformanceChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row 2 -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; margin-bottom: 20px;">
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3>AI Response Accuracy</h3>
+            </div>
+            <div class="gauge-container">
+                <canvas id="accuracyGaugeChart"></canvas>
+                <div class="gauge-value" id="gaugeValue">85</div>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3>User Feedback Distribution</h3>
+            </div>
+            <div class="pie-container">
+                <canvas id="feedbackPieChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3>Helpdesk (Agent) Availability <span class="period-label" id="availLabel">(Daily)</span></h3>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="availabilityChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Response Time Chart -->
+    <div style="display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 20px;">
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3>Average Chatbot Response Time <span class="period-label" id="responseLabel">(Daily)</span></h3>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="responseTimeChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Question Categories Table -->
+    <div class="table-container">
+        <div class="chart-header" style="margin-bottom: 20px;">
+            <h3>Most Frequent Question Categories (Top 10)</h3>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 50px;">Rank</th>
+                    <th>Category</th>
+                    <th style="width: 120px;">Count</th>
+                    <th style="width: 400px;">Distribution</th>
+                </tr>
+            </thead>
+            <tbody id="categoriesTable">
+                <!-- Data will be inserted by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Global variables
+        let currentPeriod = 'monthly';
+        let charts = {};
+        let customDateActive = false;
+
+        // Data for different periods
+        const dataByPeriod = {
+            today: {
+                labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+                helpdeskData: [150, 120, 280, 180, 110, 150],
+                aiData: [350, 320, 420, 520, 380, 390],
+                aiPerformance: [80, 82, 84, 86, 83, 85],
+                availabilityLabels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+                availabilityData: [90, 75, 135, 150, 105, 120],
+                responseTimeLabels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+                aiResponseTime: [1.2, 1.5, 1.8, 2.1, 1.9, 1.6],
+                helpdeskResponseTime: [45, 52, 68, 75, 63, 58],
+                metrics: {
+                    total: '2,110',
+                    aiSuccess: '84',
+                    unanswered: '13',
+                    escalation: '10',
+                }
+            },
+            monthly: {
+                labels: ['Jan 1', 'Jan 5', 'Jan 10', 'Jan 15', 'Jan 20', 'Jan 25', 'Jan 30'],
+                helpdeskData: [1200, 1350, 1500, 1450, 1600, 1550, 1650],
+                aiData: [3200, 3400, 3800, 3650, 3900, 3850, 4100],
+                aiPerformance: [82, 83, 85, 84, 86, 85, 87],
+                availabilityLabels: ['Jan 1', 'Jan 5', 'Jan 10', 'Jan 15', 'Jan 20', 'Jan 25', 'Jan 30'],
+                availabilityData: [340, 380, 420, 400, 450, 430, 470],
+                responseTimeLabels: ['Jan 1', 'Jan 5', 'Jan 10', 'Jan 15', 'Jan 20', 'Jan 25', 'Jan 30'],
+                aiResponseTime: [1.8, 1.6, 1.4, 1.5, 1.3, 1.4, 1.2],
+                helpdeskResponseTime: [58, 54, 48, 50, 45, 47, 42],
+                metrics: {
+                    total: '65,450',
+                    aiSuccess: '85',
+                    unanswered: '11',
+                    escalation: '9',
+                }
+            },
+            yearly: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                helpdeskData: [35000, 38000, 42000, 40000, 45000, 43000, 47000, 46000, 49000, 48000, 51000, 50000],
+                aiData: [95000, 102000, 115000, 108000, 125000, 118000, 132000, 128000, 138000, 135000, 145000, 142000],
+                aiPerformance: [78, 80, 82, 81, 84, 83, 85, 84, 86, 85, 87, 86],
+                availabilityLabels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                availabilityData: [8500, 9200, 10500, 9800, 11200, 10800, 12000, 11500, 12500, 12000, 13000, 12800],
+                responseTimeLabels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                aiResponseTime: [2.5, 2.3, 2.0, 1.9, 1.7, 1.6, 1.5, 1.4, 1.3, 1.3, 1.2, 1.2],
+                helpdeskResponseTime: [85, 78, 72, 68, 62, 58, 55, 52, 48, 47, 45, 43],
+                metrics: {
+                    total: '1,534,000',
+                    aiSuccess: '86',
+                    unanswered: '10',
+                    escalation: '8',
+                }
+            },
+            custom: {
+                labels: ['Jan 1', 'Jan 5', 'Jan 10', 'Jan 15', 'Jan 20', 'Jan 25', 'Jan 31'],
+                helpdeskData: [1200, 1350, 1500, 1450, 1600, 1550, 1650],
+                aiData: [3200, 3400, 3800, 3650, 3900, 3850, 4100],
+                aiPerformance: [82, 83, 85, 84, 86, 85, 87],
+                availabilityLabels: ['Jan 1', 'Jan 5', 'Jan 10', 'Jan 15', 'Jan 20', 'Jan 25', 'Jan 31'],
+                availabilityData: [340, 380, 420, 400, 450, 430, 470],
+                responseTimeLabels: ['Jan 1', 'Jan 5', 'Jan 10', 'Jan 15', 'Jan 20', 'Jan 25', 'Jan 31'],
+                aiResponseTime: [1.8, 1.6, 1.4, 1.5, 1.3, 1.4, 1.2],
+                helpdeskResponseTime: [58, 54, 48, 50, 45, 47, 42],
+                metrics: {
+                    total: '68,500',
+                    aiSuccess: '85',
+                    unanswered: '11',
+                    escalation: '9',
+                }
+            }
+        };
+
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('currentTime').textContent = now.toLocaleString('id-ID', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+
+        // Chart.js default settings
+        Chart.defaults.color = '#6c757d';
+        Chart.defaults.borderColor = '#e1e4e8';
+        Chart.defaults.font.family = "'Roboto', 'Helvetica Neue', Arial, sans-serif";
+
+        // Initialize charts
+        function initCharts() {
+            const data = dataByPeriod[currentPeriod];
+
+            // Interactions Trend Chart
+            const interactionsTrendCtx = document.getElementById('interactionsTrendChart').getContext('2d');
+            charts.interactionsTrend = new Chart(interactionsTrendCtx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Helpdesk Interaction',
+                        data: data.helpdeskData,
+                        borderColor: '#28a745',
+                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 0,
+                        pointHoverRadius: 5,
+                        pointHoverBackgroundColor: '#28a745',
+                        borderWidth: 2
+                    }, {
+                        label: 'AI Interaction',
+                        data: data.aiData,
+                        borderColor: '#ffc107',
+                        backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 0,
+                        pointHoverRadius: 5,
+                        pointHoverBackgroundColor: '#ffc107',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 15,
+                                color: '#2c3e50'
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            padding: 12,
+                            titleColor: '#2c3e50',
+                            bodyColor: '#2c3e50',
+                            borderColor: '#e1e4e8',
+                            borderWidth: 1
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#f1f3f5',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: '#6c757d',
+                                callback: function(value) {
+                                    return value >= 1000 ? (value/1000) + 'K' : value;
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: '#f1f3f5',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: '#6c757d'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Questions Answered Chart
+            const questionsAnsweredCtx = document.getElementById('questionsAnsweredChart').getContext('2d');
+            charts.questionsAnswered = new Chart(questionsAnsweredCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Webchat', 'WhatsApp', 'Email', 'Instagram'],
+                    datasets: [{
+                        label: 'Total Question',
+                        data: [2850, 1920, 1150, 890],
+                        backgroundColor: '#28a745',
+                        borderRadius: 4
+                    }, {
+                        label: 'Automated Answered',
+                        data: [2420, 1650, 980, 720],
+                        backgroundColor: '#ffc107',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 15,
+                                color: '#2c3e50'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#f1f3f5',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: '#6c757d'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#6c757d'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // AI Performance Trend Chart
+            const aiPerformanceCtx = document.getElementById('aiPerformanceChart').getContext('2d');
+            charts.aiPerformance = new Chart(aiPerformanceCtx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'AI Performance',
+                        data: data.aiPerformance,
+                        borderColor: '#0066cc',
+                        backgroundColor: 'rgba(0, 102, 204, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 0,
+                        pointHoverRadius: 5,
+                        pointHoverBackgroundColor: '#0066cc',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            padding: 12,
+                            titleColor: '#2c3e50',
+                            bodyColor: '#2c3e50',
+                            borderColor: '#e1e4e8',
+                            borderWidth: 1
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 75,
+                            max: 90,
+                            grid: {
+                                color: '#f1f3f5',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: '#6c757d'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: '#f1f3f5',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: '#6c757d'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Accuracy Gauge Chart
+            const accuracyGaugeCtx = document.getElementById('accuracyGaugeChart').getContext('2d');
+            charts.accuracyGauge = new Chart(accuracyGaugeCtx, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [85, 15],
+                        backgroundColor: ['#28a745', '#e9ecef'],
+                        borderWidth: 0,
+                        circumference: 180,
+                        rotation: 270
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            enabled: false
+                        }
+                    }
+                }
+            });
+
+            // Feedback Pie Chart
+            const feedbackPieCtx = document.getElementById('feedbackPieChart').getContext('2d');
+            charts.feedbackPie = new Chart(feedbackPieCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Satisfied', 'Dissatisfied'],
+                    datasets: [{
+                        data: [85, 15],
+                        backgroundColor: ['#ffc107', '#28a745'],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 15,
+                                color: '#2c3e50'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Availability Chart
+            const availabilityCtx = document.getElementById('availabilityChart').getContext('2d');
+            charts.availability = new Chart(availabilityCtx, {
+                type: 'line',
+                data: {
+                    labels: data.availabilityLabels,
+                    datasets: [{
+                        label: 'Agent Hours',
+                        data: data.availabilityData,
+                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                        borderColor: '#28a745',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 0,
+                        pointHoverRadius: 5,
+                        pointHoverBackgroundColor: '#28a745',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            padding: 12,
+                            titleColor: '#2c3e50',
+                            bodyColor: '#2c3e50',
+                            borderColor: '#e1e4e8',
+                            borderWidth: 1
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#f1f3f5',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: '#6c757d',
+                                callback: function(value) {
+                                    return value >= 1000 ? (value/1000) + 'K' : value;
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: '#f1f3f5',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: '#6c757d'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Response Time Chart
+            const responseTimeCtx = document.getElementById('responseTimeChart').getContext('2d');
+            charts.responseTime = new Chart(responseTimeCtx, {
+                type: 'line',
+                data: {
+                    labels: data.responseTimeLabels,
+                    datasets: [{
+                        label: 'AI Response Time',
+                        data: data.aiResponseTime,
+                        backgroundColor: 'rgba(0, 102, 204, 0.1)',
+                        borderColor: '#0066cc',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 0,
+                        pointHoverRadius: 5,
+                        pointHoverBackgroundColor: '#0066cc',
+                        borderWidth: 2,
+                        yAxisID: 'y'
+                    }, {
+                        label: 'Helpdesk Response Time',
+                        data: data.helpdeskResponseTime,
+                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                        borderColor: '#28a745',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 0,
+                        pointHoverRadius: 5,
+                        pointHoverBackgroundColor: '#28a745',
+                        borderWidth: 2,
+                        yAxisID: 'y1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 15,
+                                color: '#2c3e50'
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            padding: 12,
+                            titleColor: '#2c3e50',
+                            bodyColor: '#2c3e50',
+                            borderColor: '#e1e4e8',
+                            borderWidth: 1,
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.dataset.label || '';
+                                    const value = context.parsed.y;
+                                    if (label.includes('AI')) {
+                                        return label + ': ' + value.toFixed(2) + 's';
+                                    } else {
+                                        return label + ': ' + value.toFixed(0) + 's';
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            beginAtZero: true,
+                            max: 3,
+                            grid: {
+                                color: '#f1f3f5',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: '#0066cc',
+                                callback: function(value) {
+                                    return value.toFixed(1) + 's';
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: 'AI Response (seconds)',
+                                color: '#0066cc',
+                                font: {
+                                    size: 12,
+                                    weight: 600
+                                }
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            beginAtZero: true,
+                            max: 100,
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                            ticks: {
+                                color: '#28a745',
+                                callback: function(value) {
+                                    return value.toFixed(0) + 's';
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Helpdesk Response (seconds)',
+                                color: '#28a745',
+                                font: {
+                                    size: 12,
+                                    weight: 600
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: '#f1f3f5',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: '#6c757d'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Toggle custom date picker
+        function toggleCustomDate() {
+            customDateActive = !customDateActive;
+            const picker = document.getElementById('customDatePicker');
+            
+            if (customDateActive) {
+                picker.style.display = 'flex';
+                document.querySelectorAll('.time-filter button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                event.target.classList.add('active');
+            } else {
+                picker.style.display = 'none';
+            }
+        }
+
+        // Apply custom date
+        function applyCustomDate() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            currentPeriod = 'custom';
+            
+            document.getElementById('trendLabel').textContent = '(Daily)';
+            document.getElementById('perfLabel').textContent = '(Daily)';
+            document.getElementById('availLabel').textContent = '(Daily)';
+            document.getElementById('responseLabel').textContent = '(Daily)';
+
+            updateMetrics();
+            updateCharts();
+
+            document.querySelectorAll('.chart-container').forEach(el => {
+                el.classList.add('loading');
+                setTimeout(() => el.classList.remove('loading'), 500);
+            });
+        }
+
+        // Change time period
+        function changeTimePeriod(period) {
+            if (period === 'custom') {
+                toggleCustomDate();
+                return;
+            }
+
+            currentPeriod = period;
+            customDateActive = false;
+            document.getElementById('customDatePicker').style.display = 'none';
+            
+            document.querySelectorAll('.time-filter button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            const labelTexts = {
+                today: '(Hourly)',
+                monthly: '(Daily)',
+                yearly: '(Monthly)'
+            };
+            document.getElementById('trendLabel').textContent = labelTexts[period];
+            document.getElementById('perfLabel').textContent = labelTexts[period];
+            document.getElementById('availLabel').textContent = labelTexts[period];
+            document.getElementById('responseLabel').textContent = labelTexts[period];
+
+            updateMetrics();
+            updateCharts();
+
+            document.querySelectorAll('.chart-container').forEach(el => {
+                el.classList.add('loading');
+                setTimeout(() => el.classList.remove('loading'), 500);
+            });
+        }
+
+        // Update metrics
+        function updateMetrics() {
+            const data = dataByPeriod[currentPeriod];
+            document.getElementById('totalInteractions').textContent = data.metrics.total;
+            document.getElementById('aiSuccessRate').textContent = data.metrics.aiSuccess;
+            document.getElementById('unansweredRate').textContent = data.metrics.unanswered;
+            document.getElementById('escalationRate').textContent = data.metrics.escalation;
+        }
+
+        // Update charts
+        function updateCharts() {
+            const data = dataByPeriod[currentPeriod];
+
+            charts.interactionsTrend.data.labels = data.labels;
+            charts.interactionsTrend.data.datasets[0].data = data.helpdeskData;
+            charts.interactionsTrend.data.datasets[1].data = data.aiData;
+            charts.interactionsTrend.update('active');
+
+            charts.aiPerformance.data.labels = data.labels;
+            charts.aiPerformance.data.datasets[0].data = data.aiPerformance;
+            charts.aiPerformance.update('active');
+
+            charts.availability.data.labels = data.availabilityLabels;
+            charts.availability.data.datasets[0].data = data.availabilityData;
+            charts.availability.update('active');
+
+            charts.responseTime.data.labels = data.responseTimeLabels;
+            charts.responseTime.data.datasets[0].data = data.aiResponseTime;
+            charts.responseTime.data.datasets[1].data = data.helpdeskResponseTime;
+            charts.responseTime.update('active');
+        }
+
+        // Populate Categories Table
+        const categories = [
+            { rank: 1, name: 'Akun', count: 12108, percentage: 18.5 },
+            { rank: 2, name: 'Log in', count: 11127, percentage: 17.0 },
+            { rank: 3, name: 'Kode Verifikasi (OTP)', count: 8836, percentage: 13.5 },
+            { rank: 4, name: 'Laporan LKPM', count: 6872, percentage: 10.5 },
+            { rank: 5, name: 'Daftar Sanksi LKPM', count: 5563, percentage: 8.5 },
+            { rank: 6, name: 'Contact Center', count: 4582, percentage: 7.0 },
+            { rank: 7, name: 'Aliran Data ke Sistem K/L', count: 3992, percentage: 6.1 },
+            { rank: 8, name: 'Data penanggungjawab pada OSS tidak sesuai dengan data pada sistem K/L', count: 3534, percentage: 5.4 },
+            { rank: 9, name: 'Informasi mekanisme pengawasan', count: 3142, percentage: 4.8 },
+            { rank: 10, name: 'Id Izin tidak terdaftar', count: 2880, percentage: 4.4 }
+        ];
+
+        // Format number function
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            } else if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return num.toString();
+        }
+
+        const tableBody = document.getElementById('categoriesTable');
+        categories.forEach(cat => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td style="text-align: center; color: #0066cc; font-weight: 600;">#${cat.rank}</td>
+                <td style="font-weight: 500;">${cat.name}</td>
+                <td style="color: #28a745; font-weight: 600;">${formatNumber(cat.count)}</td>
+                <td>
+                    <div class="bar-cell">
+                        <div class="bar-wrapper">
+                            <div class="bar-fill" style="width: 0%;" data-width="${cat.percentage}"></div>
+                        </div>
+                        <span class="percentage">${cat.percentage}%</span>
+                    </div>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+
+        setTimeout(() => {
+            document.querySelectorAll('.bar-fill').forEach(bar => {
+                const width = bar.getAttribute('data-width');
+                bar.style.width = width + '%';
+            });
+        }, 100);
+
+        // Initialize - start with Monthly view
+        document.querySelectorAll('.time-filter button').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.textContent === 'Monthly') {
+                btn.classList.add('active');
+            }
+        });
+        
+        initCharts();
+        updateMetrics();
+    </script>
+</body>
+</html>

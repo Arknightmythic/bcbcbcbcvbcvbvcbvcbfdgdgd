@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Monitoring (Light Theme)</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* === Global & Tema === */
+        :root {
+            --bg-color: #f6f7f9; /* Latar belakang utama (terang) */
+            --panel-bg: #ffffff; /* Latar belakang panel (putih) */
+            --border-color: #e0e0e0; /* Border abu-abu terang */
+            --text-primary: #333333; /* Teks gelap */
+            --text-secondary: #666666; /* Teks abu-abu lebih terang */
+            
+            /* Warna Grafik (tetap sama, warna cerah) */
+            --color-success: #73bf69; /* Hijau */
+            --color-warning: #fade2a; /* Kuning */
+            --color-blue: #5794f2;   /* Biru */
+            --color-dark-blue: #3264c9; /* Biru gelap untuk AI Performance Trend */
+
+            /* Gradien Warna (akan diatur di JS, tetap pakai RGBA) */
+            /* Menggunakan variabel CSS untuk konsistensi, meskipun gradien dibuat di JS */
+            --gradient-yellow-top: rgba(250, 222, 42, 0.4);
+            --gradient-yellow-bottom: rgba(250, 222, 42, 0);
+
+            --gradient-green-top: rgba(115, 191, 105, 0.4);
+            --gradient-green-bottom: rgba(115, 191, 105, 0);
+
+            --gradient-blue-top: rgba(87, 148, 242, 0.4);
+            --gradient-blue-bottom: rgba(87, 148, 242, 0);
+
+            --gradient-darkblue-top: rgba(50, 100, 201, 0.4); /* Gradasi untuk AI Performance */
+            --gradient-darkblue-bottom: rgba(50, 100, 201, 0);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 1rem;
+        }
+
+        /* === Navigasi Header === */
+        .main-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 1rem 1rem 1rem;
+            color: var(--text-secondary);
+        }
+
+        .nav-right {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn {
+            background-color: var(--panel-bg);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05); /* Sedikit shadow untuk tombol */
+        }
+
+        .btn.btn-primary {
+            background-color: var(--color-blue);
+            color: white; /* Teks putih untuk tombol biru */
+            border-color: var(--color-blue);
+        }
+        /* Hover untuk tombol */
+        .btn:hover {
+            opacity: 0.9;
+        }
+        .btn.btn-primary:hover {
+            opacity: 0.9;
+        }
+
+
+        /* === Grid Layout Dashboard === */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 1rem;
+        }
+
+        .panel {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Shadow untuk panel */
+        }
+
+        .panel-title {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        /* === Ukuran Panel (Grid Spanning) === */
+        .panel-stat { grid-column: span 3; }
+        .panel-chart-med { grid-column: span 4; min-height: 300px; }
+        .panel-chart-small { grid-column: span 3; min-height: 300px; }
+        .panel-chart-large { grid-column: span 6; min-height: 300px; }
+        .panel-table { grid-column: span 6; min-height: 300px; }
+
+
+        /* === Styling Panel Spesifik === */
+        .panel-stat {
+            padding: 1.5rem;
+            justify-content: center;
+        }
+        .stat-title {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+        }
+        .stat-value {
+            font-size: 2.8rem;
+            font-weight: bold;
+            line-height: 1.2;
+        }
+        .stat-value.success { color: var(--color-success); }
+        .stat-value.warning { color: var(--color-warning); }
+        
+        /* Kontainer untuk chart <canvas> agar responsif */
+        .chart-container {
+            position: relative;
+            flex-grow: 1;
+            min-height: 150px;
+        }
+
+        /* Untuk panel Gauge (AI Response Accuracy) */
+        .gauge-container {
+            position: relative; 
+            justify-content: center;
+            align-items: center;
+        }
+        .gauge-value {
+            position: absolute;
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--color-success);
+            top: 65%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        /* Panel Tabel */
+        .panel-table { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            color: var(--text-primary); /* Pastikan teks tabel gelap */
+        }
+        th { 
+            color: var(--text-secondary); /* Header tabel lebih terang */
+            font-weight: normal; 
+        }
+        td:last-child { display: flex; align-items: center; gap: 0.5rem; }
+        .dist-bar {
+            height: 1rem;
+            background-color: var(--color-blue);
+            border-radius: 2px;
+            opacity: 0.7;
+        }
+
+        /* === 📱 RESPONSIVE === */
+        @media (max-width: 1200px) {
+            .panel-stat { grid-column: span 6; }
+            .panel-chart-med:first-child { grid-column: span 12; }
+            .panel-chart-med { grid-column: span 6; }
+            .panel-chart-small { grid-column: span 6; }
+            .panel-chart-large { grid-column: span 12; }
+            .panel-table { grid-column: span 12; }
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 0.5rem; }
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .panel-stat,
+            .panel-chart-med,
+            .panel-chart-small,
+            .panel-chart-large,
+            .panel-table {
+                grid-column: span 1;
+            }
+            .main-nav { flex-direction: column; align-items: flex-start; gap: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- <nav class="main-nav">
+        <div class="nav-left">
+            <span>Home > Dashboards > Dashboard Monitoring Daily</span>
+        </div>
+        <div class="nav-right">
+            <button class="btn">Add</button>
+            <button class="btn">Settings</button>
+            <button class="btn btn-primary">Save Dashboard</button>
+        </div>
+    </nav> -->
+
+    <main class="dashboard-grid">
+
+        <div class="panel panel-stat">
+            <div class="stat-title">Total Daily Interactions</div>
+            <div class="stat-value">1,126</div>
+        </div>
+        <div class="panel panel-stat">
+            <div class="stat-title">AI Success Rate (%)</div>
+            <div class="stat-value success">94.94</div>
+        </div>
+        <div class="panel panel-stat">
+            <div class="stat-title">Unanswered Questions (%)</div>
+            <div class="stat-value warning">5.06</div>
+        </div>
+        <div class="panel panel-stat">
+            <div class="stat-title">Escalation Rate (%)</div>
+            <div class="stat-value warning">16.67</div>
+        </div>
+
+        <div class="panel panel-chart-med">
+            <div class="panel-title">Interactions Trend</div>
+            <div class="chart-container">
+                <canvas id="chartInteractions"></canvas>
+            </div>
+        </div>
+        <div class="panel panel-chart-med">
+            <div class="panel-title">Questions Answered Automatically</div>
+            <div class="chart-container">
+                <canvas id="chartQuestions"></canvas>
+            </div>
+        </div>
+        <div class="panel panel-chart-med">
+            <div class="panel-title">AI Performance Trend</div>
+            <div class="chart-container">
+                <canvas id="chartAIPerformance"></canvas>
+            </div>
+        </div>
+        
+        <div class="panel panel-chart-small gauge-container">
+            <div class="panel-title">AI Response Accuracy</div>
+            <div class="chart-container" style="max-height: 150px;">
+                <canvas id="chartAccuracy"></canvas>
+            </div>
+            <div class="gauge-value">85.35</div>
+        </div>
+        <div class="panel panel-chart-small">
+            <div class="panel-title">User Feedback Distribution</div>
+            <div class="chart-container">
+                <canvas id="chartFeedback"></canvas>
+            </div>
+        </div>
+        <div class="panel panel-chart-large">
+            <div class="panel-title">Helpdesk (Agent) Availability</div>
+            <div class="chart-container">
+                <canvas id="chartAvailability"></canvas>
+            </div>
+        </div>
+
+        <div class="panel panel-chart-large">
+            <div class="panel-title">Average Chatbot Response Time (in Seconds)</div>
+            <div class="chart-container">
+                <canvas id="chartResponseTime"></canvas>
+            </div>
+        </div>
+        <div class="panel panel-table">
+            <div class="panel-title">Most Frequent Question Categories (Top 10)</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Category</th>
+                        <th>Count</th>
+                        <th>Distribution (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>Permohonan Baru</td>
+                        <td>192</td>
+                        <td><div class="dist-bar" style="width: 17.05%"></div> 17.05</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Ubah Email atau Nomor Ponsel</td>
+                        <td>169</td>
+                        <td><div class="dist-bar" style="width: 15.01%"></div> 15.01</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Pendaftaran</td>
+                        <td>168</td>
+                        <td><div class="dist-bar" style="width: 14.92%"></div> 14.92</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Pemenuhan Persyaratan</td>
+                        <td>161</td>
+                        <td><div class="dist-bar" style="width: 14.30%"></div> 14.30</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>Reset Password</td>
+                        <td>138</td>
+                        <td><div class="dist-bar" style="width: 12.26%"></div> 12.26</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>Ubah Password</td>
+                        <td>42</td>
+                        <td><div class="dist-bar" style="width: 3.73%"></div> 3.73</td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>Profil Pelaku Usaha</td>
+                        <td>36</td>
+                        <td><div class="dist-bar" style="width: 3.20%"></div> 3.20</td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>Perpanjangan</td>
+                        <td>32</td>
+                        <td><div class="dist-bar" style="width: 2.84%"></div> 2.84</td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>Ubah Status Usaha</td>
+                        <td>31</td>
+                        <td><div class="dist-bar" style="width: 2.75%"></div> 2.75</td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>Perubahan</td>
+                        <td>31</td>
+                        <td><div class="dist-bar" style="width: 2.75%"></div> 2.75</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </main>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            
+            const colors = {
+                primary: getComputedStyle(document.documentElement).getPropertyValue('--color-blue'),
+                success: getComputedStyle(document.documentElement).getPropertyValue('--color-success'),
+                warning: getComputedStyle(document.documentElement).getPropertyValue('--color-warning'),
+                darkBlue: getComputedStyle(document.documentElement).getPropertyValue('--color-dark-blue'),
+                textPrimary: getComputedStyle(document.documentElement).getPropertyValue('--text-primary'), // Ambil primary text untuk legend/tooltip
+                textSecondary: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary'),
+                grid: getComputedStyle(document.documentElement).getPropertyValue('--border-color'),
+                panelBg: getComputedStyle(document.documentElement).getPropertyValue('--panel-bg'),
+            };
+
+            // Fungsi untuk membuat gradien linier
+            function createGradient(ctx, chartArea, colorTop, colorBottom) {
+                const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                gradient.addColorStop(0, colorBottom);
+                gradient.addColorStop(1, colorTop);
+                return gradient;
+            }
+
+            // --- Opsi Default untuk semua chart (Tema Terang) ---
+            Chart.defaults.color = colors.textSecondary; // Warna teks default untuk chart (label sumbu, dll)
+            Chart.defaults.borderColor = colors.grid; // Warna garis grid
+            Chart.defaults.plugins.legend.position = 'bottom';
+            Chart.defaults.plugins.legend.labels.usePointStyle = true;
+            Chart.defaults.plugins.legend.labels.boxWidth = 8;
+            Chart.defaults.plugins.legend.labels.color = colors.textPrimary; // Warna label legend utama
+            Chart.defaults.plugins.tooltip.backgroundColor = 'var(--panel-bg)'; // Background tooltip putih
+            Chart.defaults.plugins.tooltip.titleColor = colors.textPrimary; // Teks judul tooltip gelap
+            Chart.defaults.plugins.tooltip.bodyColor = colors.textPrimary; // Teks body tooltip gelap
+            Chart.defaults.plugins.tooltip.borderColor = 'var(--border-color)';
+            Chart.defaults.plugins.tooltip.borderWidth = 1;
+
+
+            const defaultLineOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { 
+                        grid: { display: false },
+                        ticks: { color: colors.textSecondary }
+                    },
+                    y: { 
+                        grid: { color: colors.grid },
+                        ticks: { color: colors.textSecondary }
+                    }
+                },
+                elements: { point: { radius: 0 } },
+                tension: 0.3,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: colors.textPrimary
+                        }
+                    }
+                }
+            };
+
+            // --- 1. Interactions Trend ---
+            const ctxInteractions = document.getElementById('chartInteractions').getContext('2d');
+            new Chart(ctxInteractions, {
+                type: 'line',
+                data: {
+                    labels: ['17:00', '18:00', '19:00', '20:00', '21:00', '22:00'],
+                    datasets: [
+                        {
+                            label: 'Helpdesk Interaction',
+                            data: [30, 48, 35, 20, 30, 15],
+                            borderColor: colors.warning,
+                            backgroundColor: (context) => {
+                                const chart = context.chart;
+                                const {ctx, chartArea} = chart;
+                                if (!chartArea) return;
+                                return createGradient(ctx, chartArea, 'rgba(250, 222, 42, 0.4)', 'rgba(250, 222, 42, 0)');
+                            },
+                            fill: true,
+                            borderWidth: 1.5,
+                        },
+                        {
+                            label: 'AI Interaction',
+                            data: [20, 25, 20, 10, 15, 10],
+                            borderColor: colors.success,
+                            backgroundColor: (context) => {
+                                const chart = context.chart;
+                                const {ctx, chartArea} = chart;
+                                if (!chartArea) return;
+                                return createGradient(ctx, chartArea, 'rgba(115, 191, 105, 0.4)', 'rgba(115, 191, 105, 0)');
+                            },
+                            fill: true,
+                            borderWidth: 1.5,
+                        }
+                    ]
+                },
+                options: defaultLineOptions
+            });
+
+            // --- 2. Questions Answered Automatically ---
+            const ctxQuestions = document.getElementById('chartQuestions').getContext('2d');
+            new Chart(ctxQuestions, {
+                type: 'bar',
+                data: {
+                    labels: ['ig (dm)', 'wa', 'email', 'web'], // Menyesuaikan label
+                    datasets: [
+                        {
+                            label: 'Total Question',
+                            data: [270, 290, 180, 210], 
+                            backgroundColor: colors.primary,
+                            borderRadius: 2,
+                        },
+                        {
+                            label: 'Automated Answer',
+                            data: [230, 240, 150, 170], 
+                            backgroundColor: colors.success,
+                            borderRadius: 2,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { 
+                            grid: { display: false },
+                            ticks: { color: colors.textSecondary }
+                        },
+                        y: { 
+                            grid: { color: colors.grid },
+                            beginAtZero: true,
+                            ticks: { color: colors.textSecondary }
+                        }
+                    },
+                     plugins: {
+                        legend: {
+                            labels: {
+                                color: colors.textPrimary
+                            }
+                        }
+                    }
+                }
+            });
+
+            // --- 3. AI Performance Trend ---
+            const ctxAIPerformance = document.getElementById('chartAIPerformance').getContext('2d');
+            new Chart(ctxAIPerformance, {
+                type: 'line',
+                data: {
+                    labels: ['17:00', '18:00', '19:00', '20:00', '21:00', '22:00'],
+                    datasets: [
+                        {
+                            label: 'AI Performance',
+                            data: [92, 90, 85, 93, 80, 78],
+                            borderColor: colors.darkBlue, 
+                            backgroundColor: (context) => {
+                                const chart = context.chart;
+                                const {ctx, chartArea} = chart;
+                                if (!chartArea) return;
+                                return createGradient(ctx, chartArea, 'rgba(50, 100, 201, 0.4)', 'rgba(50, 100, 201, 0)');
+                            },
+                            fill: true,
+                            borderWidth: 2,
+                        }
+                    ]
+                },
+                options: { 
+                    ...defaultLineOptions, 
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            grid: { color: colors.grid },
+                            ticks: { color: colors.textSecondary },
+                            min: 70, 
+                            max: 95
+                        }
+                    }
+                }
+            });
+
+            // --- 4. AI Response Accuracy (Gauge) ---
+            const ctxAccuracy = document.getElementById('chartAccuracy').getContext('2d');
+            new Chart(ctxAccuracy, {
+                type: 'doughnut',
+                data: {
+                    datasets: [
+                        {
+                            data: [85.35, 100 - 85.35],
+                            backgroundColor: [colors.success, colors.grid], /* Warna background untuk bagian kosong */
+                            borderColor: [colors.success, colors.grid],
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    circumference: 180, 
+                    rotation: 270,      
+                    cutout: '70%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false }
+                    }
+                }
+            });
+
+            // --- 5. User Feedback Distribution ---
+            const ctxFeedback = document.getElementById('chartFeedback').getContext('2d');
+            new Chart(ctxFeedback, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Satisfied', 'Dissatisfied'],
+                    datasets: [
+                        {
+                            data: [88, 12], 
+                            backgroundColor: [colors.warning, colors.textSecondary], /* Warna kuning dan abu-abu terang */
+                            borderColor: colors.panelBg,
+                            borderWidth: 4,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '60%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                color: colors.textPrimary
+                            }
+                        }
+                    }
+                }
+            });
+
+            // --- 6. Helpdesk (Agent) Availability ---
+            const ctxAvailability = document.getElementById('chartAvailability').getContext('2d');
+            new Chart(ctxAvailability, {
+                type: 'line',
+                data: {
+                    labels: ['17:00', '18:00', '19:00', '20:00', '21:00', '22:00'],
+                    datasets: [
+                        {
+                            label: 'Helpdesk Availability',
+                            data: [3.2, 3.8, 2.5, 3.5, 2.8, 3.9],
+                            borderColor: colors.success,
+                            backgroundColor: (context) => {
+                                const chart = context.chart;
+                                const {ctx, chartArea} = chart;
+                                if (!chartArea) return;
+                                return createGradient(ctx, chartArea, 'rgba(115, 191, 105, 0.4)', 'rgba(115, 191, 105, 0)');
+                            },
+                            fill: true,
+                            stepped: true, 
+                            borderWidth: 1.5,
+                        }
+                    ]
+                },
+                options: { 
+                    ...defaultLineOptions,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { 
+                            grid: { display: false },
+                            ticks: { color: colors.textSecondary }
+                        },
+                        y: { 
+                            grid: { color: colors.grid },
+                            ticks: {
+                                stepSize: 0.25,
+                                color: colors.textSecondary
+                            },
+                            min: 2.25, 
+                            max: 4.25
+                        }
+                    },
+                }
+            });
+            
+            // --- 7. Average Chatbot Response Time ---
+            const ctxResponseTime = document.getElementById('chartResponseTime').getContext('2d');
+            new Chart(ctxResponseTime, {
+                type: 'line',
+                data: {
+                    labels: ['16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00', '20:30', '21:00', '21:30', '22:00'],
+                    datasets: [
+                        {
+                            label: 'AI Response Time (Seconds)',
+                            data: [10, 12, 15, 25, 40, 55, 60, 40, 35, 30, 28, 25],
+                            borderColor: colors.warning,
+                            backgroundColor: (context) => {
+                                const chart = context.chart;
+                                const {ctx, chartArea} = chart;
+                                const gradientColorTop = getComputedStyle(document.documentElement).getPropertyValue('--gradient-yellow-top');
+                                const gradientColorBottom = getComputedStyle(document.documentElement).getPropertyValue('--gradient-yellow-bottom');
+                                if (!chartArea) return;
+                                return createGradient(ctx, chartArea, gradientColorTop, gradientColorBottom);
+                            },
+                            fill: true,
+                            borderWidth: 1.5,
+                        },
+                        {
+                            label: 'Helpdesk Response Time (Seconds)',
+                            data: [8, 10, 12, 20, 35, 50, 55, 35, 30, 25, 24, 22],
+                            borderColor: colors.success,
+                            backgroundColor: (context) => {
+                                const chart = context.chart;
+                                const {ctx, chartArea} = chart;
+                                const gradientColorTop = getComputedStyle(document.documentElement).getPropertyValue('--gradient-green-top');
+                                const gradientColorBottom = getComputedStyle(document.documentElement).getPropertyValue('--gradient-green-bottom');
+                                if (!chartArea) return;
+                                return createGradient(ctx, chartArea, gradientColorTop, gradientColorBottom);
+                            },
+                            fill: true,
+                            borderWidth: 1.5,
+                        }
+                    ]
+                },
+                options: defaultLineOptions
+            });
+
+        });
+    </script>
+
+</body>
+</html>
