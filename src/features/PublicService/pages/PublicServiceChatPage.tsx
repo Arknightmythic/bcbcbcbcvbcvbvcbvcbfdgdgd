@@ -179,7 +179,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           <div className={`transition-opacity duration-300 ${isCitationVisible ? 'opacity-100' : 'opacity-0'}`}>
             {message.sender === 'agent' && hasCitations && (
               <div className="mt-3 pt-2 border-t text-xs border-gray-200">
-                <button onClick={() => onToggleCitation(message.id)} className="w-full flex justify-between items-center text-left font-semibold text-white mb-1 focus:outline-none">
+                <button onClick={() => onToggleCitation(message.id)} className="w-full flex justify-between items-center text-left font-semibold text-gray-800 mb-1 focus:outline-none">
                   <span>Sumber ({messageCitations.length})</span>
                   <span className={`transform transition-transform duration-200 ${isOpen ? 'rotate-180' : 'rotate-0'}`}>▼</span>
                 </button>
@@ -373,7 +373,7 @@ const PublicServiceChatPage: React.FC = () => {
 
         {/* --- PINDAHKAN BANNER KE SINI (Request 1) --- */}
         {isBannerVisible && (
-          <div className="flex justify-center py-2">
+          <div className="hidden justify-center py-2">
             <ConnectToAgentBanner
               onYes={() => {
                 handleConnectToAgent();
@@ -442,8 +442,7 @@ const PublicServiceChatPage: React.FC = () => {
           animation: fadeIn 0.4s ease-out forwards;
         }
         .animate-fade-in-up {
-          animation: fadeInUp 0.4s ease-out forwards;
-          opacity: 0; 
+          animation: fadeInUp 0.4s ease-out forwards; 
           animation-fill-mode: forwards;
         }
 

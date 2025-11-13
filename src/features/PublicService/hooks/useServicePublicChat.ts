@@ -26,17 +26,25 @@ import {
  * ke struktur ChatMessage yang digunakan oleh UI.
  */
 const mapBackendHistoryToFrontend = (
-  history: BackendChatHistory[]
+  history: BackendChatHistory[] // Tipe ini di types.ts mungkin tidak sesuai dengan JSON asli
 ): ChatMessage[] => {
-  return history.map((msg) => ({
+  // --- PERBAIKAN DI SINI ---
+  // Gunakan 'any' untuk 'msg' agar kita bisa mengakses struktur JSON
+  // yang benar (message.data.content dan message.type)
+  // yang berbeda dari definisi tipe BackendChatHistory
+  return (history || []).map((msg: any) => ({
     id: msg.id.toString(),
-    sender: msg.message.role === "user" ? "user" : "agent",
-    text: msg.message.content,
+    // Ganti 'msg.message.role' -> 'msg.message.type'
+    // Ganti 'user'/'assistant' -> 'human'/'ai'
+    sender: msg.message.type === "human" ? "user" : "agent",
+    // Ganti 'msg.message.content' -> 'msg.message.data.content'
+    text: msg.message.data.content,
     timestamp: msg.created_at,
     feedback: msg.feedback === null ? null : msg.feedback ? "like" : "dislike",
     // --- TAMBAHAN: Muat status 'is_answered' dari riwayat ---
     is_answered: msg.is_cannot_answer === null ? null : !msg.is_cannot_answer,
   }));
+  // --- AKHIR PERBAIKAN ---
 };
 
 /**

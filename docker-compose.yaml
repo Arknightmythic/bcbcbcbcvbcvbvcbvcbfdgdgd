@@ -27,6 +27,7 @@ services:
       # Mount Caddyfile yang Anda buat
       - ./Caddyfile:/etc/caddy/Caddyfile
       # Volume untuk menyimpan sertifikat SSL
+      - /etc/cert:/etc/cert:ro
       - caddy_data:/data
       - caddy_config:/config
     networks:

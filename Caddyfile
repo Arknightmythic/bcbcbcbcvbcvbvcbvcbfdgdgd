@@ -1,5 +1,5 @@
 dev-bkpm.cloud-ioh.com {
-    tls /etc/certs/caddy.crt /etc/certs/caddy.key
+    tls /etc/cert/cert.crt /etc/cert/private.key
 
     # Proxy API/Internal
     reverse_proxy /api/* http://10.184.0.20:30800
