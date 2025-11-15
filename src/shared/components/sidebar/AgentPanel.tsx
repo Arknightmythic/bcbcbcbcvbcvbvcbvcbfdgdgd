@@ -111,9 +111,9 @@ export const AgentPanel = ({
 
   if (isCollapsed) {
     return (
-      <div className="flex flex-col items-center py-2 space-y-4 bg-gray-200 rouned rounded-t-md">
+      <div className="flex flex-col items-center py-2 space-y-4 rounded rounded-t-md">
         
-        {/* Tab Vertikal */}
+        {/* Tab Vertikal
         <div className="flex flex-col items-center space-y-2 mt-2">
           <CollapsedTabButton
             icon={MessageSquare}
@@ -133,7 +133,7 @@ export const AgentPanel = ({
             tooltipText="Pending"
            
           />
-        </div>
+        </div> */}
 
         {/* Ikon Agen (Budi Santoso) */}
         <Tooltip text={`${agentName} (${agentStatus})`}>

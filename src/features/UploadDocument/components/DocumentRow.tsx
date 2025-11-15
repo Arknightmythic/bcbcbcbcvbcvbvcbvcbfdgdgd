@@ -167,7 +167,7 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
           type="checkbox"
           onChange={(e) => onSelect(e, doc.id)}
           checked={isSelected}
-          className="w-2 h-2 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+          className="w-3 h-3 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
         />
       </td>
       <td className="px-6 py-4">

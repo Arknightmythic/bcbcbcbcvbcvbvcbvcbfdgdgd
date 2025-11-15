@@ -13,7 +13,7 @@ const HelpDeskPage: React.FC = () => {
       <div className={`
         ${sessionId ? 'hidden' : 'flex'} 
         lg:flex lg:flex-col 
-        w-full lg:max-w-xs lg:max-w-sm 
+        w-full md:max-w-xs lg:max-w-sm 
         border-r border-gray-200 
         flex-col
       `}>

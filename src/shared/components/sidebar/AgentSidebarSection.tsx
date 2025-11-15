@@ -46,7 +46,7 @@ export const AgentSidebarSection = ({
   return (
     <div className="px-5 py-4 border-t border-gray-200 bg-gray-50 hidden md:block">
       {/* Profile Section */}
-      <div className="flex items-center mb-3">
+      <div className="flex items-center">
         <div className="w-8 h-8 bg-bOss-red rounded-full flex items-center justify-center text-white text-[12px] font-bold mr-3">
           {agentInitial}
         </div>
@@ -59,13 +59,13 @@ export const AgentSidebarSection = ({
         <div className={`w-2.5 h-2.5 rounded-full ${currentStatus.color}`} />
       </div>
 
-      {/* Tabs Section */}
+      {/* Tabs Section
       <div className="flex justify-between text-center bg-gray-200 rounded-lg p-1 space-x-1">
         <TabCount label="Aktif" count={counts.active} />
         <TabCount label="Antrian" count={counts.queue}/>
         <TabCount label="Riwayat" count={counts.history}/>
         <TabCount label="Pending" count={counts.pending}/>
-      </div>
+      </div> */}
     </div>
   );
 };

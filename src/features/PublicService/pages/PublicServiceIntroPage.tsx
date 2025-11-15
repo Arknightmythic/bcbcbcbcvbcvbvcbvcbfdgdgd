@@ -1,14 +1,16 @@
 // [GANTI: src/features/PublicService/pages/PublicServiceIntroPage.tsx]
 
-import React, { useMemo } from "react";
+// 1. Impor useEffect
+import React, { useMemo, useRef, useCallback, useEffect } from "react";
 import { Loader2, MessageSquarePlus, MessageSquareText } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+// 2. Impor useInfiniteQuery dan useQueryClient
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 
 // Impor tipe DAN API
 import type { Conversation, ChatSession } from "../utils/types";
 import { getConversations } from "../api/chatApi";
 import { useServicePublicChat } from "../hooks/useServicePublicChat";
-import { useAuthStore } from "../../../shared/store/authStore"; // 1. Impor AuthStore
+import { useAuthStore } from "../../../shared/store/authStore";
 
 // Komponen SessionCard (Tidak Berubah)
 interface SessionCardProps {
@@ -39,9 +41,8 @@ const SessionCard: React.FC<SessionCardProps> = ({ session, onSelect }) => {
 
 // Komponen Halaman Intro (Modifikasi)
 const PublicServiceIntroPage: React.FC = () => {
-  // 2. Ambil user dari AuthStore
   const user = useAuthStore((state) => state.user);
-  const platformUniqueId = user?.email || "anonymous_user"; // Gunakan email sebagai ID
+  const platformUniqueId = user?.email || "anonymous_user";
 
   const {
     isRestoringSession,
@@ -49,38 +50,81 @@ const PublicServiceIntroPage: React.FC = () => {
     handleCreateNewSession,
   } = useServicePublicChat();
 
-  // 3. Gunakan React Query untuk mengambil data sesi
-  const { data: conversationsData, isLoading: isLoadingSessions } = useQuery({
-    // Tambahkan platformUniqueId ke queryKey agar unik per user
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // 3. Dapatkan queryClient
+  const queryClient = useQueryClient();
+
+  const {
+    data: infiniteData,
+    isLoading: isLoadingSessions,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
     queryKey: ["conversations", platformUniqueId],
-    queryFn: () => {
-      // 4. Tambahkan platform_unique_id ke parameter API
-      const params = new URLSearchParams("page=1&page_size=10");
-      params.set("platform_unique_id", platformUniqueId);
-      return getConversations(params);
+    queryFn: ({ pageParam = 1 }) =>
+      getConversations(platformUniqueId, pageParam as number),
+    getNextPageParam: (lastPage) => {
+      if (lastPage.page < lastPage.total_pages) {
+        return lastPage.page + 1;
+      }
+      return undefined;
     },
-    // Hanya jalankan query jika platformUniqueId sudah ada
+    initialPageParam: 1,
     enabled: !!platformUniqueId,
   });
 
-  // 5. Map data API (Conversation[]) ke data UI (ChatSession[])
+  // 4. Tambahkan useEffect ini untuk mereset query saat unmount
+  useEffect(() => {
+    // Fungsi 'return' dari useEffect akan dijalankan saat
+    // komponen 'unmount' (ditinggalkan)
+    return () => {
+      queryClient.resetQueries({
+        queryKey: ["conversations", platformUniqueId],
+        exact: true, // Pastikan hanya query ini yang direset
+      });
+    };
+  }, [queryClient, platformUniqueId]); // <-- Akhir blok useEffect
+
   const activeSessions: ChatSession[] = useMemo(
     () =>
-      conversationsData?.data?.map((convo: Conversation) => ({
-        id: convo.id,
-        created_at: convo.start_timestamp,
-        agent_name: convo.is_helpdesk ? "Agent" : "AI Assistant",
-      })) || [],
-    [conversationsData]
+      infiniteData?.pages.flatMap((page) =>
+        page.data.map((convo: Conversation) => ({
+          id: convo.id,
+          created_at: convo.start_timestamp,
+          agent_name: convo.is_helpdesk ? "Agent" : "AI Assistant",
+        }))
+      ) || [],
+    [infiniteData]
   );
-  // --- Akhir blok React Query ---
+
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleScroll = useCallback(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      const container = scrollContainerRef.current;
+      if (container) {
+        const { scrollHeight, scrollTop, clientHeight } = container;
+        if (scrollHeight - scrollTop - clientHeight < 50) {
+          if (hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
+          }
+        }
+      }
+    }, 200);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const isLoading = isLoadingSessions || isRestoringSession;
 
   return (
     <div className="flex h-full flex-col bg-gray-50">
       <div className="flex-1 flex flex-col justify-center bg-white w-full rounded-xl shadow-lg border border-gray-200 p-8 text-center">
-        {isLoading ? (
+        {isLoading && !isFetchingNextPage ? (
           <div className="flex justify-center items-center py-10">
             <Loader2 className="w-12 h-full animate-spin text-blue-500" />
           </div>
@@ -99,7 +143,11 @@ const PublicServiceIntroPage: React.FC = () => {
                 <h3 className="text-xs font-semibold text-gray-500 mb-3 text-left uppercase tracking-wide">
                   Sesi Tersimpan
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                <div
+                  ref={scrollContainerRef}
+                  onScroll={handleScroll}
+                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6 max-h-60 overflow-y-auto pr-2 custom-scrollbar"
+                >
                   {activeSessions.map((session) => (
                     <SessionCard
                       key={session.id}
@@ -107,7 +155,14 @@ const PublicServiceIntroPage: React.FC = () => {
                       onSelect={handleSelectSession}
                     />
                   ))}
+
+                  {isFetchingNextPage && (
+                    <div className="flex justify-center items-center py-4 md:col-span-2 lg:col-span-3">
+                      <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+                    </div>
+                  )}
                 </div>
+
                 <div className="relative my-6">
                   <div className="absolute inset-0 flex items-center">
                     <span className="w-full border-t border-gray-300"></span>

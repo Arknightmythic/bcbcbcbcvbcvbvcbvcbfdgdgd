@@ -9,11 +9,18 @@ import type {
 } from "../utils/types";
 
 /**
- * Mengambil daftar percakapan yang sudah ada.
+ * Mengambil daftar percakapan yang sudah ada (dengan paginasi).
  */
 export const getConversations = async (
-  params: URLSearchParams
+  platformUniqueId: string,
+  page: number
 ): Promise<ConversationWithPagination> => {
+  // Buat params di dalam fungsi
+  const params = new URLSearchParams();
+  params.set("page", page.toString());
+  params.set("page_size", "10"); // Tetap 10 per halaman
+  params.set("platform_unique_id", platformUniqueId);
+
   const response = await instanceApiToken.get("/api/chat/conversations", {
     params,
   });
@@ -38,13 +45,8 @@ export const getConversationById = async (
  * Ini akan membuat percakapan baru jika conversation_id kosong.
  */
 export const askQuestion = async (payload: AskPayload): Promise<AskResponse> => {
-  // --- PERUBAHAN DI SINI ---
-  // Tambahkan timeout 90 detik (90000 ms) khusus untuk request ini
-  // karena AI membutuhkan waktu lama untuk merespons.
   const response = await instanceApiToken.post("/api/chat/ask", payload, {
     timeout: 600000,
   });
-  // --- AKHIR PERUBAHAN ---
-
   return response.data.data;
 };

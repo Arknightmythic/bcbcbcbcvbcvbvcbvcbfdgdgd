@@ -88,7 +88,7 @@ function Layout() {
       >
         <Header toggleSidebar={toggleSidebar} />
 
-        <main className={`flex flex-col flex-1 p-5 bg-[#F9FAFB] overflow-y-auto relative ${
+        <main className={`flex flex-col flex-1 p-5 bg-[#F9FAFB] overflow-y-hidden relative ${
           isAgentPanelPopupOpen ? 'blur-sm pointer-events-none' : '' 
         } transition-all duration-300`}>
           <Outlet />
