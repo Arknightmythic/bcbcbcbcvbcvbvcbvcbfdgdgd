@@ -1,3 +1,5 @@
+// [MODIFIKASI: src/features/PublicService/pages/PublicServiceChatPage.tsx]
+
 import React, { useState, useEffect } from "react"; // Impor useEffect
 import { Loader2, Send, ArrowLeft, Copy } from "lucide-react";
 import toast from "react-hot-toast";
@@ -248,7 +250,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
             )}
           </div>
 
-          <button
+         <button
             onClick={handleCopyClick}
             className={`absolute top-0 z-10 p-1 text-gray-400 bg-white border border-gray-200 rounded-full shadow-sm
                           opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all duration-200
@@ -411,7 +413,8 @@ const PublicServiceChatPage: React.FC = () => {
   }
 
   return (
-    <div className="flex-1 flex flex-col mx-auto w-full bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+    // --- PERUBAHAN DI SINI: Ganti 'flex-1' menjadi 'h-full' ---
+    <div className="h-full flex flex-col mx-auto w-full bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
       <div className="p-3 border-b border-gray-200 flex items-center bg-gray-50">
         <button
           onClick={handleGoBackToIntro}
@@ -450,7 +453,6 @@ const PublicServiceChatPage: React.FC = () => {
         })}
 
       
-
         {isBotLoading && (
           <div className="mb-4 flex gap-3">
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 bg-bOss-red text-white">

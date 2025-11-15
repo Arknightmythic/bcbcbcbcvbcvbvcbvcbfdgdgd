@@ -1,4 +1,3 @@
-// [GANTI: src/features/PublicService/pages/PublicServiceIntroPage.tsx]
 
 // 1. Impor useEffect
 import React, { useMemo, useRef, useCallback, useEffect } from "react";
@@ -17,7 +16,7 @@ interface SessionCardProps {
   session: ChatSession;
   onSelect: (session: ChatSession) => void;
 }
-const SessionCard: React.FC<SessionCardProps> = ({ session, onSelect }) => {
+const SessionCard: React.FC<SessionCardProps> = ({ session, onSelect}) => {
   return (
     <button
       key={session.id}
@@ -25,7 +24,7 @@ const SessionCard: React.FC<SessionCardProps> = ({ session, onSelect }) => {
       className="text-left p-4 border border-gray-200 rounded-lg hover:bg-gray-50 flex items-center justify-between transition-colors duration-150 shadow-sm hover:shadow-md"
     >
       <div>
-        <p className="font-semibold text-gray-800 text-sm">Lanjutkan Sesi</p>
+        <p className="font-semibold text-gray-800 text-sm">{session.cardContext}</p>
         <p className="text-[10px] text-gray-500 mt-1">
           Dimulai pada:{" "}
           {new Date(session.created_at).toLocaleString("id-ID", {
@@ -94,10 +93,13 @@ const PublicServiceIntroPage: React.FC = () => {
           id: convo.id,
           created_at: convo.start_timestamp,
           agent_name: convo.is_helpdesk ? "Agent" : "AI Assistant",
+          cardContext: convo.context || "lanjutkan sesi",
         }))
       ) || [],
     [infiniteData]
   );
+
+  console.log("Active Sessions:", activeSessions);
 
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 

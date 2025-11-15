@@ -107,4 +107,5 @@ export interface ChatSession {
   id: string;
   agent_name?: string;
   created_at: string;
+  cardContext?: string;
 }

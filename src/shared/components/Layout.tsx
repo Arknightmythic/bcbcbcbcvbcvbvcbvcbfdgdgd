@@ -1,4 +1,4 @@
-// src/shared/components/Layout.tsx
+
 import { useState, useEffect } from "react";
 import { Outlet } from "react-router";
 import Sidebar from "./sidebar/Sidebar";
@@ -65,7 +65,9 @@ function Layout() {
   const isContentBlurred = isMobileSidebarOpen && !isDesktop;
 
   return (
-    <div className="flex min-h-screen relative">
+    // --- PERUBAHAN 1: Ganti 'min-h-screen' menjadi 'h-screen' dan tambahkan 'overflow-hidden' ---
+    // Ini memaksa layout untuk tidak pernah lebih tinggi dari viewport browser.
+    <div className="flex h-screen relative overflow-hidden">
       
       {isContentBlurred && (
         <div
@@ -88,7 +90,10 @@ function Layout() {
       >
         <Header toggleSidebar={toggleSidebar} />
 
-        <main className={`flex flex-col flex-1 p-5 bg-[#F9FAFB] overflow-y-hidden relative ${
+        {/* --- PERUBAHAN 2: Ganti 'overflow-y-hidden' menjadi 'overflow-y-auto' --- */}
+        {/* Ini membuat area 'main' bisa scroll jika kontennya (seperti UserManagement) panjang, */}
+        {/* tapi tidak akan scroll jika kontennya (seperti ChatPage) me-manage scroll-nya sendiri. */}
+        <main className={`flex flex-col flex-1 p-5 bg-[#F9FAFB] overflow-y-auto custom-scrollbar relative ${
           isAgentPanelPopupOpen ? 'blur-sm pointer-events-none' : '' 
         } transition-all duration-300`}>
           <Outlet />
