@@ -18,7 +18,7 @@ const dummyMenu: MenuItem[] = [
   { path: "/user-management", title: "User Management", icon: User2, identifier: "user-management" },
   { path: "/team-management", title: "Team Management ", icon: Users, identifier: "team-management" },
   { path: "/role-management", title: "Role Management", icon: Shield, identifier: "role-management" },
-  { path: "/helpdesk", title: "Help Desk", icon: Headset, identifier: "helpdesk" },
+  // { path: "/helpdesk", title: "Help Desk", icon: Headset, identifier: "helpdesk" },
 ];
 
 const dummyUser = {

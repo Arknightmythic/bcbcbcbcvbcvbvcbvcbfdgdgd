@@ -52,7 +52,7 @@ interface MessageBubbleProps {
   isOpen: boolean;
   onToggleCitation: (messageId: string) => void;
   onOpenCitationModal: (citation: Citation) => void;
-  onFeedback: (messageId: string, feedback: "like" | "dislike") => void;
+  onFeedback: (messageId: string, feedback: "like" | "dislike" | null) => void;
   onCopy: (question?: ChatMessage, answer?: ChatMessage) => void;
   userInitial: string;
   isLastMessage: boolean;
@@ -301,6 +301,7 @@ const PublicServiceChatPage: React.FC = () => {
     messagesEndRef,
     textareaRef,
     isRestoringSession,
+    handleFeedbackUpdate,
   } = useServicePublicChat();
 
   // --- State Baru: Visibilitas Banner (Request 1) ---
@@ -347,12 +348,6 @@ const PublicServiceChatPage: React.FC = () => {
       textareaRef.current.style.height = "auto";
     }
     setIsBannerVisible(false); // Sembunyikan banner saat kirim pesan baru
-  };
-
-  const handleFeedback = (messageId: string, feedback: "like" | "dislike") => {
-    console.log(`Feedback for message ${messageId}: ${feedback}`);
-    const feedbackText = feedback === "like" ? "Suka" : "Tidak Suka";
-    toast.success(`Terima kasih atas masukan Anda! (${feedbackText})`);
   };
 
   // --- PERBAIKAN FUNGSI COPY (Request 2) ---
@@ -445,7 +440,7 @@ const PublicServiceChatPage: React.FC = () => {
               isOpen={!!openCitations[msg.id]}
               onToggleCitation={toggleCitations}
               onOpenCitationModal={handleOpenModal}
-              onFeedback={handleFeedback}
+              onFeedback={handleFeedbackUpdate}
               onCopy={handleCopy}
               userInitial={userInitial}
             />

@@ -1,4 +1,4 @@
-// [GANTI: src/features/PublicService/hooks/useServicePublicChat.ts]
+
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
@@ -21,10 +21,7 @@ import {
   getConversationById,
 } from "../api/chatApi";
 
-/**
- * Helper function untuk memetakan riwayat chat dari backend
- * ke struktur ChatMessage yang digunakan oleh UI.
- */
+
 const mapBackendHistoryToFrontend = (
   history: BackendChatHistory[] // Tipe ini di types.ts mungkin tidak sesuai dengan JSON asli
 ): ChatMessage[] => {
@@ -40,13 +37,17 @@ const mapBackendHistoryToFrontend = (
     // Ganti 'msg.message.content' -> 'msg.message.data.content'
     text: msg.message.data.content,
     timestamp: msg.created_at,
-    feedback: msg.feedback === null ? null : msg.feedback ? "like" : "dislike",
-    // --- TAMBAHAN: Muat status 'is_answered' dari riwayat ---
+    
+    // --- PERBAIKAN LOGIKA: Cek 'true' dan 'false' secara eksplisit ---
+    // Logika lama: msg.feedback === null ? null : msg.feedback ? "like" : "dislike"
+    // BUG: Jika msg.feedback 'undefined', itu akan menjadi "dislike".
+    // Logika Baru:
+    feedback: msg.feedback === true ? "like" : msg.feedback === false ? "dislike" : null,
+    
     is_answered: msg.is_cannot_answer === null ? null : !msg.is_cannot_answer,
   }));
   // --- AKHIR PERBAIKAN ---
 };
-
 /**
  * Helper function untuk memetakan respons API 'ask'
  * ke tipe Citation yang digunakan oleh UI.
@@ -71,14 +72,14 @@ export const useServicePublicChat = () => {
   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
 
-  // State Inti
+  
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState<string>("");
   const [chatMode, setChatMode] = useState<ChatMode>("bot");
   const [citations, setCitations] = useState<Citation[]>([]);
   const [isHistoryLoaded, setIsHistoryLoaded] = useState(false);
 
-  // State UI
+  
   const [openCitations, setOpenCitations] = useState<OpenCitationsState>({});
   const [selectedCitation, setSelectedCitation] = useState<Citation | null>(
     null
@@ -86,7 +87,7 @@ export const useServicePublicChat = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // --- LOGIKA Data Fetching (Flow 2: Membuka chat lama) ---
+  
   const {
     data: historyData,
     isLoading: isLoadingHistory,
@@ -99,20 +100,20 @@ export const useServicePublicChat = () => {
     retry: false,
   });
 
-  // Effect untuk memuat riwayat setelah fetch berhasil
+  
   useEffect(() => {
     if (historyData) {
       const mappedHistory = mapBackendHistoryToFrontend(
         historyData.chat_history || []
       );
       setMessages(mappedHistory);
-      // (Sitasi dari riwayat belum didukung, jadi kita set kosong)
+      
       setCitations([]); 
       setIsHistoryLoaded(true);
     }
   }, [historyData]);
 
-  // Effect untuk error (Tidak berubah)
+  
   useEffect(() => {
     if (isHistoryError && historyError) {
       toast.error(`Gagal memuat riwayat: ${(historyError as Error).message}`);
@@ -120,7 +121,7 @@ export const useServicePublicChat = () => {
     }
   }, [isHistoryError, historyError]);
 
-  // --- LOGIKA Inisialisasi Sesi Baru (Flow 1: URL /new) ---
+  
   useEffect(() => {
     if (sessionId === "new" && !isHistoryLoaded) {
       setMessages([
@@ -136,7 +137,7 @@ export const useServicePublicChat = () => {
     }
   }, [sessionId, isHistoryLoaded]);
 
-  // --- LOGIKA Data Mutation (Mengirim pesan) ---
+  
   const { mutate: performAsk, isPending: isBotLoading } = useMutation({
     mutationFn: askQuestion,
     onSuccess: (data: AskResponse) => {
@@ -147,9 +148,9 @@ export const useServicePublicChat = () => {
         text: data.answer,
         timestamp: new Date().toISOString(),
         feedback: null,
-        // --- TAMBAHAN BARU: Simpan status 'is_answered' ---
+        
         is_answered: data.is_answered,
-        // ------------------------------------------------
+        
       };
       setMessages((prev) => [...prev, botMessage]);
 
@@ -171,7 +172,7 @@ export const useServicePublicChat = () => {
     },
   });
 
-  // --- Handlers ---
+  
   const handleSendMessage = useCallback(() => {
     if (input.trim() === "" || isBotLoading) return;
 
@@ -212,6 +213,28 @@ export const useServicePublicChat = () => {
     []
   );
 
+  const handleFeedbackUpdate = useCallback((messageId: string, feedback: 'like' | 'dislike' | null) => {
+    
+    setMessages(prevMessages => 
+      prevMessages.map(msg => 
+        msg.id === messageId ? { ...msg, feedback: feedback } : msg
+      )
+    );
+    
+    
+    if (feedback === 'like') {
+      toast.success("Terima kasih atas masukan Anda! (Suka)");
+    } else if (feedback === 'dislike') {
+      toast.success("Terima kasih atas masukan Anda! (Tidak Suka)");
+    } else {
+      
+      console.log("Feedback dibatalkan");
+    }
+    
+    
+    
+  }, []); 
+
   const handleSelectSession = useCallback(
     (session: ChatSession) => {
       setIsHistoryLoaded(false);
@@ -230,7 +253,7 @@ export const useServicePublicChat = () => {
     navigate("/public-service");
   }, [navigate]);
 
-  // Handlers UI (Tidak berubah)
+  
   const toggleCitations = useCallback((messageId: string) => {
     setOpenCitations((prev) => ({ ...prev, [messageId]: !prev[messageId] }));
   }, []);
@@ -255,15 +278,13 @@ export const useServicePublicChat = () => {
     handleCloseModal,
     handleSendMessage,
     handleInputChange,
-
+    handleFeedbackUpdate,
     isRestoringSession: isLoadingHistory,
     handleSelectSession,
     handleCreateNewSession,
     handleGoBackToIntro,
-
     messagesEndRef,
     textareaRef,
-
     currentSessionId: sessionId,
   };
 };
