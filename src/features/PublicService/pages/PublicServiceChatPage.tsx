@@ -10,6 +10,7 @@ import { useServicePublicChat } from "../hooks/useServicePublicChat";
 import { useAuthStore } from "../../../shared/store/authStore";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { normalizeMarkdown } from "../utils/helper";
 
 // --- KOMPONEN BANNER (Request 1) ---
 // (Tetap sama, hanya dipindahkan ke sini untuk kerapian)
@@ -185,10 +186,10 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           <div className="m-0 text-sm">
             {message.sender === "agent" ? (
               // JIKA DARI AI: Gunakan ReactMarkdown
-              <div className="prose prose-sm max-w-none prose-ol:list-decimal prose-ol:list-inside prose-ol:pl-4 prose-li:before:hidden hover:prose-a:text-blue-700 hover:prose-a:underline whitespace-pre-wrap prose-p:my-0 prose-ol:my-0 prose-li:my-0">
+              <div className="prose prose-sm max-w-none prose-ol:list-decimal prose-ol:list-inside prose-ol:pl-4 prose-li:before:hidden hover:prose-a:text-blue-700 hover:prose-a:underline prose-p:my-1 prose-ol:my-1 prose-li:my-0.5 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {/* Gabungkan kembali baris-baris untuk di-parse oleh Markdown */}
-                  {displayedLines.join("\n")}
+                  {normalizeMarkdown(displayedLines.join("\n"))}
                 </ReactMarkdown>
               </div>
             ) : (
