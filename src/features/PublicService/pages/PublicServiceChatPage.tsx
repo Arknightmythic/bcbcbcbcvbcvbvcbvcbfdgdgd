@@ -8,8 +8,8 @@ import MessageActions from "../components/MessageAction";
 import CitationModal from "../components/CitationModal";
 import { useServicePublicChat } from "../hooks/useServicePublicChat";
 import { useAuthStore } from "../../../shared/store/authStore";
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 // --- KOMPONEN BANNER (Request 1) ---
 // (Tetap sama, hanya dipindahkan ke sini untuk kerapian)
@@ -111,18 +111,19 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     // 2. Gunakan timer sederhana untuk menampilkan seluruh teks sekaligus.
     // Ini memberi ReactMarkdown string yang lengkap untuk di-parse.
     const timeouts: ReturnType<typeof setTimeout>[] = [];
-    
-    timeouts.push(setTimeout(() => {
-      setDisplayedLines(textToDisplay.split("\n"));
-      setIsTextComplete(true);
-    }, 100)); // Tampilkan seluruh teks setelah 100ms
+
+    timeouts.push(
+      setTimeout(() => {
+        setDisplayedLines(textToDisplay.split("\n"));
+        setIsTextComplete(true);
+      }, 100)
+    ); // Tampilkan seluruh teks setelah 100ms
 
     // 3. Pastikan semua timeout dibersihkan saat unmount
     return () => {
       timeouts.forEach(clearTimeout);
     };
     // --- AKHIR BLOK PERBAIKAN ---
-
   }, [message.id, message.text, message.sender, isLastMessage]); // <-- 4. TAMBAHKAN 'isLastMessage' di sini
 
   useEffect(() => {
@@ -182,14 +183,12 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           {/* --- AWAL PERUBAHAN DI SINI --- */}
           {/* Ganti <div className="whitespace-pre-wrap..."> dengan logika if/else */}
           <div className="m-0 text-sm">
-            {message.sender === 'agent' ? (
+            {message.sender === "agent" ? (
               // JIKA DARI AI: Gunakan ReactMarkdown
-              <div className="prose prose-sm max-w-none prose-ol:list-decimal prose-ol:list-inside prose-ol:pl-4 prose-li:before:hidden hover:prose-a:text-blue-700 hover:prose-a:underline">
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                >
+              <div className="prose prose-sm max-w-none prose-ol:list-decimal prose-ol:list-inside prose-ol:pl-4 prose-li:before:hidden hover:prose-a:text-blue-700 hover:prose-a:underline whitespace-pre-wrap prose-p:my-0 prose-ol:my-0 prose-li:my-0">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {/* Gabungkan kembali baris-baris untuk di-parse oleh Markdown */}
-                  {displayedLines.join('\n')}
+                  {displayedLines.join("\n")}
                 </ReactMarkdown>
               </div>
             ) : (
@@ -250,7 +249,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
             )}
           </div>
 
-         <button
+          <button
             onClick={handleCopyClick}
             className={`absolute top-0 z-10 p-1 text-gray-400 bg-white border border-gray-200 rounded-full shadow-sm
                           opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all duration-200
@@ -447,7 +446,6 @@ const PublicServiceChatPage: React.FC = () => {
           );
         })}
 
-      
         {isBotLoading && (
           <div className="mb-4 flex gap-3">
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 bg-bOss-red text-white">

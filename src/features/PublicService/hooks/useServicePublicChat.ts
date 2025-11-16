@@ -228,7 +228,7 @@ export const useServicePublicChat = () => {
       toast.success("Terima kasih atas masukan Anda! (Tidak Suka)");
     } else {
       
-      console.log("Feedback dibatalkan");
+     toast.success("Feedback dibatalkan");
     }
     
     

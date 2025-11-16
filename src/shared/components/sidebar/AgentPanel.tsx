@@ -81,7 +81,6 @@ export const AgentPanel = ({
 
 
   const handleItemClick = (id: string) => {
-    console.log(`Chat with id ${id} selected.`);
     setSelectedChatId(id);
   };
 

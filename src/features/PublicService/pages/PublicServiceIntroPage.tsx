@@ -99,8 +99,6 @@ const PublicServiceIntroPage: React.FC = () => {
     [infiniteData]
   );
 
-  console.log("Active Sessions:", activeSessions);
-
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleScroll = useCallback(() => {
