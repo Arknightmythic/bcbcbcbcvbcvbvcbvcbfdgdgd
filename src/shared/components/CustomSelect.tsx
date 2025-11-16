@@ -65,7 +65,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
       </button>
 
       {isOpen && !disabled && ( // <-- LOGIKA DISABLED
-        <div className={`absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto ${dropdownPositionClass}`}>
+        <div className={`absolute z-20 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto ${dropdownPositionClass}`}>
           <ul className="py-1">
             {options.map((option) => (
               <li

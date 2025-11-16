@@ -28,15 +28,15 @@ const filterConfig: FilterConfig<Filters>[] = [
   {
     key: "aiAnswer",
     options: [
-      { value: "", label: "Semua Jawaban AI" },
-      { value: "answered", label: "Terjawab" },
-      { value: "unanswered", label: "Tidak Terjawab" },
+      { value: "", label: "AI Answer" },
+      { value: "answered", label: "Answered" },
+      { value: "unanswered", label: "Unanswered" },
     ],
   },
   {
     key: "validationStatus",
     options: [
-      { value: "", label: "Semua Status Validasi" },
+      { value: "", label: "All Status" },
       { value: "Pending", label: "Pending" },
       { value: "Validated", label: "Validated" },
       { value: "Rejected", label: "Rejected" },
@@ -192,7 +192,7 @@ const HistoryValidationPage = () => {
         <div className="px-4 bg-gray-50 rounded-t-lg shadow-md">
           <TableControls
             searchTerm={searchInput}
-            searchPlaceholder="Cari berdasarkan pengguna, ID sesi, atau pertanyaan..."
+            searchPlaceholder="Search by user, session ID, or question...."
             filters={filters}
             onSearchChange={setSearchInput}
             onSearchSubmit={handleSearchSubmit}

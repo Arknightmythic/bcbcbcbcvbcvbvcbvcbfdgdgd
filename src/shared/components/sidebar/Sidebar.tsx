@@ -5,6 +5,7 @@ import {  useRef } from 'react';
 import { AgentPanel } from "./AgentPanel";
 import type { Chat, MenuItem } from "../../types/types";
 import Tooltip from "../Tooltip"; // Pastikan ini adalah versi Tooltip.tsx dengan React Portal
+import { useAuthStore } from "../../store/authStore";
 
 
 // ... (dummyMenu, dummyUser, dummyChats, NavigationMenu tetap sama) ...
@@ -95,7 +96,8 @@ const Sidebar = ({ isCollapsed, isMobileOpen, isDesktop, setOutletBlurred }: {
   const sidebarRef = useRef<HTMLElement>(null);
   const agentPanelRef = useRef<HTMLDivElement>(null);
   const logoSectionRef = useRef<HTMLDivElement>(null);
-
+  const { user } = useAuthStore();
+  
   const accessibleMenu = dummyMenu.filter(item =>
     dummyUser.isSuperAdmin || dummyUser.permissions.some(p => p.startsWith(item.identifier))
   );
@@ -147,7 +149,7 @@ const Sidebar = ({ isCollapsed, isMobileOpen, isDesktop, setOutletBlurred }: {
           <div style={{ height: 'auto' }} className="mt-auto">
             <AgentPanel
               panelRef={agentPanelRef}
-              agentName={dummyUser.name}
+              agentName={user?.name || 'Guest'}
               chats={dummyChats}
               agentStatus={dummyUser.status}
               isCollapsed={isCollapsed}

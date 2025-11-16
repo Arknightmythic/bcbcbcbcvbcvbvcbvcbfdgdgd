@@ -42,15 +42,15 @@ const HistoryValidationTable: React.FC<HistoryValidationTableProps> = ({
         <table className="min-w-full min-w-[1024px]"> {/* Tambah min-w */}
           <thead className="bg-gray-100 sticky top-0 "> {/* Tambah sticky & z-index */}
             <tr className="text-left text-[10px] font-semibold text-gray-600">
-              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">TANGGAL</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">Request Date</th>
               <th className="px-4 py-3 sticky top-0 bg-gray-100">USER</th>
-              <th className="px-4 py-3 sticky top-0 bg-gray-100">SESSION ID</th>
-              <th className="px-4 py-3 sticky top-0 bg-gray-100">PERTANYAAN</th>
-              <th className="px-4 py-3 sticky top-0 bg-gray-100">JAWABAN AI</th>
-              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">TIDAK TERJAWAB (AI)</th>
-              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">STATUS VALIDASI</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100">Session Id</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100">Question</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100">Answer(AI)</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">Unanswered(AI)</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">Status</th>
               {/* --- PERUBAHAN DI SINI: Buat header Action sticky --- */}
-              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center right-0 z-10">AKSI</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center right-0 z-10">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">

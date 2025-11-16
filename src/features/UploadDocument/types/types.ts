@@ -24,6 +24,7 @@ export interface DocumentVersion {
   staff: string;
   filename: string;
   is_approve: boolean | null;
+  status: string | null;
 }
 
 

@@ -56,7 +56,7 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
                 User Request
               </th>
               <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">Doc Type</th>
-              <th className="px-4 py-3 sticky top-0 bg-gray-100">Kategori</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100">Category</th>
               <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">
                 Status
               </th>

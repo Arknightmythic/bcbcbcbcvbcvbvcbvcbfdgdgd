@@ -15,7 +15,7 @@ const VersioningModal: React.FC<VersioningModalProps> = ({ isOpen, onClose, vers
   if (!isOpen) return null;
 
   
-  const sortedVersions = [...versions].filter(v => v.is_approve === true).sort((a, b) => b.id - a.id);
+  const sortedVersions = [...versions].filter(v => v.status === 'Approved').sort((a, b) => b.id - a.id);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-sm p-4" onClick={onClose}>

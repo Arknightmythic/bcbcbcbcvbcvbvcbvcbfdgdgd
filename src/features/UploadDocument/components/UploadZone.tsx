@@ -86,7 +86,7 @@ const UploadZone: React.FC<UploadZoneProps> = ({
             value={selectedCategory}
             onChange={(value) => onCategoryChange(value as DocumentCategory)}
             options={categoryOptions}
-            placeholder="Pilih Kategori..."
+            placeholder="choose category..."
             selectedType='default'
           />
           <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
