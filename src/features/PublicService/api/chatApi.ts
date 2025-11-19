@@ -25,6 +25,16 @@ export const getConversations = async (
     params,
   });
   // Data dari backend Anda ada di dalam 'response.data.data'
+
+  if (!response.data.data) {
+      return {
+          data: [],
+          total: 0,
+          page: page,
+          page_size: 10,
+          total_pages: 0
+      };
+  }
   return response.data.data;
 };
 

@@ -2,17 +2,17 @@ import React from 'react';
 
 // Props diubah agar menerima isApprove
 interface StatusBadgeProps {
-  isApprove: boolean | null;
+  isApprove: string | null;
 }
 
 const StatusBadge: React.FC<StatusBadgeProps> = ({ isApprove }) => {
   let badgeStyle: string;
   let statusText: string;
 
-  if (isApprove === true) {
+  if (isApprove === 'Approved') {
     badgeStyle = 'bg-green-100 text-green-800';
     statusText = 'Approved';
-  } else if (isApprove === false) {
+  } else if (isApprove === 'Rejected') {
     badgeStyle = 'bg-red-100 text-red-800';
     statusText = 'Rejected';
   } else {

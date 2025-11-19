@@ -1,5 +1,3 @@
-
-
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -23,30 +21,21 @@ import {
 
 
 const mapBackendHistoryToFrontend = (
-  history: BackendChatHistory[] // Tipe ini di types.ts mungkin tidak sesuai dengan JSON asli
+  history: BackendChatHistory[] 
 ): ChatMessage[] => {
-  // --- PERBAIKAN DI SINI ---
-  // Gunakan 'any' untuk 'msg' agar kita bisa mengakses struktur JSON
-  // yang benar (message.data.content dan message.type)
-  // yang berbeda dari definisi tipe BackendChatHistory
+  
   return (history || []).map((msg: any) => ({
     id: msg.id.toString(),
-    // Ganti 'msg.message.role' -> 'msg.message.type'
-    // Ganti 'user'/'assistant' -> 'human'/'ai'
+  
     sender: msg.message.type === "human" ? "user" : "agent",
-    // Ganti 'msg.message.content' -> 'msg.message.data.content'
     text: msg.message.data.content,
     timestamp: msg.created_at,
-    
-    // --- PERBAIKAN LOGIKA: Cek 'true' dan 'false' secara eksplisit ---
-    // Logika lama: msg.feedback === null ? null : msg.feedback ? "like" : "dislike"
-    // BUG: Jika msg.feedback 'undefined', itu akan menjadi "dislike".
-    // Logika Baru:
+        
     feedback: msg.feedback === true ? "like" : msg.feedback === false ? "dislike" : null,
     
     is_answered: msg.is_cannot_answer === null ? null : !msg.is_cannot_answer,
   }));
-  // --- AKHIR PERBAIKAN ---
+  
 };
 /**
  * Helper function untuk memetakan respons API 'ask'
@@ -87,6 +76,8 @@ export const useServicePublicChat = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const loadingToastRef = useRef<string | null>(null);
+  const loadingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   const {
     data: historyData,
@@ -137,10 +128,49 @@ export const useServicePublicChat = () => {
     }
   }, [sessionId, isHistoryLoaded]);
 
+   // --- TAMBAHAN BARU: Fungsi untuk show/hide toast loading ---
+  const showLoadingToast = () => {
+    // Set timer untuk menampilkan toast setelah 30 detik
+    loadingTimerRef.current = setTimeout(() => {
+      loadingToastRef.current = toast.loading(
+        "AI sedang memproses, mohon tunggu beberapa saat lagi...",
+        {
+          duration: Infinity, // Toast tidak hilang otomatis
+          style: {
+            background: '#3B82F6',
+            color: '#fff',
+          },
+          iconTheme: {
+            primary: '#fff',
+            secondary: '#3B82F6',
+          },
+        }
+      );
+    }, 5000);
+  };
+
+  const hideLoadingToast = () => {
+    // Clear timer jika belum 30 detik
+    if (loadingTimerRef.current) {
+      clearTimeout(loadingTimerRef.current);
+      loadingTimerRef.current = null;
+    }
+    
+    // Dismiss toast jika sudah muncul
+    if (loadingToastRef.current) {
+      toast.dismiss(loadingToastRef.current);
+      loadingToastRef.current = null;
+    }
+  };
+
   
   const { mutate: performAsk, isPending: isBotLoading } = useMutation({
     mutationFn: askQuestion,
+    onMutate: () => {
+      showLoadingToast();
+    },
     onSuccess: (data: AskResponse) => {
+      hideLoadingToast();
       const botMessageId = `bot-${Date.now()}`;
       const botMessage: ChatMessage = {
         id: botMessageId,
@@ -164,6 +194,7 @@ export const useServicePublicChat = () => {
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
     onError: (err: any) => {
+      hideLoadingToast();
       const errorMsg =
         err.response?.data?.message ||
         "Gagal mengirim pesan. Silakan coba lagi.";
@@ -171,6 +202,12 @@ export const useServicePublicChat = () => {
       setMessages((prev) => prev.slice(0, -1));
     },
   });
+
+  useEffect(() => {
+    return () => {
+      hideLoadingToast();
+    };
+  }, []);
 
   
   const handleSendMessage = useCallback(() => {

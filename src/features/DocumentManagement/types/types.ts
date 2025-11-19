@@ -11,4 +11,5 @@ export interface Document {
   is_approve: boolean | null; 
   filename: string;
   category: DocumentCategory;
+  status: 'Pending' | 'Approved' | 'Rejected';
 }

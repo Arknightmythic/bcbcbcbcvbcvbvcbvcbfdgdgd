@@ -89,14 +89,14 @@ const PublicServiceIntroPage: React.FC = () => {
   const activeSessions: ChatSession[] = useMemo(
     () =>
       infiniteData?.pages.flatMap((page) =>
-        page.data.map((convo: Conversation) => ({
-          id: convo.id,
-          created_at: convo.start_timestamp,
-          agent_name: convo.is_helpdesk ? "Agent" : "AI Assistant",
-          cardContext: convo.context || "lanjutkan sesi",
-        }))
-      ) || [],
-    [infiniteData]
+        (page.data || []).map((convo: Conversation) => ({
+        id: convo.id,
+        created_at: convo.start_timestamp,
+        agent_name: convo.is_helpdesk ? "Agent" : "AI Assistant",
+        cardContext: convo.context || "lanjutkan sesi",
+      }))
+    ) || [],
+  [infiniteData]
   );
 
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);

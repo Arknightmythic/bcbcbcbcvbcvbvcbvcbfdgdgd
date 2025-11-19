@@ -25,7 +25,7 @@ const DocumentTableRow: React.FC<DocumentTableRowProps> = ({ document, hasManage
       </td>
       <td className="px-4 py-3 capitalize">{document.category}</td>
       <td className="px-4 py-3 text-center">
-        <StatusBadge isApprove={document.is_approve} />
+        <StatusBadge isApprove={document.status} />
       </td>
       {/* --- PERUBAHAN DI SINI: Buat sel Action sticky --- */}
       <td className="px-4 py-3 text-center sticky right-0 bg-white group-hover:bg-gray-50 z-10 border-l border-gray-200">
