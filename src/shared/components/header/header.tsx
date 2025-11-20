@@ -13,7 +13,7 @@ const menuConfig = [
   { path: "/user-management", title: "User Management" },
   { path: "/team-management", title: "Team Management" },
   { path: "/role-management", title: "Role Management" },
-  { path: "/helpdesk", title: "Help Desk" },
+  // { path: "/helpdesk", title: "Help Desk" },
 ];
 
 const Notifications = () => (

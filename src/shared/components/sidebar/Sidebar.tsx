@@ -25,7 +25,7 @@ const dummyMenu: MenuItem[] = [
 const dummyUser = {
   name: "Budi Santoso",
   isSuperAdmin: false,
-  permissions: ["dashboard:access", "document-management:access", "agent-dashboard:access", "user-management:master", "knowledge-base:access", "public-service:access", "validation-history:access","guide:access", "team-management", "role-management", "helpdesk:access"],
+  permissions: ["dashboard:read", "document-management:read", "agent-dashboard:read", "user-management:master", "knowledge-base:read", "public-service:read", "validation-history:read","guide:read", "team-management", "role-management", "helpdesk:read"],
   status: 'online' as const,
 };
 
@@ -102,7 +102,7 @@ const Sidebar = ({ isCollapsed, isMobileOpen, isDesktop, setOutletBlurred }: {
     dummyUser.isSuperAdmin || dummyUser.permissions.some(p => p.startsWith(item.identifier))
   );
 
-  const showAgentSection = dummyUser.permissions.includes("agent-dashboard:access");
+  const showAgentSection = dummyUser.permissions.includes("helpdesk:read");
 
   return (
     <nav
