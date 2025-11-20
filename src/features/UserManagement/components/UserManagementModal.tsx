@@ -1,7 +1,7 @@
 // src/features/UserManagement/components/UserManagementModal.tsx
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Loader2, X } from 'lucide-react';
+import { Loader2, X, Eye, EyeOff } from 'lucide-react'; // Tambahkan import icon Eye
 // Import tipe data yang sudah diperbarui
 import type { User, Team, Role, UserModalData } from '../utils/types';
 import CustomSelect from '../../../shared/components/CustomSelect';
@@ -34,6 +34,8 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
     roleId: '', // ID role (dari role.id)
   });
 
+  const [showPassword, setShowPassword] = useState(false); // State untuk toggle password
+
   const isEditMode = !!user;
 
   useEffect(() => {
@@ -41,12 +43,13 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
       setFormData({
         name: user?.name || '',
         email: user?.email || '',
-        password: '', // Selalu kosongkan password
+        password: '', // Selalu kosongkan password saat edit dimulai
         teamId: user?.role?.team?.id?.toString() || '',
         roleId: user?.role?.id?.toString() || '',
       });
+      setShowPassword(false); // Reset visibilitas password saat modal dibuka
     }
-  }, [isOpen, user, teams, roles]); // teams dan roles ditambahkan sbg dependensi
+  }, [isOpen, user, teams, roles]); 
 
   // Opsi tim sekarang dari data API
   const teamOptions = useMemo(() => 
@@ -80,7 +83,7 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-sm p-4" onClick={onClose}>
       <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md animate-fade-in-up" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center pb-4 border-b">
           <h2 className="text-2xl font-bold">{isEditMode ? 'Edit User' : 'Create New User'}</h2>
@@ -98,27 +101,54 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
                 required
               />
             </div>
+            
+            {/* PERBAIKAN BACKEND: 
+                API UpdateUser (Repository) tidak melakukan update pada kolom email.
+                Oleh karena itu, input email di-disable saat mode Edit.
+            */}
             <div>
-              <label className="block text-sm font-medium text-gray-700">Email</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Email 
+                {isEditMode && <span className="text-xs text-gray-400 font-normal ml-1">(Cannot be changed)</span>}
+              </label>
               <input
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className={`mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
+                  isEditMode ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
+                }`}
                 required
+                disabled={isEditMode} 
               />
             </div>
+
+            {/* FITUR BARU: Eye Icon untuk Show/Hide Password */}
             <div>
               <label className="block text-sm font-medium text-gray-700">Password</label>
-              <input
-                type="password"
-                placeholder={isEditMode ? "Leave blank to keep current" : ""}
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                required={!isEditMode}
-              />
+              <div className="relative mt-1">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder={isEditMode ? "Leave blank to keep current" : "Enter password"}
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  required={!isEditMode}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700 focus:outline-none"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" aria-hidden="true" />
+                  ) : (
+                    <Eye className="h-5 w-5" aria-hidden="true" />
+                  )}
+                </button>
+              </div>
             </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700">Team</label>
               <CustomSelect
@@ -134,7 +164,7 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
                 selectedType="default"
                 value={formData.roleId}
                 onChange={(value) => setFormData({ ...formData, roleId: value })}
-                options={[{ value: '', label: formData.teamId ? 'No Role Assigned' : 'Select a team first' }, ...roleOptions]}
+                options={[{ value: '', label: formData.teamId ? 'Select a role' : 'Select a team first' }, ...roleOptions]}
                 disabled={!formData.teamId}
               />
             </div>

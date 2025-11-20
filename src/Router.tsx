@@ -1,4 +1,5 @@
-
+import React from "react";
+import { createBrowserRouter, redirect, Navigate } from "react-router";
 
 // Layout & Halaman Utama
 import Layout from "./shared/components/Layout";
@@ -15,17 +16,63 @@ import GuidePage from "./features/Guide/pages/GuidePage";
 import UserManagementPage from "./features/UserManagement/pages/UserManagementPage";
 import TeamManagementPage from "./features/TeamManagements/pages/TeamManagementPage";
 import RoleManagementPage from "./features/RoleManagements/pages/RoleManagementPage";
-import { createBrowserRouter, redirect } from "react-router";
-import { useAuthStore } from "./shared/store/authStore";
-// import HelpDeskPage from "./features/HelpDesk/pages/HelpDeskPage";
-// import HelpDeskIntroPage from "./features/HelpDesk/pages/HelpDeskIntroPage";
-// import HelpDeskChatPage from "./features/HelpDesk/pages/HelpDeskChatPage";
+import HelpDeskIntroPage from "./features/HelpDesk/pages/HelpDeskIntroPage";
+import HelpDeskChatPage from "./features/HelpDesk/pages/HelpDeskChatPage";
 
-// Fungsi loader untuk memeriksa status autentikasi
+import { useAuthStore } from "./shared/store/authStore";
+
+// --- KONFIGURASI MAPPING ACCESS RIGHT KE URL ---
+// Key: Value dari database (team.pages) -> Value: URL Route Frontend
+const PAGE_PATHS: Record<string, string> = {
+  "dashboard": "/dashboard",
+  "knowledge-base": "/knowledge-base",
+  "document-management": "/document-management",
+  "public-service": "/public-service",
+  "validation-history": "/validation-history",
+  "guide": "/guide",
+  "user-management": "/user-management",
+  "team-management": "/team-management",
+  "role-management": "/role-management",
+  "helpdesk": "/agent-dashboard", // Perhatikan URL-nya beda dengan key
+};
+
+// --- HELPER: Dapatkan Halaman Default User ---
+const getDefaultPath = () => {
+  const { user } = useAuthStore.getState();
+  const userPages = user?.role?.team?.pages || [];
+
+  // Cari permission valid pertama yang dimiliki user
+  const firstAllowedKey = Object.keys(PAGE_PATHS).find(key => userPages.includes(key));
+
+  // Jika ketemu, return URL-nya. Jika tidak punya akses apapun, lempar ke 404.
+  return firstAllowedKey ? PAGE_PATHS[firstAllowedKey] : "/404";
+};
+
+// --- KOMPONEN PROTEKSI ---
+const ProtectedRoute = ({ allowedPage, children }: { allowedPage: string, children: React.ReactNode }) => {
+  const { user } = useAuthStore.getState();
+  const userPages = user?.role?.team?.pages || [];
+  
+  if (!userPages.includes(allowedPage)) {
+    return <Navigate to="/404" replace />;
+  }
+  return <>{children}</>;
+};
+
+// --- HALAMAN 404 SEDERHANA ---
+const NotFoundPage = () => (
+  <div className="flex flex-col items-center justify-center h-screen bg-gray-50">
+    <h1 className="text-6xl font-bold text-gray-800">404</h1>
+    <p className="text-xl text-gray-600 mt-4">Access Denied or Page Not Found</p>
+    <a href="/" className="mt-6 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">Back to Home</a>
+  </div>
+);
+
+// --- LOADER LOGIC ---
+
 const authLoader = () => {
   const { isAuthenticated } = useAuthStore.getState();
   if (!isAuthenticated) {
-    // Jika pengguna tidak terautentikasi, arahkan ke halaman login
     return redirect("/login");
   }
   return null;
@@ -34,8 +81,9 @@ const authLoader = () => {
 const loginLoader = () => {
   const { isAuthenticated } = useAuthStore.getState();
   if (isAuthenticated) {
-    // Jika pengguna sudah login dan mencoba mengakses /login, arahkan ke dashboard
-    return redirect("/dashboard");
+    // PERBAIKAN: Jangan hardcode ke dashboard, tapi ke halaman default user
+    const defaultPath = getDefaultPath();
+    return redirect(defaultPath);
   }
   return null;
 };
@@ -43,75 +91,81 @@ const loginLoader = () => {
 const Router = createBrowserRouter([
   {
     path: "/login",
-    loader: loginLoader, // Loader untuk halaman login
+    loader: loginLoader,
     element: <Login />,
   },
   {
     path: "/",
-    loader: authLoader, // Loader untuk semua rute di dalam layout utama
+    loader: authLoader,
     element: <Layout />,
     children: [
       {
-        // Arahkan dari "/" ke "/dashboard" secara default
         index: true, 
-        loader: () => redirect("/dashboard"),
+        // PERBAIKAN: Redirect root ("/") juga dinamis
+        loader: () => {
+            const defaultPath = getDefaultPath();
+            return redirect(defaultPath);
+        },
       },
+      // --- BUNGKUS ELEMENT DENGAN PROTECTED ROUTE ---
       {
         path: "dashboard",
-        element: <Dashboard />,
+        element: <ProtectedRoute allowedPage="dashboard"><Dashboard /></ProtectedRoute>,
       },
       {
         path: "document-management",
-        element: <DocumentManagementPage />,
+        element: <ProtectedRoute allowedPage="document-management"><DocumentManagementPage /></ProtectedRoute>,
       },
       {
         path: "knowledge-base",
-        element: <UploadPage />,
+        element: <ProtectedRoute allowedPage="knowledge-base"><UploadPage /></ProtectedRoute>,
       },
       {
         path: "public-service",
-        element: <PublicServiceIntroPage />,
+        element: <ProtectedRoute allowedPage="public-service"><PublicServiceIntroPage /></ProtectedRoute>,
       },
       {
         path: "public-service/:sessionId",
-        element: <PublicServiceChatPage />,
+        element: <ProtectedRoute allowedPage="public-service"><PublicServiceChatPage /></ProtectedRoute>,
       },
       {
         path: "validation-history",
-        element: <HistoryValidationPage />,
+        element: <ProtectedRoute allowedPage="validation-history"><HistoryValidationPage /></ProtectedRoute>,
       },
       {
         path: "guide",
-        element: <GuidePage />,
+        element: <ProtectedRoute allowedPage="guide"><GuidePage /></ProtectedRoute>,
       },
       {
         path: "user-management",
-        element: <UserManagementPage />,
+        element: <ProtectedRoute allowedPage="user-management"><UserManagementPage /></ProtectedRoute>,
       },
       {
         path: "team-management",
-        element: <TeamManagementPage />,
+        element: <ProtectedRoute allowedPage="team-management"><TeamManagementPage /></ProtectedRoute>,
       },
       {
-        path: "role-management", // Perbaiki path agar konsisten
-        element: <RoleManagementPage />,
+        path: "role-management",
+        element: <ProtectedRoute allowedPage="role-management"><RoleManagementPage /></ProtectedRoute>,
       },
-      // {
-      //   path: "helpdesk",
-      //   element: <HelpDeskPage />,
-      //   children: [
-      //     {
-      //       index: true,
-      //       element: <HelpDeskIntroPage />, // Tampilan intro
-      //     },
-      //     {
-      //       path: ":sessionId",
-      //       element: <HelpDeskChatPage />, // Tampilan chat aktif
-      //     },
-      //   ]
-      // },
+      {
+        path: "agent-dashboard",
+        element: <ProtectedRoute allowedPage="helpdesk"><HelpDeskIntroPage /></ProtectedRoute>,
+      },
+      {
+        path: "agent-dashboard/chat/:id",
+        element: <ProtectedRoute allowedPage="helpdesk"><HelpDeskChatPage /></ProtectedRoute>,
+      },
     ],
   },
+  {
+    path: "/404",
+    element: <NotFoundPage />,
+  },
+  {
+    path: "*",
+    element: <Navigate to="/404" replace />,
+  }
 ]);
 
 export default Router;

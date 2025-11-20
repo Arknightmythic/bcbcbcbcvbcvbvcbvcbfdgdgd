@@ -37,7 +37,7 @@ function Login() {
       onSuccess: (response) => {
         loginAction(response.data);
         toast.success('Login successful!');
-        navigate('/dashboard');
+        navigate('/');
       },
       onError: (error: any) => {
         const errorMessage =

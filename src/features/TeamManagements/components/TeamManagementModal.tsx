@@ -1,14 +1,22 @@
-// src/features/TeamManagements/components/TeamManagementModal.tsx
+// arknightmythic/bcbcbcbcvbcvbvcbvcbfdgdgd/bcbcbcbcvbcvbvcbvcbfdgdgd-dev/src/features/TeamManagements/components/TeamManagementModal.tsx
 
 import React, { useState, useEffect } from 'react';
 import { Loader2, X } from 'lucide-react';
 import type { Team, TeamPayload } from '../utils/types'; // Import tipe baru
 
 // Ganti nama variabel agar lebih jelas
+// DAFTAR HALAMAN DISEMPURNAKAN AGAR COCOK DENGAN BACKEND (superadmin_seeder.go)
 const VALID_PAGES = [
-    "dashboard","knowledge-base","market-competitor-insight","prompt-management",
-    "upload-document","sipp-case-details","user-management","team-management",
-    "role-management","service-public","agent-dashboard", "document-management"
+    "dashboard",
+    "knowledge-base",
+    "document-management",
+    "public-service",
+    "validation-history",
+    "guide",
+    "user-management",
+    "team-management",
+    "role-management",
+    "helpdesk",
 ];
 
 interface TeamManagementModalProps {
