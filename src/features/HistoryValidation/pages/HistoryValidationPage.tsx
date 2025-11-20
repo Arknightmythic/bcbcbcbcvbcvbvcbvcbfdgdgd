@@ -6,8 +6,7 @@ import type {
   ValidationHistoryItem,
   ChatPair,
   ValidationStatus,
-  Filters, 
-  SortOrder, // <-- Import SortOrder
+  SortOrder,
 } from "../utils/types";
 import {
   useGetValidationHistory,
@@ -21,17 +20,25 @@ import TableControls, {
   type FilterConfig,
 } from "../../../shared/components/TableControls";
 import ConfirmationModal from "../../../shared/components/ConfirmationModal";
-// Asumsi Anda telah membuat dan mengimpor modal ini
-
 import toast from "react-hot-toast";
 import TextExpandModal from "../../../shared/components/TextExpandModal";
-import { Loader2 } from "lucide-react"; 
+import { Loader2 } from "lucide-react";
 import ApproveWithCorrectionModal from "../../../shared/components/ApproveWithCorrectionModal";
 
-// Filter config (tidak berubah)
-const filterConfig: FilterConfig<Filters>[] = [
+// Definisikan tipe Filters lokal untuk halaman ini
+// extends Record<string, any> agar kompatibel dengan index signature TableControls
+interface HistoryPageFilters extends Record<string, any> {
+    aiAnswer: string;
+    validationStatus: string;
+    start_date: string;
+    end_date: string;
+}
+
+// PERBAIKAN: Menambahkan Generic Type <HistoryPageFilters>
+const filterConfig: FilterConfig<HistoryPageFilters>[] = [
   {
     key: "aiAnswer",
+    type: "select",
     options: [
       { value: "", label: "AI Answer" },
       { value: "answered", label: "Answered" },
@@ -40,12 +47,20 @@ const filterConfig: FilterConfig<Filters>[] = [
   },
   {
     key: "validationStatus",
+    type: "select",
     options: [
       { value: "", label: "All Status" },
       { value: "Pending", label: "Pending" },
       { value: "Validated", label: "Validated" },
       { value: "Rejected", label: "Rejected" },
     ],
+  },
+  {
+    key: "date_range", // Key dummy untuk config (tidak masuk ke state filter)
+    type: "date-range",
+    startDateKey: "start_date",
+    endDateKey: "end_date",
+    placeholder: "Select Date Range",
   },
 ];
 
@@ -60,7 +75,7 @@ const mapChatPairToValidationItem = (
     id: pair.question_id,
     answerId: pair.answer_id,
     tanggal: pair.question_time,
-    user: "User", // Dummy
+    user: "User", // Dummy user name
     session_id: pair.session_id,
     pertanyaan: pair.question_content,
     jawaban_ai: pair.answer_content,
@@ -73,12 +88,15 @@ const HistoryValidationPage = () => {
   const [chatModalOpen, setChatModalOpen] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [filters, setFilters] = useState<Filters>({
+  
+  const [filters, setFilters] = useState<HistoryPageFilters>({
     aiAnswer: "",
     validationStatus: "",
-    date: "", // <-- State baru untuk filter tanggal
+    start_date: "", 
+    end_date: "",
   });
-  const [sortOrder, setSortOrder] = useState<SortOrder>("latest"); // <-- State baru untuk sorting
+  
+  const [sortOrder, setSortOrder] = useState<SortOrder>("latest");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
@@ -104,7 +122,12 @@ const HistoryValidationPage = () => {
   }, [currentPage, itemsPerPage]);
 
   const { data: historyData, isLoading: isLoadingTable } =
-    useGetValidationHistory(searchParams, sortOrder, filters.date); // <-- Meneruskan sortOrder dan filters.date
+    useGetValidationHistory(
+        searchParams, 
+        sortOrder, 
+        filters.start_date, 
+        filters.end_date
+    ); 
 
   const { mutate: updateFeedback, isPending: isUpdatingFeedback } = useUpdateFeedback();
 
@@ -112,7 +135,6 @@ const HistoryValidationPage = () => {
     useGetChatHistory(selectedSessionId);
 
   const filteredHistories = useMemo(() => {
-    // Logika filter sisi klien (untuk search term dan filter dropdown lama)
     const tableData = historyData?.data.map(mapChatPairToValidationItem) || [];
 
     return tableData.filter((history) => {
@@ -131,7 +153,6 @@ const HistoryValidationPage = () => {
       const statusMatch = filters.validationStatus
         ? history.status_validasi === filters.validationStatus
         : true;
-
       
       return searchMatch && answerMatch && statusMatch;
     });
@@ -148,17 +169,15 @@ const HistoryValidationPage = () => {
     setCurrentPage(1);
   };
 
-  const handleFilterChange = (filterName: keyof Filters, value: string) => {
-    setFilters((prev: Filters) => ({ ...prev, [filterName]: value }));
+  const handleFilterChange = (filterName: keyof HistoryPageFilters, value: string) => {
+    setFilters((prev) => ({ ...prev, [filterName]: value }));
     setCurrentPage(1);
   };
   
-  // --- HANDLER BARU UNTUK SORTING ---
   const handleSortToggle = () => {
     setSortOrder(prev => (prev === "latest" ? "oldest" : "latest"));
-    setCurrentPage(1); // Kembali ke halaman 1 setiap kali sorting diubah
+    setCurrentPage(1);
   };
-  // -----------------------------------
 
   const handleItemsPerPageChange = (items: number) => {
     setItemsPerPage(items);
@@ -221,7 +240,6 @@ const HistoryValidationPage = () => {
     );
   };
 
-
   const handleCloseChatModal = () => {
     setChatModalOpen(false);
     setSelectedSessionId(null);
@@ -266,7 +284,6 @@ const HistoryValidationPage = () => {
             totalItems={totalItems}
             onPageChange={setCurrentPage}
             onItemsPerPageChange={handleItemsPerPageChange}
-            // Meneruskan state sorting
             currentSort={sortOrder}
             onSortToggle={handleSortToggle}
           />

@@ -22,12 +22,14 @@ interface FeedbackPayload {
 export const useGetValidationHistory = (
   params: URLSearchParams,
   sort: SortOrder, 
-  date: string 
+  startDate: string, // Ganti date -> startDate
+  endDate: string    // Tambah endDate
 ) => {
   return useQuery({
-    queryKey: [QUERY_KEY, params.toString(), sort, date], 
+    // Masukkan kedua tanggal ke queryKey agar refetch saat berubah
+    queryKey: [QUERY_KEY, params.toString(), sort, startDate, endDate], 
     
-    queryFn: () => getValidationHistory(params, sort, date),
+    queryFn: () => getValidationHistory(params, sort, startDate, endDate),
     placeholderData: (prevData) => prevData,
   });
 };
@@ -45,10 +47,7 @@ export const useUpdateFeedback = () => {
     },
   });
 };
-/**
- * Hook untuk mengambil data chat history untuk modal.
- * Dibuat 'disabled' by default dan hanya aktif jika 'sessionId' ada.
- */
+
 export const useGetChatHistory = (sessionId: string | null) => {
   return useQuery({
     queryKey: [HISTORY_KEY, sessionId],
@@ -58,7 +57,6 @@ export const useGetChatHistory = (sessionId: string | null) => {
       return data.chat_history.map(
         (msg: BackendChatHistory): ChatMessage => ({
           id: msg.id.toString(),
-          
           sender: msg.message.role === "user" ? "user" : "agent",
           text: msg.message.content,
         })

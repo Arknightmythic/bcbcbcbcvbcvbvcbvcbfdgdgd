@@ -8,15 +8,20 @@ import type {
 export const getValidationHistory = async (
   params: URLSearchParams,
   sort: SortOrder = "", 
-  date: string = "" 
+  startDate: string = "", // Ubah date -> startDate
+  endDate: string = ""    // Tambah endDate
 ): Promise<PaginatedChatPairsResponse> => {
   if (sort) {
     params.set("sort", sort); 
   }
-  if (date) {
-    
-    params.set("date", date); 
+  // Kirim start_date dan end_date ke Backend
+  if (startDate) {
+    params.set("start_date", startDate); 
   }
+  if (endDate) {
+    params.set("end_date", endDate);
+  }
+
   const response = await instanceApiToken.get("/api/chat/pairs/all", {
     params,
   });
