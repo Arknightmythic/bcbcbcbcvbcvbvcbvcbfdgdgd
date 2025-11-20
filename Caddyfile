@@ -1,6 +1,16 @@
 dev-bkpm.cloud-ioh.com {
     tls /etc/cert/cert.crt /etc/cert/private.key
 
+    handle /public-dashboards* {
+        reverse_proxy http://10.184.0.13:3000 {
+            # WAJIB: Kasih tahu Grafana bahwa dia diakses via HTTPS dan Domain asli
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
     # Proxy API/Internal
     reverse_proxy /api/* http://10.184.0.20:30800
     reverse_proxy /auth/* http://10.184.0.20:30800 {

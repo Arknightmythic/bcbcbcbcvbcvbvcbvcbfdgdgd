@@ -6,7 +6,8 @@ import type {
   ValidationHistoryItem,
   ChatPair,
   ValidationStatus,
-  Filters, // Sekarang diimpor dari types
+  Filters, 
+  SortOrder, // <-- Import SortOrder
 } from "../utils/types";
 import {
   useGetValidationHistory,
@@ -19,9 +20,13 @@ import ChatHistoryModal from "../components/ChatHistoryModal";
 import TableControls, {
   type FilterConfig,
 } from "../../../shared/components/TableControls";
+import ConfirmationModal from "../../../shared/components/ConfirmationModal";
+// Asumsi Anda telah membuat dan mengimpor modal ini
+
 import toast from "react-hot-toast";
 import TextExpandModal from "../../../shared/components/TextExpandModal";
-import { Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react"; 
+import ApproveWithCorrectionModal from "../../../shared/components/ApproveWithCorrectionModal";
 
 // Filter config (tidak berubah)
 const filterConfig: FilterConfig<Filters>[] = [
@@ -71,7 +76,9 @@ const HistoryValidationPage = () => {
   const [filters, setFilters] = useState<Filters>({
     aiAnswer: "",
     validationStatus: "",
+    date: "", // <-- State baru untuk filter tanggal
   });
+  const [sortOrder, setSortOrder] = useState<SortOrder>("latest"); // <-- State baru untuk sorting
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
@@ -84,6 +91,11 @@ const HistoryValidationPage = () => {
     content: string;
   }>({ isOpen: false, title: "", content: "" });
 
+  const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+  const [selectedHistoryItem, setSelectedHistoryItem] =
+    useState<ValidationHistoryItem | null>(null);
+
   const searchParams = useMemo(() => {
     const params = new URLSearchParams();
     params.set("page", String(currentPage));
@@ -92,16 +104,15 @@ const HistoryValidationPage = () => {
   }, [currentPage, itemsPerPage]);
 
   const { data: historyData, isLoading: isLoadingTable } =
-    useGetValidationHistory(searchParams);
+    useGetValidationHistory(searchParams, sortOrder, filters.date); // <-- Meneruskan sortOrder dan filters.date
 
-  // --- PERBAIKAN: Hapus 'isPending' yang tidak terpakai ---
-  const { mutate: updateFeedback } = useUpdateFeedback();
-  // ----------------------------------------------------
+  const { mutate: updateFeedback, isPending: isUpdatingFeedback } = useUpdateFeedback();
 
   const { data: chatHistoryForModal, isLoading: isLoadingModal } =
     useGetChatHistory(selectedSessionId);
 
   const filteredHistories = useMemo(() => {
+    // Logika filter sisi klien (untuk search term dan filter dropdown lama)
     const tableData = historyData?.data.map(mapChatPairToValidationItem) || [];
 
     return tableData.filter((history) => {
@@ -121,6 +132,7 @@ const HistoryValidationPage = () => {
         ? history.status_validasi === filters.validationStatus
         : true;
 
+      
       return searchMatch && answerMatch && statusMatch;
     });
   }, [searchTerm, filters, historyData]);
@@ -137,15 +149,30 @@ const HistoryValidationPage = () => {
   };
 
   const handleFilterChange = (filterName: keyof Filters, value: string) => {
-    // --- PERBAIKAN: Tipe 'prev' ditambahkan ---
     setFilters((prev: Filters) => ({ ...prev, [filterName]: value }));
-    // ------------------------------------
     setCurrentPage(1);
   };
+  
+  // --- HANDLER BARU UNTUK SORTING ---
+  const handleSortToggle = () => {
+    setSortOrder(prev => (prev === "latest" ? "oldest" : "latest"));
+    setCurrentPage(1); // Kembali ke halaman 1 setiap kali sorting diubah
+  };
+  // -----------------------------------
 
   const handleItemsPerPageChange = (items: number) => {
     setItemsPerPage(items);
     setCurrentPage(1);
+  };
+
+  const handleCloseApproveModal = () => {
+    setIsApproveModalOpen(false);
+    setSelectedHistoryItem(null);
+  };
+
+  const handleCloseRejectModal = () => {
+    setIsRejectModalOpen(false);
+    setSelectedHistoryItem(null);
   };
 
   const handleAction = (action: ActionType, item: ValidationHistoryItem) => {
@@ -153,25 +180,47 @@ const HistoryValidationPage = () => {
       setSelectedSessionId(item.session_id);
       setChatModalOpen(true);
     } else if (action === "approve") {
-      updateFeedback(
-        { id: item.answerId, feedback: true },
-        {
-          onSuccess: () => toast.success("Pertanyaan telah divalidasi."),
-          onError: (e: any) =>
-            toast.error(e.response?.data?.message || "Gagal memvalidasi."),
-        }
-      );
+      setSelectedHistoryItem(item);
+      setIsApproveModalOpen(true);
     } else if (action === "reject") {
-      updateFeedback(
-        { id: item.answerId, feedback: false },
-        {
-          onSuccess: () => toast.success("Pertanyaan ditandai tidak valid."),
-          onError: (e: any) =>
-            toast.error(e.response?.data?.message || "Gagal menolak."),
-        }
-      );
+      setSelectedHistoryItem(item);
+      setIsRejectModalOpen(true);
     }
   };
+
+  const handleApproveConfirm = (
+    item: ValidationHistoryItem,
+    correction: string
+  ) => {
+    updateFeedback(
+      { id: item.answerId, feedback: true, correction: correction },
+      {
+        onSuccess: () => {
+          toast.success("Pertanyaan telah divalidasi.");
+          handleCloseApproveModal();
+        },
+        onError: (e: any) =>
+          toast.error(e.response?.data?.message || "Gagal memvalidasi."),
+      }
+    );
+  };
+
+  const handleRejectConfirm = () => {
+    if (!selectedHistoryItem) return;
+
+    updateFeedback(
+      { id: selectedHistoryItem.answerId, feedback: false },
+      {
+        onSuccess: () => {
+          toast.success("Pertanyaan ditandai tidak valid.");
+          handleCloseRejectModal();
+        },
+        onError: (e: any) =>
+          toast.error(e.response?.data?.message || "Gagal menolak."),
+      }
+    );
+  };
+
 
   const handleCloseChatModal = () => {
     setChatModalOpen(false);
@@ -217,6 +266,9 @@ const HistoryValidationPage = () => {
             totalItems={totalItems}
             onPageChange={setCurrentPage}
             onItemsPerPageChange={handleItemsPerPageChange}
+            // Meneruskan state sorting
+            currentSort={sortOrder}
+            onSortToggle={handleSortToggle}
           />
         )}
       </div>
@@ -232,6 +284,26 @@ const HistoryValidationPage = () => {
         onClose={handleCloseTextModal}
         title={textModalState.title}
         content={textModalState.content}
+      />
+
+      <ConfirmationModal
+        isOpen={isRejectModalOpen}
+        onClose={handleCloseRejectModal}
+        onConfirm={handleRejectConfirm}
+        title="Konfirmasi Penolakan"
+        confirmText="Ya, Tolak"
+        confirmColor="bg-red-600 hover:bg-red-700"
+        isConfirming={isUpdatingFeedback}
+      >
+        <p>Apakah Anda yakin ingin menandai jawaban ini sebagai <strong>Tidak Valid (Reject)?</strong> Tindakan ini tidak dapat dibatalkan.</p>
+      </ConfirmationModal>
+
+      <ApproveWithCorrectionModal
+        isOpen={isApproveModalOpen}
+        onClose={handleCloseApproveModal}
+        history={selectedHistoryItem}
+        onConfirm={handleApproveConfirm}
+        isConfirming={isUpdatingFeedback}
       />
     </>
   );

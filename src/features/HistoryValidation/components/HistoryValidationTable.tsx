@@ -1,80 +1,156 @@
 import React from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import CustomSelect from "../../../shared/components/CustomSelect";
-import type { ActionType, ValidationHistoryItem } from "../utils/types";
 import HistoryValidationTableRow from "./HistoryValidationRow";
+import type {
+  ActionType,
+  ValidationHistoryItem,
+  SortOrder,
+} from "../utils/types"; // Import SortOrder
+import { ArrowUp, ArrowDown, ChevronRight, ChevronLeft } from "lucide-react"; // Import icons
+import CustomSelect from "../../../shared/components/CustomSelect";
 
 interface HistoryValidationTableProps {
   histories: ValidationHistoryItem[];
   onAction: (action: ActionType, history: ValidationHistoryItem) => void;
-  onViewText: (title: string, content: string) => void; // <-- Prop baru
+  onViewText: (title: string, content: string) => void;
+
   currentPage: number;
   itemsPerPage: number;
   totalItems: number;
   onPageChange: (page: number) => void;
   onItemsPerPageChange: (items: number) => void;
+
+  // --- Props baru untuk Sorting ---
+  currentSort: SortOrder;
+  onSortToggle: () => void;
+  // ------------------------------
 }
 
+// --- Definisi itemsPerPageOptions ---
 const itemsPerPageOptions = [
   { value: "10", label: "10" },
-  { value: "20", label: "20" },
-  { value: "30", label: "30" },
+  { value: "25", label: "25" },
+  { value: "50", label: "50" },
+  { value: "100", label: "100" },
 ];
+// -----------------------------------
 
 const HistoryValidationTable: React.FC<HistoryValidationTableProps> = ({
   histories,
   onAction,
-  onViewText, // <-- Ambil prop baru
+  onViewText,
   currentPage,
   itemsPerPage,
   totalItems,
   onPageChange,
   onItemsPerPageChange,
+  // Props baru
+  currentSort,
+  onSortToggle,
 }) => {
+  // Fungsi helper untuk menampilkan ikon sort yang sesuai
+  // 'latest' (descending) -> ArrowDown
+  // 'oldest' (ascending) -> ArrowUp
+  const SortIcon = currentSort === "latest" ? ArrowDown : ArrowUp;
+
   const totalPages = Math.ceil(totalItems / itemsPerPage);
-  const startItem = (currentPage - 1) * itemsPerPage + 1;
+  
+  // --- Definisi startItem dan endItem ---
+  const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+  // --------------------------------------
 
   return (
-    <div className="bg-white p-6 rounded-b-lg shadow-md">
-      {/* --- PERUBAHAN DI SINI: ganti overflow-y-auto -> overflow-x-auto --- */}
-      <div className="overflow-x-auto relative">
-        <table className="min-w-full min-w-[1024px]"> {/* Tambah min-w */}
-          <thead className="bg-gray-100 sticky top-0 "> {/* Tambah sticky & z-index */}
-            <tr className="text-left text-[10px] font-semibold text-gray-600">
-              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">Request Date</th>
-              <th className="px-4 py-3 sticky top-0 bg-gray-100">USER</th>
-              <th className="px-4 py-3 sticky top-0 bg-gray-100">Session Id</th>
-              <th className="px-4 py-3 sticky top-0 bg-gray-100">Question</th>
-              <th className="px-4 py-3 sticky top-0 bg-gray-100">Answer(AI)</th>
-              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">Unanswered(AI)</th>
-              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">Status</th>
-              {/* --- PERUBAHAN DI SINI: Buat header Action sticky --- */}
-              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center right-0 z-10">Action</th>
+    <div className="bg-white p-6 rounded-b-lg shadow-md z-0">
+      <div className="flex flex-col flex-1 overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50 sticky top-0 z-20">
+            <tr>
+              <th
+                scope="col"
+                className="px-4 py-3 text-center text-[10px] font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+              >
+                <div
+                  className="flex items-center justify-center gap-1"
+                  onClick={onSortToggle}
+                >
+                  Tanggal
+                  <button
+                    className="p-0.5 text-gray-500 hover:text-blue-600 transition-colors"
+                    title={`Sort by ${
+                      currentSort === "latest" ? "Oldest" : "Latest"
+                    }`}
+                  >
+                    <SortIcon className="w-3 h-3" />
+                  </button>
+                </div>
+              </th>
+              <th
+                scope="col"
+                className="px-4 py-3 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider"
+              >
+                User
+              </th>
+              <th
+                scope="col"
+                className="px-4 py-3 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Session ID
+              </th>
+              <th
+                scope="col"
+                className="px-4 py-3 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider max-w-xs"
+              >
+                Pertanyaan
+              </th>
+              <th
+                scope="col"
+                className="px-4 py-3 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider max-w-xs"
+              >
+                Jawaban AI
+              </th>
+              <th
+                scope="col"
+                className="px-4 py-3 text-center text-[10px] font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Tidak Terjawab
+              </th>
+              <th
+                scope="col"
+                className="px-4 py-3 text-center text-[10px] font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Status Validasi
+              </th>
+              <th
+                scope="col"
+                className="px-4 py-3 text-center text-[10px] font-medium text-gray-500 uppercase tracking-wider sticky right-0 bg-gray-50 z-20 border-l border-gray-200"
+              >
+                Action
+              </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="bg-white divide-y divide-gray-200">
             {histories.length > 0 ? (
               histories.map((history) => (
                 <HistoryValidationTableRow
                   key={history.id}
                   history={history}
                   onAction={onAction}
-                  onViewText={onViewText} // <-- Teruskan prop
+                  onViewText={onViewText}
                 />
               ))
             ) : (
               <tr>
-                <td colSpan={8} className="text-center py-10 text-gray-500">
-                  <p>No history found matching your criteria.</p>
+                <td
+                  colSpan={8}
+                  className="px-4 py-10 text-center text-sm text-gray-500"
+                >
+                  Tidak ada data riwayat validasi yang ditemukan.
                 </td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
-
-      {/* --- PERUBAHAN DI SINI: Kontrol Paginasi Responsif --- */}
       <nav
         className="flex flex-col md:flex-row items-center justify-between pt-4 gap-4 md:gap-0"
         aria-label="Table navigation"

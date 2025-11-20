@@ -1,43 +1,46 @@
-// [BUAT BARU: src/features/HistoryValidation/api/historyApi.ts]
-
 import { instanceApiToken } from "../../../shared/utils/Axios";
 import type {
   PaginatedChatPairsResponse,
   ConversationHistory,
+  SortOrder
 } from "../utils/types";
 
-/**
- * Mengambil data tabel Validation History
- * (GET /api/chat/pairs/all)
- */
 export const getValidationHistory = async (
-  params: URLSearchParams
+  params: URLSearchParams,
+  sort: SortOrder = "", 
+  date: string = "" 
 ): Promise<PaginatedChatPairsResponse> => {
+  if (sort) {
+    params.set("sort", sort); 
+  }
+  if (date) {
+    
+    params.set("date", date); 
+  }
   const response = await instanceApiToken.get("/api/chat/pairs/all", {
     params,
   });
   return response.data.data;
 };
 
-/**
- * Memperbarui feedback (Approve/Reject)
- * (PUT /api/chat/history/:id)
- */
 export const updateChatFeedback = async (
   id: number,
-  feedback: boolean
+  feedback: boolean, 
+  correction?: string 
 ): Promise<void> => {
-  // Kita kirim 'id' dari Answer, dan 'feedback' (true/false)
-  const response = await instanceApiToken.put(`/api/chat/history/${id}`, {
+  const payload: { feedback: boolean; correct_answer?: string } = {
     feedback,
-  });
+  };
+
+  if (feedback && correction && correction.trim() !== "") {
+    payload.correct_answer = correction.trim();
+  }
+
+  const response = await instanceApiToken.put(`/api/chat/history/${id}`, payload);
   return response.data;
 };
 
-/**
- * Mengambil riwayat chat untuk modal
- * (GET /api/chat/conversations/:session_id)
- */
+
 export const getConversationHistory = async (
   sessionId: string
 ): Promise<ConversationHistory> => {

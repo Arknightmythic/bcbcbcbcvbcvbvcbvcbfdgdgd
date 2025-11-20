@@ -1,86 +1,148 @@
-import { Search } from 'lucide-react';
-import CustomSelect from './CustomSelect';
+// [GANTI: src/shared/components/TableControls.tsx]
 
-export interface FilterConfig<T> {
-  key: keyof T & string; 
-  options: { value: string; label: string }[];
+import React, { useCallback, useState } from "react";
+import { Search, Filter, Calendar } from "lucide-react"; // Import Calendar
+import CustomSelect from "./CustomSelect";
+
+// Interface untuk opsi filter (diasumsikan sudah ada)
+export interface FilterOption {
+  value: string;
+  label: string;
 }
 
-interface TableControlsProps<T extends object> {
+// Interface untuk konfigurasi filter (diasumsikan sudah ada)
+export interface FilterConfig<T extends Record<string, string>> {
+  key: keyof T;
+  options: FilterOption[];
+}
+
+// Interface props komponen TableControls
+interface TableControlsProps<T extends Record<string, string>> {
   searchTerm: string;
   searchPlaceholder: string;
-  filters: T; 
+  filters: T;
   onSearchChange: (value: string) => void;
-  
   onSearchSubmit: () => void;
-  onFilterChange: (filterName: keyof T, value: string) => void; 
+  onFilterChange: (filterName: keyof T, value: string) => void;
   filterConfig: FilterConfig<T>[];
+  // --- Props baru untuk Sorting ---
+  sortState?: {
+      order: 'latest' | 'oldest' | '';
+      onSortToggle: () => void;
+      sortKey: string;
+  }
+  // --------------------------------
 }
 
-const TableControls = <T extends object>({
+const TableControls = <T extends Record<string, string>>({
   searchTerm,
   searchPlaceholder,
   filters,
   onSearchChange,
-  onSearchSubmit, 
+  onSearchSubmit,
   onFilterChange,
   filterConfig,
-}: TableControlsProps<T>) => {
-
+  // Props baru
+  sortState
+}: React.PropsWithChildren<TableControlsProps<T>>) => {
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') {
-      onSearchSubmit();
-    }
-  };
-
+  // Asumsi 'date' adalah kunci filter untuk date selector
+  const dateFilterKey = 'date' as keyof T; 
+  const hasDateFilter = filters.hasOwnProperty(dateFilterKey);
+  const otherFilters = filterConfig.filter(
+      (config) => config.key !== dateFilterKey
+  );
+  
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLInputElement>) => {
+      if (event.key === "Enter") {
+        onSearchSubmit();
+      }
+    },
+    [onSearchSubmit]
+  );
+  
   return (
-    <div className="py-4 bg-gray-50 rounded-t-lg">
+    <div className="flex flex-col md:flex-row gap-3 py-4">
+      {/* Search Input */}
+      <div className="max-w-md relative flex-grow md:w-1/3">
+        <input
+          type="text"
+          placeholder={searchPlaceholder}
+          value={searchTerm}
+          onChange={(e) => onSearchChange(e.target.value)}
+          onKeyDown={handleKeyDown}
+          className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white"
+        />
+        <button
+          onClick={onSearchSubmit}
+          className="absolute left-0 top-0 mt-2.5 ml-3 text-gray-400 hover:text-gray-600"
+          title="Search"
+        >
+          <Search className="w-4 h-4" />
+        </button>
+      </div>
 
-      <div className="flex flex-col lg:flex-row items-center">
-
-        <div className="flex items-center gap-2 w-full lg:w-2/5">
-          <div className="relative flex-grow">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-3 w-3 text-gray-400" />
-            </div>
-            <input
-              type="text"
-              id="table-search"
-              className="bg-white border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5"
-              placeholder={searchPlaceholder}
-              value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
-              onKeyDown={handleKeyDown} 
-            />
-          </div>
-          <button
-            onClick={onSearchSubmit}
-            className="px-4 py-2.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            Search
-          </button>
-        </div>
-
-        {/* --- BARIS 2 (Mobile) / KOLOM 2 (Desktop) : Filters --- */}
-        {/* - 'grid-cols-3' (Mobile/Tablet): Filter akan menjadi 3 kolom.
-          - 'w-full' (Mobile/Tablet): Kontainer grid akan mengambil lebar penuh.
-          - 'lg:w-3/5' (Desktop): Kontainer grid akan mengambil 3/5 lebar.
-          - 'lg:grid-cols-3' (Desktop): Tetap 3 kolom di desktop.
-        */}
-        <div className="grid grid-cols-3 gap-4 w-full lg:w-3/5 mt-4 lg:mt-0 ml-0 lg:ml-4">
-          {filterConfig.map((config) => (
-            <div key={config.key}>
-              <CustomSelect
-                selectedType="default"
-                value={String(filters[config.key] ?? '')}
-                onChange={(value) => onFilterChange(config.key, value)}
-                options={config.options}
-              />
-            </div>
-          ))}
-        </div>
+      {/* Filter and Date Input Section */}
+      <div className="flex flex-wrap items-center gap-3">
         
+        {/* Date Selector Filter */}
+        {hasDateFilter && (
+            <div className="relative">
+                <input
+                    type="date"
+                    id="date-filter"
+                    // Ambil format YYYY-MM-DD dari state filters
+                    value={filters[dateFilterKey] as string} 
+                    onChange={(e) => onFilterChange(dateFilterKey, e.target.value)}
+                    // Styling disesuaikan dengan tema Tailwind
+                    className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-700 appearance-none bg-white"
+                    title="Filter by specific date"
+                />
+                <label 
+                    htmlFor="date-filter" 
+                    className="absolute left-0 top-0 mt-2.5 ml-3 text-gray-400 pointer-events-none"
+                >
+                    <Calendar className="w-4 h-4" />
+                </label>
+            </div>
+        )}
+        
+        {/* Dropdown Filters (aiAnswer, validationStatus) */}
+        {otherFilters.length > 0 && (
+          <div className="relative">
+            <button
+              onClick={() => setIsFilterOpen(!isFilterOpen)}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <Filter className="w-4 h-4" />
+              Filter
+            </button>
+            
+            {/* Dropdown Menu */}
+            {isFilterOpen && (
+              <div
+                className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg z-20 border border-gray-200 p-3"
+                onBlur={() => setTimeout(() => setIsFilterOpen(false), 100)} // Menutup dropdown saat klik di luar
+              >
+                {otherFilters.map((config) => (
+                  <div key={config.key as string} className="mb-3 last:mb-0">
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      {config.options[0].label.replace("All ", "").replace("AI ", "")}
+                    </label>
+                    <CustomSelect
+                      options={config.options}
+                      value={filters[config.key]}
+                      onChange={(value) => onFilterChange(config.key, value)}
+                      selectedType="default"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

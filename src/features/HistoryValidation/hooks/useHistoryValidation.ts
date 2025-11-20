@@ -1,24 +1,33 @@
-// [GANTI: src/features/HistoryValidation/hooks/useHistoryValidation.ts]
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getValidationHistory,
   updateChatFeedback,
   getConversationHistory,
 } from "../api/historyApi";
-// --- PERBAIKAN: Impor tipe ChatMessage ---
-import type { BackendChatHistory, ChatMessage } from "../utils/types";
+
+import type { BackendChatHistory, ChatMessage, SortOrder } from "../utils/types";
 
 const QUERY_KEY = "validationHistory";
 const HISTORY_KEY = "chatHistoryDetail";
 
+interface FeedbackPayload {
+  id: number;
+  feedback: boolean;
+  correction?: string;
+}
+
 /**
  * Hook untuk mengambil data tabel Validation History
  */
-export const useGetValidationHistory = (params: URLSearchParams) => {
+export const useGetValidationHistory = (
+  params: URLSearchParams,
+  sort: SortOrder, 
+  date: string 
+) => {
   return useQuery({
-    queryKey: [QUERY_KEY, params.toString()],
-    queryFn: () => getValidationHistory(params),
+    queryKey: [QUERY_KEY, params.toString(), sort, date], 
+    
+    queryFn: () => getValidationHistory(params, sort, date),
     placeholderData: (prevData) => prevData,
   });
 };
@@ -29,15 +38,13 @@ export const useGetValidationHistory = (params: URLSearchParams) => {
 export const useUpdateFeedback = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, feedback }: { id: number; feedback: boolean }) =>
-      updateChatFeedback(id, feedback),
-    onSuccess: () => {
-      // Refresh tabel setelah berhasil
+    mutationFn: ({ id, feedback, correction }: FeedbackPayload) =>
+    updateChatFeedback(id, feedback, correction),
+    onSuccess: () => {  
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
   });
 };
-
 /**
  * Hook untuk mengambil data chat history untuk modal.
  * Dibuat 'disabled' by default dan hanya aktif jika 'sessionId' ada.
@@ -46,14 +53,12 @@ export const useGetChatHistory = (sessionId: string | null) => {
   return useQuery({
     queryKey: [HISTORY_KEY, sessionId],
     queryFn: () => getConversationHistory(sessionId!),
-    enabled: !!sessionId, // Hanya berjalan jika sessionId tidak null
-    // --- PERBAIKAN: Tambahkan tipe return eksplisit ---
+    enabled: !!sessionId, 
     select: (data): ChatMessage[] => {
-      // Map data backend ke format yang dimengerti UI Modal
       return data.chat_history.map(
         (msg: BackendChatHistory): ChatMessage => ({
           id: msg.id.toString(),
-          // Kita map 'assistant' dari BE ke 'agent' di FE
+          
           sender: msg.message.role === "user" ? "user" : "agent",
           text: msg.message.content,
         })

@@ -1,3 +1,4 @@
+// [GANTI: src/features/HistoryValidation/utils/types.ts]
 
 // 1. Tipe Data yang Dibutuhkan oleh UI (dari file Page Anda)
 // -------------------------------------------------------------
@@ -5,10 +6,18 @@ export type ValidationStatus = "Pending" | "Validated" | "Rejected";
 export type AnswerStatus = "Answered" | "Unanswered";
 export type ActionType = "view" | "approve" | "reject";
 
-// --- TAMBAHAN BARU: Ekspor interface Filters ---
+// --- TAMBAHAN BARU: Tipe untuk Sort Order ---
+export type SortOrder = "latest" | "oldest" | "";
+// --------------------------------------------
+
+// --- UPDATE INTERFACE Filters ---
 export interface Filters {
+  // --- PERBAIKAN: Tambahkan index signature untuk memenuhi Record<string, string> ---
+  [key: string]: string; 
   aiAnswer: string;
   validationStatus: string;
+  // --- Filter Tanggal ---
+  date: string; 
 }
 // ---------------------------------------------
 
@@ -25,14 +34,7 @@ export interface ValidationHistoryItem {
   status_validasi: ValidationStatus;
 }
 
-// Tipe data untuk modal riwayat chat
-export interface ChatMessage {
-  id: string;
-  sender: "user" | "agent"; // Pastikan ini "user" | "agent"
-  text: string;
-}
-
-// 2. Tipe Data dari API Backend (Sesuai 'chat/entity.go')
+// Tipe data dari API Backend (Sesuai 'chat/entity.go')
 // -------------------------------------------------------------
 
 // Tipe data dari GET /api/chat/pairs/all
@@ -72,4 +74,10 @@ export interface BackendChatHistory {
 export interface ConversationHistory {
   id: string; // UUID
   chat_history: BackendChatHistory[];
+}
+
+export interface ChatMessage {
+  id: string;
+  sender: "user" | "agent"; 
+  text: string;
 }
