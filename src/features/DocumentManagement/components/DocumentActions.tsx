@@ -20,17 +20,15 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
   const isPending = doc.is_approve === null;
   const isRejected = doc.is_approve === false;
 
-  // --- State & Ref untuk Dropdown Portal ---
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [position, setPosition] = useState<{ top?: number, bottom?: number, right?: number }>({});
   const moreButtonRef = useRef<HTMLButtonElement>(null);
   
-  // Hook untuk menutup dropdown saat diklik di luar
   const dropdownRef = useClickOutside<HTMLDivElement>(() => {
     setIsDropdownOpen(false);
   });
 
-  // Handler untuk membuka/menutup dan menghitung posisi dropdown
+  
   const handleDropdownToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isDropdownOpen) {
@@ -41,20 +39,20 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
     if (moreButtonRef.current) {
       const rect = moreButtonRef.current.getBoundingClientRect();
       
-      // Perkiraan tinggi: 3 item * ~40px = 120px
+      
       const dropdownHeight = 140; 
       const spaceBelow = window.innerHeight - rect.bottom;
       const spaceAbove = rect.top;
 
       let newPos: { top?: number, bottom?: number, right?: number } = {
-        right: window.innerWidth - rect.right + 8, // 8px dari kanan tombol
+        right: window.innerWidth - rect.right + 8, 
       };
 
-      // Jika tidak muat di bawah DAN muat di atas, buka ke atas
+      
       if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
         newPos.bottom = window.innerHeight - rect.top;
       } else {
-        // Buka ke bawah (default)
+        
         newPos.top = rect.bottom;
       }
       
@@ -63,7 +61,7 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
     }
   };
 
-  // --- Komponen Konten Dropdown (untuk Portal) ---
+  
   const DropdownContent = () => (
     <div
       ref={dropdownRef}

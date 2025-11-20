@@ -1,4 +1,4 @@
-// [GANTI: src/features/Dashboard/utils/types.ts]
+
 
 export interface GenerateEmbedRequest {
   category: string;
@@ -14,10 +14,10 @@ export interface GrafanaEmbedResponse {
   };
 }
 
-// --- PERUBAHAN: 'today' menjadi 'daily' ---
+
 export type Period = 'daily' | 'monthly' | 'yearly' | 'custom';
 
-// Tipe untuk state yang disimpan di localStorage
+
 export interface DashboardFilterState {
   period: Period;
   startDate?: string;

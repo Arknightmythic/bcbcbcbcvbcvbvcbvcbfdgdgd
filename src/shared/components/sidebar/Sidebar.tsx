@@ -1,14 +1,12 @@
 import { Link, useLocation } from "react-router";
 import { Users, Shield, LayoutDashboard, Dock, Database, BotIcon, History, SearchSlash, User2, Headset } from "lucide-react";
-import {  useRef } from 'react';
+import { useRef } from 'react';
 
 import { AgentPanel } from "./AgentPanel";
 import type { Chat, MenuItem } from "../../types/types";
-import Tooltip from "../Tooltip"; // Pastikan ini adalah versi Tooltip.tsx dengan React Portal
+import Tooltip from "../Tooltip";
 import { useAuthStore } from "../../store/authStore";
 
-
-// ... (dummyMenu, dummyUser, dummyChats, NavigationMenu tetap sama) ...
 const dummyMenu: MenuItem[] = [
   { path: "/dashboard", title: "Dashboard", icon: LayoutDashboard, identifier: "dashboard" },
   { path: "/knowledge-base", title: "Knowledge base", icon: Database, identifier: "knowledge-base"},
@@ -19,15 +17,7 @@ const dummyMenu: MenuItem[] = [
   { path: "/user-management", title: "User Management", icon: User2, identifier: "user-management" },
   { path: "/team-management", title: "Team Management ", icon: Users, identifier: "team-management" },
   { path: "/role-management", title: "Role Management", icon: Shield, identifier: "role-management" },
-  // { path: "/helpdesk", title: "Help Desk", icon: Headset, identifier: "helpdesk" },
 ];
-
-const dummyUser = {
-  name: "Budi Santoso",
-  isSuperAdmin: false,
-  permissions: ["dashboard:read", "document-management:read", "agent-dashboard:read", "user-management:master", "knowledge-base:read", "public-service:read", "validation-history:read","guide:read", "team-management", "role-management", "helpdesk:read"],
-  status: 'online' as const,
-};
 
 const dummyChats: {
   queue: Chat[];
@@ -49,42 +39,41 @@ const dummyChats: {
 };
 
 const NavigationMenu = ({ menuItems, currentPath, isCollapsed }: { menuItems: MenuItem[], currentPath: string, isCollapsed: boolean }) => (
-    <div className="space-y-1 px-2 pb-4 md:px-4">
-      {menuItems.map((item) => {
-        const isActive = currentPath === item.path || currentPath.startsWith(`${item.path}/`);
-        const linkContent = (
-          <Link
-            key={item.path}
-            to={item.path}
-            className={`group flex items-center rounded-lg px-3 h-12 mx-2 transition-colors duration-200 ${
-              isCollapsed ? 'justify-center' : 'justify-start'
-            } ${
-              isActive ? "bg-bOss-red text-white" : "hover:bg-bOss-red-50 text-gray-600"
-            }`}
+  <div className="space-y-1 px-2 pb-4 md:px-4">
+    {menuItems.map((item) => {
+      const isActive = currentPath === item.path || currentPath.startsWith(`${item.path}/`);
+      const linkContent = (
+        <Link
+          key={item.path}
+          to={item.path}
+          className={`group flex items-center rounded-lg px-3 h-12 mx-2 transition-colors duration-200 ${
+            isCollapsed ? 'justify-center' : 'justify-start'
+          } ${
+            isActive ? "bg-bOss-red text-white" : "hover:bg-bOss-red-50 text-gray-600"
+          }`}
+        >
+          <item.icon className="h-4 w-4 flex-shrink-0" />
+          <span
+            className={`
+              font-medium overflow-hidden transition-all duration-300 ease-in-out leading-snug text-xs
+              ${isCollapsed ? 'w-0 opacity-0 ml-0' : 'w-auto opacity-100 ml-3'}
+            `}
           >
-            <item.icon className="h-4 w-4 flex-shrink-0" />
-            <span
-              className={`
-                font-medium overflow-hidden transition-all duration-300 ease-in-out leading-snug text-xs
-                ${isCollapsed ? 'w-0 opacity-0 ml-0' : 'w-auto opacity-100 ml-3'}
-              `}
-            >
-              {item.title}
-            </span>
-          </Link>
-        );
-  
-        return isCollapsed ? (
-          <Tooltip key={item.path} text={item.title}>
-            {linkContent}
-          </Tooltip>
-        ) : (
-          linkContent
-        );
-      })}
-    </div>
-  );
-// --- AKHIR NavigationMenu ---
+            {item.title}
+          </span>
+        </Link>
+      );
+
+      return isCollapsed ? (
+        <Tooltip key={item.path} text={item.title}>
+          {linkContent}
+        </Tooltip>
+      ) : (
+        linkContent
+      );
+    })}
+  </div>
+);
 
 const Sidebar = ({ isCollapsed, isMobileOpen, isDesktop, setOutletBlurred }: { 
   isCollapsed: boolean, 
@@ -95,14 +84,22 @@ const Sidebar = ({ isCollapsed, isMobileOpen, isDesktop, setOutletBlurred }: {
   const location = useLocation();
   const sidebarRef = useRef<HTMLElement>(null);
   const agentPanelRef = useRef<HTMLDivElement>(null);
-  const logoSectionRef = useRef<HTMLDivElement>(null);
-  const { user } = useAuthStore();
-  
-  const accessibleMenu = dummyMenu.filter(item =>
-    dummyUser.isSuperAdmin || dummyUser.permissions.some(p => p.startsWith(item.identifier))
-  );
 
-  const showAgentSection = dummyUser.permissions.includes("helpdesk:read");
+  // FIX: Use memoized selector to prevent infinite re-renders
+  const { user, allowedPages, showAgentSection } = useAuthStore(state => {
+    const pages = state.user?.role?.team?.pages || [];
+    const hasHelpdeskAccess = pages.includes("helpdesk");
+    return {
+      user: state.user,
+      allowedPages: pages,
+      showAgentSection: hasHelpdeskAccess
+    };
+  });
+  
+  // FILTERING MENU: Hanya tampilkan menu yang ada di allowedPages
+  const accessibleMenu = dummyMenu.filter(item =>
+    allowedPages.includes(item.identifier)
+  );
 
   return (
     <nav
@@ -110,13 +107,12 @@ const Sidebar = ({ isCollapsed, isMobileOpen, isDesktop, setOutletBlurred }: {
       className={`fixed top-0 left-0 flex h-screen flex-col bg-white text-gray-700 shadow-lg transition-all duration-300 ${
         isCollapsed ? "w-25" : "w-50"
       } 
-      /* --- PERUBAHAN DI SINI: z-index dinamis --- */
       ${
         isDesktop
-          ? 'z-50' // z-50 (standar) di desktop
+          ? 'z-50'
           : isMobileOpen
-            ? 'z-[60]' // z-[60] (di atas overlay blur z-[55])
-            : 'z-50 -translate-x-full' // Sembunyi
+            ? 'z-[60]'
+            : 'z-50 -translate-x-full'
       }
       `}
     >
@@ -151,7 +147,7 @@ const Sidebar = ({ isCollapsed, isMobileOpen, isDesktop, setOutletBlurred }: {
               panelRef={agentPanelRef}
               agentName={user?.name || 'Guest'}
               chats={dummyChats}
-              agentStatus={dummyUser.status}
+              agentStatus="online"
               isCollapsed={isCollapsed}
               setOutletBlurred={setOutletBlurred}
             />

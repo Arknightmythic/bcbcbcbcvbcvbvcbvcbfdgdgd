@@ -1,15 +1,13 @@
 import React from "react";
 import DocumentTableRow from "./DocumentTableRow";
-
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import CustomSelect from "../../../shared/components/CustomSelect"; // Import CustomSelect
+import CustomSelect from "../../../shared/components/CustomSelect"; 
 import type { ActionType, Document } from "../types/types";
 
 interface DocumentTableProps {
   documents: Document[];
   hasManagerAccess: boolean;
   onAction: (action: ActionType, doc: Document) => void;
-  // Props Paginasi
   currentPage: number;
   itemsPerPage: number;
   totalItems: number;

@@ -3,6 +3,7 @@
 import React, { useCallback, useState } from "react";
 import { Search, Filter, Calendar } from "lucide-react"; // Import Calendar
 import CustomSelect from "./CustomSelect";
+import { useClickOutside } from "../hooks/useClickOutside";
 
 // Interface untuk opsi filter (diasumsikan sudah ada)
 export interface FilterOption {
@@ -46,7 +47,7 @@ const TableControls = <T extends Record<string, string>>({
   sortState
 }: React.PropsWithChildren<TableControlsProps<T>>) => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  
+  const filterRef = useClickOutside<HTMLDivElement>(() => setIsFilterOpen(false)); //
   // Asumsi 'date' adalah kunci filter untuk date selector
   const dateFilterKey = 'date' as keyof T; 
   const hasDateFilter = filters.hasOwnProperty(dateFilterKey);
@@ -111,7 +112,8 @@ const TableControls = <T extends Record<string, string>>({
         
         {/* Dropdown Filters (aiAnswer, validationStatus) */}
         {otherFilters.length > 0 && (
-          <div className="relative">
+          // GANTI: Terapkan ref ke div container filter
+          <div className="relative" ref={filterRef}> 
             <button
               onClick={() => setIsFilterOpen(!isFilterOpen)}
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -124,7 +126,8 @@ const TableControls = <T extends Record<string, string>>({
             {isFilterOpen && (
               <div
                 className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg z-20 border border-gray-200 p-3"
-                onBlur={() => setTimeout(() => setIsFilterOpen(false), 100)} // Menutup dropdown saat klik di luar
+                // HAPUS: onBlur yang bermasalah. Sekarang dikendalikan oleh useClickOutside
+                // onBlur={() => setTimeout(() => setIsFilterOpen(false), 100)} 
               >
                 {otherFilters.map((config) => (
                   <div key={config.key as string} className="mb-3 last:mb-0">

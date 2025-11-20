@@ -1,5 +1,3 @@
-// [BUAT BARU: src/features/Dashboard/api/grafanaApi.ts]
-
 import { instanceApiToken } from "../../../shared/utils/Axios";
 import type {
   GenerateEmbedRequest,

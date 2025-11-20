@@ -1,5 +1,3 @@
-// [GANTI: src/features/Dashboard/components/FilterCustom.tsx]
-
 import React, { useState, useEffect } from 'react';
 import type { Period } from '../utils/types';
 
@@ -11,19 +9,16 @@ interface DashboardHeaderProps {
   defaultEndDate?: string;
 }
 
-// Helper untuk mendapatkan tanggal YYYY-MM-DD
 const getTodayDateString = () => new Date().toISOString().split('T')[0];
-
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   onPeriodChange,
-  onCustomDateApply,
-  // --- PERUBAHAN: Ubah default ke 'daily' ---
+  onCustomDateApply, 
   defaultPeriod = 'daily',
   defaultStartDate = getTodayDateString(),
   defaultEndDate = getTodayDateString(),
 }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
-  // State internal untuk UI (dikontrol oleh props)
+  
   const [activePeriod, setActivePeriod] = useState<Period>(defaultPeriod);
   const [isCustomDateVisible, setIsCustomDateVisible] = useState(
     defaultPeriod === 'custom'
@@ -31,7 +26,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const [startDate, setStartDate] = useState(defaultStartDate);
   const [endDate, setEndDate] = useState(defaultEndDate);
 
-  // Efek untuk menyinkronkan state internal jika props default berubah (setelah load dari localStorage)
+  
   useEffect(() => {
     setActivePeriod(defaultPeriod);
     setStartDate(defaultStartDate);
@@ -56,20 +51,18 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   });
 
   const handlePeriodClick = (period: Period) => {
-    setActivePeriod(period); // Update state internal UI
-
+    setActivePeriod(period); 
     if (period === 'custom') {
       setIsCustomDateVisible(true);
-      // Jangan panggil onPeriodChange, tunggu 'Apply'
     } else {
       setIsCustomDateVisible(false);
-      onPeriodChange(period); // Panggil parent (Dashboard.tsx)
+      onPeriodChange(period); 
     }
   };
 
   const handleApplyClick = () => {
     onCustomDateApply({ startDate, endDate });
-    onPeriodChange('custom'); // Panggil parent (Dashboard.tsx)
+    onPeriodChange('custom'); 
   };
 
   const buttonBaseClasses =

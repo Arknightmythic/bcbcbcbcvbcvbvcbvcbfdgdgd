@@ -2,7 +2,6 @@ import { useMutation } from '@tanstack/react-query';
 import { instanceApiToken } from '../../../shared/utils/Axios';
 import { useAuthActions } from '../../../shared/store/authStore';
 
-// Backend akan menerima cookie dan menghapusnya
 const logoutApi = async () => {
   return instanceApiToken.post('/auth/logout');
 };
