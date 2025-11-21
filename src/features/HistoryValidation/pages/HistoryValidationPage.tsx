@@ -1,4 +1,4 @@
-// [GANTI: src/features/HistoryValidation/pages/HistoryValidationPage.tsx]
+// src/features/HistoryValidation/pages/HistoryValidationPage.tsx
 
 import { useMemo, useState } from "react";
 import type {
@@ -10,7 +10,7 @@ import type {
 } from "../utils/types";
 import {
   useGetValidationHistory,
-  useUpdateFeedback,
+  useSubmitValidation,
   useGetChatHistory,
 } from "../hooks/useHistoryValidation";
 
@@ -25,22 +25,20 @@ import TextExpandModal from "../../../shared/components/TextExpandModal";
 import { Loader2 } from "lucide-react";
 import ApproveWithCorrectionModal from "../../../shared/components/ApproveWithCorrectionModal";
 
-// Definisikan tipe Filters lokal untuk halaman ini
-// extends Record<string, any> agar kompatibel dengan index signature TableControls
+// Interface Filter State
 interface HistoryPageFilters extends Record<string, any> {
-    aiAnswer: string;
-    validationStatus: string;
+    aiAnswer: string;       // "" | "answered" | "unanswered"
+    validationStatus: string; // "" | "Pending" | "Validated" | "Rejected"
     start_date: string;
     end_date: string;
 }
 
-// PERBAIKAN: Menambahkan Generic Type <HistoryPageFilters>
 const filterConfig: FilterConfig<HistoryPageFilters>[] = [
   {
     key: "aiAnswer",
     type: "select",
     options: [
-      { value: "", label: "AI Answer" },
+      { value: "", label: "All Answers" },
       { value: "answered", label: "Answered" },
       { value: "unanswered", label: "Unanswered" },
     ],
@@ -50,13 +48,13 @@ const filterConfig: FilterConfig<HistoryPageFilters>[] = [
     type: "select",
     options: [
       { value: "", label: "All Status" },
-      { value: "Pending", label: "Pending" },
-      { value: "Validated", label: "Validated" },
+      { value: "Pending", label: "On Review (Pending)" },
+      { value: "Validated", label: "Approved" },
       { value: "Rejected", label: "Rejected" },
     ],
   },
   {
-    key: "date_range", // Key dummy untuk config (tidak masuk ke state filter)
+    key: "date_range",
     type: "date-range",
     startDateKey: "start_date",
     endDateKey: "end_date",
@@ -64,18 +62,30 @@ const filterConfig: FilterConfig<HistoryPageFilters>[] = [
   },
 ];
 
+// Mapping data dari Backend ke UI
 const mapChatPairToValidationItem = (
   pair: ChatPair
 ): ValidationHistoryItem => {
   let status: ValidationStatus = "Pending";
-  if (pair.feedback === true) status = "Validated";
-  if (pair.feedback === false) status = "Rejected";
+  
+  // Mapping bedasarkan is_validated dari backend (sesuai logika Anda)
+  // Asumsi backend mengirim is_validated: boolean | null
+  // null -> Pending, true -> Validated, false -> Rejected
+  // Namun di ChatPair interface Anda sebelumnya pakai `feedback`. 
+  // Kita harus sesuaikan ChatPair di types.ts nanti agar punya field `is_validated`
+  
+  // Fallback logic jika field backend bernama 'is_validated'
+  // @ts-ignore (Abaikan jika TS complain sementara sebelum update types.ts)
+  if (pair.is_validated === true) status = "Validated";
+  // @ts-ignore
+  else if (pair.is_validated === false) status = "Rejected";
+  else status = "Pending";
 
   return {
     id: pair.question_id,
     answerId: pair.answer_id,
-    tanggal: pair.question_time,
-    user: "User", // Dummy user name
+    tanggal: pair.created_at,
+    user: "User", 
     session_id: pair.session_id,
     pertanyaan: pair.question_content,
     jawaban_ai: pair.answer_content,
@@ -85,172 +95,173 @@ const mapChatPairToValidationItem = (
 };
 
 const HistoryValidationPage = () => {
+  // State Modals
   const [chatModalOpen, setChatModalOpen] = useState(false);
+  const [isApproveConfirmOpen, setIsApproveConfirmOpen] = useState(false);
+  const [isRejectConfirmOpen, setIsRejectConfirmOpen] = useState(false);
+  const [isReviseModalOpen, setIsReviseModalOpen] = useState(false);
+
+  // State Data & Filter
   const [searchInput, setSearchInput] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  
+  const [searchTerm, setSearchTerm] = useState(""); // Search text params
   const [filters, setFilters] = useState<HistoryPageFilters>({
     aiAnswer: "",
     validationStatus: "",
     start_date: "", 
     end_date: "",
   });
-  
   const [sortOrder, setSortOrder] = useState<SortOrder>("latest");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
-    null
-  );
+  // Selected Items
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
+  const [selectedHistoryItem, setSelectedHistoryItem] = useState<ValidationHistoryItem | null>(null);
   const [textModalState, setTextModalState] = useState<{
-    isOpen: boolean;
-    title: string;
-    content: string;
+    isOpen: boolean; title: string; content: string;
   }>({ isOpen: false, title: "", content: "" });
 
-  const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
-  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
-  const [selectedHistoryItem, setSelectedHistoryItem] =
-    useState<ValidationHistoryItem | null>(null);
-
+  // --- 1. Siapkan Parameter untuk Hook ---
+  
   const searchParams = useMemo(() => {
     const params = new URLSearchParams();
     params.set("page", String(currentPage));
     params.set("page_size", String(itemsPerPage));
+    if (searchTerm) {
+      params.set("search", searchTerm); // Pastikan backend support 'search' query
+    }
     return params;
-  }, [currentPage, itemsPerPage]);
+  }, [currentPage, itemsPerPage, searchTerm]);
 
+  // --- 2. Mapping Logic Filter UI ke Backend Params ---
+  
+  // Mapping Status: Pending -> "null", Validated -> "1", Rejected -> "0"
+  const isValidatedParam = useMemo(() => {
+    switch (filters.validationStatus) {
+      case "Pending": return "null";
+      case "Validated": return "1";
+      case "Rejected": return "0";
+      default: return ""; // All
+    }
+  }, [filters.validationStatus]);
+
+  // Mapping Answered: Answered -> "true", Unanswered -> "false"
+  const isAnsweredParam = useMemo(() => {
+    switch (filters.aiAnswer) {
+      case "answered": return "true";
+      case "unanswered": return "false";
+      default: return ""; // All
+    }
+  }, [filters.aiAnswer]);
+
+  // --- 3. Panggil API Hook dengan Parameter Lengkap ---
+  
   const { data: historyData, isLoading: isLoadingTable } =
     useGetValidationHistory(
-        searchParams, 
-        sortOrder, 
-        filters.start_date, 
-        filters.end_date
+      searchParams, 
+      sortOrder, 
+      filters.start_date, 
+      filters.end_date,
+      isValidatedParam, // Kirim param status
+      isAnsweredParam   // Kirim param answered
     ); 
 
-  const { mutate: updateFeedback, isPending: isUpdatingFeedback } = useUpdateFeedback();
+  const { mutate: submitValidation, isPending: isSubmitting } = useSubmitValidation();
 
   const { data: chatHistoryForModal, isLoading: isLoadingModal } =
     useGetChatHistory(selectedSessionId);
 
-  const filteredHistories = useMemo(() => {
-    const tableData = historyData?.data.map(mapChatPairToValidationItem) || [];
 
-    return tableData.filter((history) => {
-      const lowerSearchTerm = searchTerm.toLowerCase();
-      const searchMatch =
-        history.user.toLowerCase().includes(lowerSearchTerm) ||
-        history.session_id.toLowerCase().includes(lowerSearchTerm) ||
-        history.pertanyaan.toLowerCase().includes(lowerSearchTerm) ||
-        history.jawaban_ai.toLowerCase().includes(lowerSearchTerm);
-
-      const answerMatch = filters.aiAnswer
-        ? filters.aiAnswer === "answered"
-          ? !history.tidak_terjawab
-          : history.tidak_terjawab
-        : true;
-      const statusMatch = filters.validationStatus
-        ? history.status_validasi === filters.validationStatus
-        : true;
-      
-      return searchMatch && answerMatch && statusMatch;
-    });
-  }, [searchTerm, filters, historyData]);
-
-  const paginatedHistories = useMemo(() => {
-    return filteredHistories;
-  }, [filteredHistories]);
+  // --- 4. Data Processing (Hanya Mapping, Tidak ada Filtering Client-side lagi) ---
   
+  const paginatedHistories = useMemo(() => {
+    if (!historyData?.data) return [];
+    return historyData.data.map(mapChatPairToValidationItem);
+  }, [historyData]);
+
   const totalItems = historyData?.total || 0;
 
-  const handleSearchSubmit = () => {
-    setSearchTerm(searchInput);
-    setCurrentPage(1);
-  };
-
+  // Handlers
+  const handleSearchSubmit = () => { setSearchTerm(searchInput); setCurrentPage(1); };
   const handleFilterChange = (filterName: keyof HistoryPageFilters, value: string) => {
-    setFilters((prev) => ({ ...prev, [filterName]: value }));
-    setCurrentPage(1);
+    setFilters((prev) => ({ ...prev, [filterName]: value })); 
+    setCurrentPage(1); // Reset ke halaman 1 saat filter berubah
   };
-  
-  const handleSortToggle = () => {
-    setSortOrder(prev => (prev === "latest" ? "oldest" : "latest"));
-    setCurrentPage(1);
-  };
+  const handleSortToggle = () => { setSortOrder(prev => (prev === "latest" ? "oldest" : "latest")); setCurrentPage(1); };
+  const handleItemsPerPageChange = (items: number) => { setItemsPerPage(items); setCurrentPage(1); };
 
-  const handleItemsPerPageChange = (items: number) => {
-    setItemsPerPage(items);
-    setCurrentPage(1);
-  };
-
-  const handleCloseApproveModal = () => {
-    setIsApproveModalOpen(false);
-    setSelectedHistoryItem(null);
-  };
-
-  const handleCloseRejectModal = () => {
-    setIsRejectModalOpen(false);
-    setSelectedHistoryItem(null);
-  };
-
+  // Action Dispatcher
   const handleAction = (action: ActionType, item: ValidationHistoryItem) => {
     if (action === "view") {
       setSelectedSessionId(item.session_id);
       setChatModalOpen(true);
     } else if (action === "approve") {
       setSelectedHistoryItem(item);
-      setIsApproveModalOpen(true);
+      setIsApproveConfirmOpen(true);
     } else if (action === "reject") {
       setSelectedHistoryItem(item);
-      setIsRejectModalOpen(true);
+      setIsRejectConfirmOpen(true);
+    } else if (action === "revise") {
+      setSelectedHistoryItem(item);
+      setIsReviseModalOpen(true);
     }
   };
 
-  const handleApproveConfirm = (
-    item: ValidationHistoryItem,
-    correction: string
-  ) => {
-    updateFeedback(
-      { id: item.answerId, feedback: true, correction: correction },
-      {
-        onSuccess: () => {
-          toast.success("Pertanyaan telah divalidasi.");
-          handleCloseApproveModal();
-        },
-        onError: (e: any) =>
-          toast.error(e.response?.data?.message || "Gagal memvalidasi."),
-      }
-    );
+  // Handlers Submit (Sama seperti sebelumnya)
+  const handleApproveConfirm = () => {
+    if (!selectedHistoryItem) return;
+    submitValidation({
+      question_id: selectedHistoryItem.id,
+      question: selectedHistoryItem.pertanyaan,
+      answer_id: selectedHistoryItem.answerId,
+      answer: selectedHistoryItem.jawaban_ai,
+      revision: selectedHistoryItem.jawaban_ai,
+      validate: true
+    }, {
+      onSuccess: () => {
+        toast.success("Jawaban berhasil divalidasi.");
+        setIsApproveConfirmOpen(false);
+        setSelectedHistoryItem(null);
+      },
+      onError: () => toast.error("Gagal memvalidasi.")
+    });
   };
 
   const handleRejectConfirm = () => {
     if (!selectedHistoryItem) return;
-
-    updateFeedback(
-      { id: selectedHistoryItem.answerId, feedback: false },
-      {
-        onSuccess: () => {
-          toast.success("Pertanyaan ditandai tidak valid.");
-          handleCloseRejectModal();
-        },
-        onError: (e: any) =>
-          toast.error(e.response?.data?.message || "Gagal menolak."),
-      }
-    );
+    submitValidation({
+      question_id: selectedHistoryItem.id,
+      question: selectedHistoryItem.pertanyaan,
+      answer_id: selectedHistoryItem.answerId,
+      answer: selectedHistoryItem.jawaban_ai,
+      revision: selectedHistoryItem.jawaban_ai,
+      validate: false
+    }, {
+      onSuccess: () => {
+        toast.success("Jawaban ditandai tidak valid.");
+        setIsRejectConfirmOpen(false);
+        setSelectedHistoryItem(null);
+      },
+      onError: () => toast.error("Gagal menolak.")
+    });
   };
 
-  const handleCloseChatModal = () => {
-    setChatModalOpen(false);
-    setSelectedSessionId(null);
-  };
-
-  const handleViewText = (title: string, content: string) => {
-    setTextModalState({ isOpen: true, title, content });
-  };
-
-  const handleCloseTextModal = () => {
-    setTextModalState({ isOpen: false, title: "", content: "" });
+  const handleReviseConfirm = (item: ValidationHistoryItem, correction: string) => {
+    submitValidation({
+      question_id: item.id,
+      question: item.pertanyaan,
+      answer_id: item.answerId,
+      answer: item.jawaban_ai,
+      revision: correction,
+      validate: true
+    }, {
+      onSuccess: () => {
+        toast.success("Revisi berhasil disimpan & divalidasi.");
+        setIsReviseModalOpen(false);
+        setSelectedHistoryItem(null);
+      },
+      onError: () => toast.error("Gagal menyimpan revisi.")
+    });
   };
 
   return (
@@ -268,17 +279,15 @@ const HistoryValidationPage = () => {
           />
         </div>
 
-        {isLoadingTable && (
+        {isLoadingTable ? (
           <div className="flex-1 flex justify-center items-center p-10">
             <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
           </div>
-        )}
-
-        {!isLoadingTable && (
+        ) : (
           <HistoryValidationTable
             histories={paginatedHistories}
             onAction={handleAction}
-            onViewText={handleViewText}
+            onViewText={(title, content) => setTextModalState({ isOpen: true, title, content })}
             currentPage={currentPage}
             itemsPerPage={itemsPerPage}
             totalItems={totalItems}
@@ -290,38 +299,16 @@ const HistoryValidationPage = () => {
         )}
       </div>
 
-      <ChatHistoryModal
-        isOpen={chatModalOpen}
-        onClose={handleCloseChatModal}
-        chatHistory={isLoadingModal ? [] : chatHistoryForModal || []}
-      />
-
-      <TextExpandModal
-        isOpen={textModalState.isOpen}
-        onClose={handleCloseTextModal}
-        title={textModalState.title}
-        content={textModalState.content}
-      />
-
-      <ConfirmationModal
-        isOpen={isRejectModalOpen}
-        onClose={handleCloseRejectModal}
-        onConfirm={handleRejectConfirm}
-        title="Konfirmasi Penolakan"
-        confirmText="Ya, Tolak"
-        confirmColor="bg-red-600 hover:bg-red-700"
-        isConfirming={isUpdatingFeedback}
-      >
-        <p>Apakah Anda yakin ingin menandai jawaban ini sebagai <strong>Tidak Valid (Reject)?</strong> Tindakan ini tidak dapat dibatalkan.</p>
+      {/* Modal components ... (Sama seperti sebelumnya) */}
+      <ChatHistoryModal isOpen={chatModalOpen} onClose={() => setChatModalOpen(false)} chatHistory={isLoadingModal ? [] : chatHistoryForModal || []} />
+      <TextExpandModal isOpen={textModalState.isOpen} onClose={() => setTextModalState({ ...textModalState, isOpen: false })} title={textModalState.title} content={textModalState.content} />
+      <ConfirmationModal isOpen={isApproveConfirmOpen} onClose={() => setIsApproveConfirmOpen(false)} onConfirm={handleApproveConfirm} title="Konfirmasi Validasi" confirmText="Ya, Validasi" confirmColor="bg-green-600 hover:bg-green-700" isConfirming={isSubmitting}>
+        <p>Apakah Anda yakin jawaban ini <strong>Benar</strong> dan siap divalidasi?</p>
       </ConfirmationModal>
-
-      <ApproveWithCorrectionModal
-        isOpen={isApproveModalOpen}
-        onClose={handleCloseApproveModal}
-        history={selectedHistoryItem}
-        onConfirm={handleApproveConfirm}
-        isConfirming={isUpdatingFeedback}
-      />
+      <ConfirmationModal isOpen={isRejectConfirmOpen} onClose={() => setIsRejectConfirmOpen(false)} onConfirm={handleRejectConfirm} title="Konfirmasi Penolakan" confirmText="Ya, Tolak" confirmColor="bg-red-600 hover:bg-red-700" isConfirming={isSubmitting}>
+        <p>Apakah Anda yakin ingin menandai jawaban ini sebagai <strong>Tidak Valid (Reject)?</strong></p>
+      </ConfirmationModal>
+      <ApproveWithCorrectionModal isOpen={isReviseModalOpen} onClose={() => setIsReviseModalOpen(false)} history={selectedHistoryItem} onConfirm={handleReviseConfirm} isConfirming={isSubmitting} />
     </>
   );
 };

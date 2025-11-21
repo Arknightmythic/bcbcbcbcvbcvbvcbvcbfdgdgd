@@ -1,9 +1,10 @@
 import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
-import { createPortal } from 'react-dom'; // 1. Impor createPortal
+import { createPortal } from 'react-dom';
 import type { ActionType, ValidationHistoryItem } from '../utils/types';
-import { CheckCircle, XCircle, FileText, MoreVertical } from 'lucide-react'; // 2. Impor MoreVertical
+// Tambahkan PencilIcon
+import { CheckCircle, XCircle, FileText, MoreVertical, Pencil } from 'lucide-react'; 
 import StatusBadge from './StatusBadge';
-import { useClickOutside } from '../../../shared/hooks/useClickOutside'; // 3. Impor hook
+import { useClickOutside } from '../../../shared/hooks/useClickOutside';
 
 interface HistoryValidationTableRowProps {
   history: ValidationHistoryItem;
@@ -81,7 +82,6 @@ const TruncatedText: React.FC<{ content: string; title: string; onIconClick: () 
 
 const HistoryValidationTableRow: React.FC<HistoryValidationTableRowProps> = ({ history, onAction, onViewText }) => {
   
-  // --- 4. State & Ref untuk Dropdown Portal ---
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [position, setPosition] = useState<{ top?: number, bottom?: number, right?: number }>({});
   const moreButtonRef = useRef<HTMLButtonElement>(null);
@@ -90,7 +90,6 @@ const HistoryValidationTableRow: React.FC<HistoryValidationTableRowProps> = ({ h
     setIsDropdownOpen(false);
   });
 
-  // --- 5. Handler untuk Dropdown ---
   const handleDropdownToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isDropdownOpen) {
@@ -100,7 +99,7 @@ const HistoryValidationTableRow: React.FC<HistoryValidationTableRowProps> = ({ h
 
     if (moreButtonRef.current) {
       const rect = moreButtonRef.current.getBoundingClientRect();
-      const dropdownHeight = 90; // Perkiraan tinggi: 2 item * 44px
+      const dropdownHeight = 135; // Ditambah karena ada 3 menu
       const spaceBelow = window.innerHeight - rect.bottom;
       const spaceAbove = rect.top;
 
@@ -119,7 +118,6 @@ const HistoryValidationTableRow: React.FC<HistoryValidationTableRowProps> = ({ h
     }
   };
 
-  // --- 6. Konten Dropdown (untuk Portal) ---
   const DropdownContent = () => (
     <div
       ref={dropdownRef}
@@ -135,18 +133,24 @@ const HistoryValidationTableRow: React.FC<HistoryValidationTableRowProps> = ({ h
         <button
           onClick={() => { onAction('approve', history); setIsDropdownOpen(false); }}
           className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-green-600 hover:bg-green-50"
-          title="Validate"
         >
           <CheckCircle className="w-4 h-4" />
-          <span>Validate</span>
+          <span>Approve</span>
+        </button>
+        {/* Menu Revisi Baru */}
+        <button
+          onClick={() => { onAction('revise', history); setIsDropdownOpen(false); }}
+          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-blue-600 hover:bg-blue-50"
+        >
+          <Pencil className="w-4 h-4" />
+          <span>Revise</span>
         </button>
         <button
           onClick={() => { onAction('reject', history); setIsDropdownOpen(false); }}
           className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
-          title="Not Validate"
         >
           <XCircle className="w-4 h-4" />
-          <span>Not Validate</span>
+          <span>Reject</span>
         </button>
       </div>
     </div>
@@ -185,25 +189,36 @@ const HistoryValidationTableRow: React.FC<HistoryValidationTableRowProps> = ({ h
         <StatusBadge status={history.status_validasi} />
       </td>
       
-      {/* --- 7. PERUBAHAN UTAMA DI SINI --- */}
       <td className="px-4 py-3 text-center sticky right-0 bg-white group-hover:bg-gray-50 z-10 border-l border-gray-200">
         
-        {/* Layout Desktop */}
+        {/* Layout Desktop: 3 Tombol */}
         <div className="hidden md:flex items-center justify-center gap-x-2">
           <button
             onClick={() => onAction('approve', history)}
             className="p-1 text-green-600 hover:bg-green-50 rounded-md transition-colors"
-            title="Validate"
+            title="Approve"
           >
             <CheckCircle className="w-4 h-4" />
           </button>
+          
+          
           <button
             onClick={() => onAction('reject', history)}
             className="p-1 text-red-600 hover:bg-red-50 rounded-md transition-colors"
-            title="Not Validate"
+            title="Reject"
           >
             <XCircle className="w-4 h-4" />
           </button>
+
+          {/* Tombol Revisi Baru */}
+          <button
+            onClick={() => onAction('revise', history)}
+            className="p-1 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+            title="Revise"
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
+
         </div>
 
         {/* Layout Mobile */}
@@ -217,7 +232,6 @@ const HistoryValidationTableRow: React.FC<HistoryValidationTableRowProps> = ({ h
           </button>
         </div>
 
-        {/* Render Portal */}
         {isDropdownOpen && createPortal(<DropdownContent />, document.body)}
       </td>
     </tr>

@@ -1,47 +1,39 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getValidationHistory,
-  updateChatFeedback,
+  submitChatValidation,
   getConversationHistory,
 } from "../api/historyApi";
 
-import type { BackendChatHistory, ChatMessage, SortOrder } from "../utils/types";
+import type { BackendChatHistory, ChatMessage, SortOrder, ValidatePayload } from "../utils/types";
 
 const QUERY_KEY = "validationHistory";
 const HISTORY_KEY = "chatHistoryDetail";
 
-interface FeedbackPayload {
-  id: number;
-  feedback: boolean;
-  correction?: string;
-}
-
-/**
- * Hook untuk mengambil data tabel Validation History
- */
 export const useGetValidationHistory = (
   params: URLSearchParams,
   sort: SortOrder, 
-  startDate: string, // Ganti date -> startDate
-  endDate: string    // Tambah endDate
+  startDate: string,
+  endDate: string,
+  // Terima parameter baru
+  isValidated?: string,
+  isAnswered?: string
 ) => {
   return useQuery({
-    // Masukkan kedua tanggal ke queryKey agar refetch saat berubah
-    queryKey: [QUERY_KEY, params.toString(), sort, startDate, endDate], 
-    
-    queryFn: () => getValidationHistory(params, sort, startDate, endDate),
+    // Tambahkan filter ke queryKey agar data refresh saat filter berubah
+    queryKey: [QUERY_KEY, params.toString(), sort, startDate, endDate, isValidated, isAnswered], 
+    queryFn: () => getValidationHistory(params, sort, startDate, endDate, isValidated, isAnswered),
     placeholderData: (prevData) => prevData,
   });
 };
 
 /**
- * Hook untuk mutasi Approve/Reject (update feedback)
+ * Hook untuk mutasi Validate/Reject/Revise
  */
-export const useUpdateFeedback = () => {
+export const useSubmitValidation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, feedback, correction }: FeedbackPayload) =>
-    updateChatFeedback(id, feedback, correction),
+    mutationFn: (payload: ValidatePayload) => submitChatValidation(payload),
     onSuccess: () => {  
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },

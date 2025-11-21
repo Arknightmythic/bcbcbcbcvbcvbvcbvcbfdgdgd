@@ -1,32 +1,24 @@
 // [GANTI: src/features/HistoryValidation/utils/types.ts]
 
-// 1. Tipe Data yang Dibutuhkan oleh UI (dari file Page Anda)
-// -------------------------------------------------------------
 export type ValidationStatus = "Pending" | "Validated" | "Rejected";
 export type AnswerStatus = "Answered" | "Unanswered";
-export type ActionType = "view" | "approve" | "reject";
+// Update ActionType menjadi 3 aksi utama (+ revise)
+export type ActionType = "view" | "approve" | "reject" | "revise";
 
-// --- TAMBAHAN BARU: Tipe untuk Sort Order ---
 export type SortOrder = "latest" | "oldest" | "";
-// --------------------------------------------
 
-// --- UPDATE INTERFACE Filters ---
 export interface Filters {
-  // --- PERBAIKAN: Tambahkan index signature untuk memenuhi Record<string, string> ---
   [key: string]: string; 
   aiAnswer: string;
   validationStatus: string;
-  // --- Filter Tanggal ---
   date: string; 
 }
-// ---------------------------------------------
 
-// Tipe data yang digunakan oleh komponen tabel (Saya tambahkan 'answerId')
 export interface ValidationHistoryItem {
   id: number; // question_id
-  answerId: number; // answer_id (untuk update feedback)
+  answerId: number; // answer_id
   tanggal: string;
-  user: string; // Akan di-dummy
+  user: string;
   session_id: string;
   pertanyaan: string;
   jawaban_ai: string;
@@ -34,10 +26,6 @@ export interface ValidationHistoryItem {
   status_validasi: ValidationStatus;
 }
 
-// Tipe data dari API Backend (Sesuai 'chat/entity.go')
-// -------------------------------------------------------------
-
-// Tipe data dari GET /api/chat/pairs/all
 export interface ChatPair {
   question_id: number;
   question_content: string;
@@ -47,12 +35,15 @@ export interface ChatPair {
   answer_time: string;
   category: string | null;
   question_category: string | null;
-  feedback: boolean | null; // true=Validated, false=Rejected, null=Pending
+  feedback: boolean | null;
   is_cannot_answer: boolean | null;
   session_id: string;
+  is_validated?: boolean | null;
+  is_answered?: boolean | null;
+  // Field Baru
+  created_at: string;
 }
 
-// Tipe wrapper untuk paginasi dari GET /api/chat/pairs/all
 export interface PaginatedChatPairsResponse {
   data: ChatPair[];
   total: number;
@@ -61,18 +52,28 @@ export interface PaginatedChatPairsResponse {
   total_pages: number;
 }
 
-// Tipe data dari GET /api/chat/conversations/:session_id
+// --- TAMBAHAN BARU: Payload untuk endpoint /validate ---
+// Sesuai dengan req struct di chat/handler.go
+export interface ValidatePayload {
+  question_id: number;
+  question: string;
+  answer_id: number;
+  answer: string;
+  revision: string;
+  validate: boolean;
+}
+
 export interface BackendChatHistory {
   id: number;
   message: {
-    role: "user" | "assistant"; // Tipe backend adalah 'assistant'
+    role: "user" | "assistant";
     content: string;
   };
   created_at: string;
 }
 
 export interface ConversationHistory {
-  id: string; // UUID
+  id: string;
   chat_history: BackendChatHistory[];
 }
 
