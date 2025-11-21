@@ -1,4 +1,4 @@
-// src/features/HistoryValidation/pages/HistoryValidationPage.tsx
+// [GANTI: src/features/HistoryValidation/pages/HistoryValidationPage.tsx]
 
 import { useMemo, useState } from "react";
 import type {
@@ -27,8 +27,8 @@ import ApproveWithCorrectionModal from "../../../shared/components/ApproveWithCo
 
 // Interface Filter State
 interface HistoryPageFilters extends Record<string, any> {
-    aiAnswer: string;       // "" | "answered" | "unanswered"
-    validationStatus: string; // "" | "Pending" | "Validated" | "Rejected"
+    aiAnswer: string;
+    validationStatus: string;
     start_date: string;
     end_date: string;
 }
@@ -62,20 +62,12 @@ const filterConfig: FilterConfig<HistoryPageFilters>[] = [
   },
 ];
 
-// Mapping data dari Backend ke UI
 const mapChatPairToValidationItem = (
   pair: ChatPair
 ): ValidationHistoryItem => {
   let status: ValidationStatus = "Pending";
   
-  // Mapping bedasarkan is_validated dari backend (sesuai logika Anda)
-  // Asumsi backend mengirim is_validated: boolean | null
-  // null -> Pending, true -> Validated, false -> Rejected
-  // Namun di ChatPair interface Anda sebelumnya pakai `feedback`. 
-  // Kita harus sesuaikan ChatPair di types.ts nanti agar punya field `is_validated`
-  
-  // Fallback logic jika field backend bernama 'is_validated'
-  // @ts-ignore (Abaikan jika TS complain sementara sebelum update types.ts)
+  // @ts-ignore
   if (pair.is_validated === true) status = "Validated";
   // @ts-ignore
   else if (pair.is_validated === false) status = "Rejected";
@@ -84,7 +76,7 @@ const mapChatPairToValidationItem = (
   return {
     id: pair.question_id,
     answerId: pair.answer_id,
-    tanggal: pair.created_at,
+    tanggal: pair.created_at, 
     user: "User", 
     session_id: pair.session_id,
     pertanyaan: pair.question_content,
@@ -97,13 +89,14 @@ const mapChatPairToValidationItem = (
 const HistoryValidationPage = () => {
   // State Modals
   const [chatModalOpen, setChatModalOpen] = useState(false);
-  const [isApproveConfirmOpen, setIsApproveConfirmOpen] = useState(false);
+  
+  // GANTI: Menggunakan satu modal Approve yang bisa input revisi
+  const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
   const [isRejectConfirmOpen, setIsRejectConfirmOpen] = useState(false);
-  const [isReviseModalOpen, setIsReviseModalOpen] = useState(false);
 
   // State Data & Filter
   const [searchInput, setSearchInput] = useState("");
-  const [searchTerm, setSearchTerm] = useState(""); // Search text params
+  const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState<HistoryPageFilters>({
     aiAnswer: "",
     validationStatus: "",
@@ -121,49 +114,41 @@ const HistoryValidationPage = () => {
     isOpen: boolean; title: string; content: string;
   }>({ isOpen: false, title: "", content: "" });
 
-  // --- 1. Siapkan Parameter untuk Hook ---
-  
   const searchParams = useMemo(() => {
     const params = new URLSearchParams();
     params.set("page", String(currentPage));
     params.set("page_size", String(itemsPerPage));
     if (searchTerm) {
-      params.set("search", searchTerm); // Pastikan backend support 'search' query
+      params.set("search", searchTerm);
     }
     return params;
   }, [currentPage, itemsPerPage, searchTerm]);
 
-  // --- 2. Mapping Logic Filter UI ke Backend Params ---
-  
-  // Mapping Status: Pending -> "null", Validated -> "1", Rejected -> "0"
   const isValidatedParam = useMemo(() => {
     switch (filters.validationStatus) {
       case "Pending": return "null";
       case "Validated": return "1";
       case "Rejected": return "0";
-      default: return ""; // All
+      default: return "";
     }
   }, [filters.validationStatus]);
 
-  // Mapping Answered: Answered -> "true", Unanswered -> "false"
   const isAnsweredParam = useMemo(() => {
     switch (filters.aiAnswer) {
       case "answered": return "true";
       case "unanswered": return "false";
-      default: return ""; // All
+      default: return "";
     }
   }, [filters.aiAnswer]);
 
-  // --- 3. Panggil API Hook dengan Parameter Lengkap ---
-  
   const { data: historyData, isLoading: isLoadingTable } =
     useGetValidationHistory(
       searchParams, 
       sortOrder, 
       filters.start_date, 
       filters.end_date,
-      isValidatedParam, // Kirim param status
-      isAnsweredParam   // Kirim param answered
+      isValidatedParam,
+      isAnsweredParam
     ); 
 
   const { mutate: submitValidation, isPending: isSubmitting } = useSubmitValidation();
@@ -171,9 +156,6 @@ const HistoryValidationPage = () => {
   const { data: chatHistoryForModal, isLoading: isLoadingModal } =
     useGetChatHistory(selectedSessionId);
 
-
-  // --- 4. Data Processing (Hanya Mapping, Tidak ada Filtering Client-side lagi) ---
-  
   const paginatedHistories = useMemo(() => {
     if (!historyData?.data) return [];
     return historyData.data.map(mapChatPairToValidationItem);
@@ -185,7 +167,7 @@ const HistoryValidationPage = () => {
   const handleSearchSubmit = () => { setSearchTerm(searchInput); setCurrentPage(1); };
   const handleFilterChange = (filterName: keyof HistoryPageFilters, value: string) => {
     setFilters((prev) => ({ ...prev, [filterName]: value })); 
-    setCurrentPage(1); // Reset ke halaman 1 saat filter berubah
+    setCurrentPage(1);
   };
   const handleSortToggle = () => { setSortOrder(prev => (prev === "latest" ? "oldest" : "latest")); setCurrentPage(1); };
   const handleItemsPerPageChange = (items: number) => { setItemsPerPage(items); setCurrentPage(1); };
@@ -196,37 +178,45 @@ const HistoryValidationPage = () => {
       setSelectedSessionId(item.session_id);
       setChatModalOpen(true);
     } else if (action === "approve") {
+      // GANTI: Approve sekarang membuka modal dengan opsi revisi
       setSelectedHistoryItem(item);
-      setIsApproveConfirmOpen(true);
+      setIsApproveModalOpen(true); 
     } else if (action === "reject") {
       setSelectedHistoryItem(item);
       setIsRejectConfirmOpen(true);
-    } else if (action === "revise") {
-      setSelectedHistoryItem(item);
-      setIsReviseModalOpen(true);
     }
   };
 
-  // Handlers Submit (Sama seperti sebelumnya)
-  const handleApproveConfirm = () => {
-    if (!selectedHistoryItem) return;
+  // --- LOGIKA SUBMIT BARU ---
+
+  // 1. Handle Approve (dengan atau tanpa revisi) via Modal
+  const handleApproveSubmit = (item: ValidationHistoryItem, correction: string) => {
+    // Cek apakah ada revisi? 
+    // Jika correction == jawaban asli, berarti "Approve Tanpa Revisi" -> kirim revision: ""
+    // Jika correction != jawaban asli, berarti "Approve Revisi" -> kirim revision: correction
+    
+    const isModified = correction.trim() !== item.jawaban_ai.trim();
+    const revisionPayload = isModified ? correction : "";
+
     submitValidation({
-      question_id: selectedHistoryItem.id,
-      question: selectedHistoryItem.pertanyaan,
-      answer_id: selectedHistoryItem.answerId,
-      answer: selectedHistoryItem.jawaban_ai,
-      revision: selectedHistoryItem.jawaban_ai,
+      question_id: item.id,
+      question: item.pertanyaan,
+      answer_id: item.answerId,
+      answer: item.jawaban_ai, // Jawaban asli selalu dikirim
+      revision: revisionPayload, // "" atau string revisi
       validate: true
     }, {
       onSuccess: () => {
-        toast.success("Jawaban berhasil divalidasi.");
-        setIsApproveConfirmOpen(false);
+        const msg = isModified ? "Revisi berhasil disimpan & divalidasi." : "Jawaban berhasil divalidasi.";
+        toast.success(msg);
+        setIsApproveModalOpen(false);
         setSelectedHistoryItem(null);
       },
-      onError: () => toast.error("Gagal memvalidasi.")
+      onError: (e: any) => toast.error("Gagal memproses validasi.")
     });
   };
 
+  // 2. Reject (Tidak Valid)
   const handleRejectConfirm = () => {
     if (!selectedHistoryItem) return;
     submitValidation({
@@ -234,7 +224,7 @@ const HistoryValidationPage = () => {
       question: selectedHistoryItem.pertanyaan,
       answer_id: selectedHistoryItem.answerId,
       answer: selectedHistoryItem.jawaban_ai,
-      revision: selectedHistoryItem.jawaban_ai,
+      revision: "", // Reject tidak perlu revisi teks, kirim kosong atau jawaban asli (sesuai kebutuhan backend, di sini kita kirim kosong agar aman)
       validate: false
     }, {
       onSuccess: () => {
@@ -242,25 +232,7 @@ const HistoryValidationPage = () => {
         setIsRejectConfirmOpen(false);
         setSelectedHistoryItem(null);
       },
-      onError: () => toast.error("Gagal menolak.")
-    });
-  };
-
-  const handleReviseConfirm = (item: ValidationHistoryItem, correction: string) => {
-    submitValidation({
-      question_id: item.id,
-      question: item.pertanyaan,
-      answer_id: item.answerId,
-      answer: item.jawaban_ai,
-      revision: correction,
-      validate: true
-    }, {
-      onSuccess: () => {
-        toast.success("Revisi berhasil disimpan & divalidasi.");
-        setIsReviseModalOpen(false);
-        setSelectedHistoryItem(null);
-      },
-      onError: () => toast.error("Gagal menyimpan revisi.")
+      onError: (e: any) => toast.error("Gagal menolak.")
     });
   };
 
@@ -299,16 +271,42 @@ const HistoryValidationPage = () => {
         )}
       </div>
 
-      {/* Modal components ... (Sama seperti sebelumnya) */}
-      <ChatHistoryModal isOpen={chatModalOpen} onClose={() => setChatModalOpen(false)} chatHistory={isLoadingModal ? [] : chatHistoryForModal || []} />
-      <TextExpandModal isOpen={textModalState.isOpen} onClose={() => setTextModalState({ ...textModalState, isOpen: false })} title={textModalState.title} content={textModalState.content} />
-      <ConfirmationModal isOpen={isApproveConfirmOpen} onClose={() => setIsApproveConfirmOpen(false)} onConfirm={handleApproveConfirm} title="Konfirmasi Validasi" confirmText="Ya, Validasi" confirmColor="bg-green-600 hover:bg-green-700" isConfirming={isSubmitting}>
-        <p>Apakah Anda yakin jawaban ini <strong>Benar</strong> dan siap divalidasi?</p>
-      </ConfirmationModal>
-      <ConfirmationModal isOpen={isRejectConfirmOpen} onClose={() => setIsRejectConfirmOpen(false)} onConfirm={handleRejectConfirm} title="Konfirmasi Penolakan" confirmText="Ya, Tolak" confirmColor="bg-red-600 hover:bg-red-700" isConfirming={isSubmitting}>
+      {/* Modal Components */}
+      <ChatHistoryModal 
+        isOpen={chatModalOpen} 
+        onClose={() => setChatModalOpen(false)} 
+        chatHistory={isLoadingModal ? [] : chatHistoryForModal || []} 
+      />
+      
+      <TextExpandModal 
+        isOpen={textModalState.isOpen} 
+        onClose={() => setTextModalState({ ...textModalState, isOpen: false })} 
+        title={textModalState.title} 
+        content={textModalState.content} 
+      />
+
+      {/* Modal Approve (Menggunakan kembali komponen ApproveWithCorrectionModal) */}
+      <ApproveWithCorrectionModal
+        isOpen={isApproveModalOpen}
+        onClose={() => setIsApproveModalOpen(false)}
+        history={selectedHistoryItem}
+        onConfirm={handleApproveSubmit} // Handler baru
+        isConfirming={isSubmitting}
+        // Opsional: Bisa ubah title modal via props jika component mendukung, misal: title="Validasi Jawaban"
+      />
+
+      {/* Modal Reject */}
+      <ConfirmationModal
+        isOpen={isRejectConfirmOpen}
+        onClose={() => setIsRejectConfirmOpen(false)}
+        onConfirm={handleRejectConfirm}
+        title="Konfirmasi Penolakan"
+        confirmText="Ya, Tolak"
+        confirmColor="bg-red-600 hover:bg-red-700"
+        isConfirming={isSubmitting}
+      >
         <p>Apakah Anda yakin ingin menandai jawaban ini sebagai <strong>Tidak Valid (Reject)?</strong></p>
       </ConfirmationModal>
-      <ApproveWithCorrectionModal isOpen={isReviseModalOpen} onClose={() => setIsReviseModalOpen(false)} history={selectedHistoryItem} onConfirm={handleReviseConfirm} isConfirming={isSubmitting} />
     </>
   );
 };

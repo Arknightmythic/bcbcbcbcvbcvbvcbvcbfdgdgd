@@ -2,8 +2,8 @@
 
 export type ValidationStatus = "Pending" | "Validated" | "Rejected";
 export type AnswerStatus = "Answered" | "Unanswered";
-// Update ActionType menjadi 3 aksi utama (+ revise)
-export type ActionType = "view" | "approve" | "reject" | "revise";
+// Update: Menghapus 'revise' karena digabung ke 'approve'
+export type ActionType = "view" | "approve" | "reject";
 
 export type SortOrder = "latest" | "oldest" | "";
 
@@ -15,8 +15,8 @@ export interface Filters {
 }
 
 export interface ValidationHistoryItem {
-  id: number; // question_id
-  answerId: number; // answer_id
+  id: number;
+  answerId: number;
   tanggal: string;
   user: string;
   session_id: string;
@@ -40,7 +40,6 @@ export interface ChatPair {
   session_id: string;
   is_validated?: boolean | null;
   is_answered?: boolean | null;
-  // Field Baru
   created_at: string;
 }
 
@@ -52,8 +51,6 @@ export interface PaginatedChatPairsResponse {
   total_pages: number;
 }
 
-// --- TAMBAHAN BARU: Payload untuk endpoint /validate ---
-// Sesuai dengan req struct di chat/handler.go
 export interface ValidatePayload {
   question_id: number;
   question: string;

@@ -1,19 +1,16 @@
-// src/features/UserManagement/components/UserManagementModal.tsx
-
 import React, { useState, useEffect, useMemo } from 'react';
-import { Loader2, X, Eye, EyeOff } from 'lucide-react'; // Tambahkan import icon Eye
-// Import tipe data yang sudah diperbarui
+import { Loader2, X, Eye, EyeOff } from 'lucide-react'; 
+import toast from 'react-hot-toast'; // <--- 1. TAMBAHKAN IMPORT INI
 import type { User, Team, Role, UserModalData } from '../utils/types';
 import CustomSelect from '../../../shared/components/CustomSelect';
 
 interface UserManagementModalProps {
   isOpen: boolean;
   onClose: () => void;
-  // Prop onSave diubah untuk mengirim data form mentah
   onSave: (data: UserModalData, id?: number) => void;
-  user: User | null; // Tipe User adalah DTO backend
-  teams: Team[]; // Tipe Team adalah DTO backend
-  roles: Role[]; // Tipe Role adalah DTO backend
+  user: User | null;
+  teams: Team[];
+  roles: Role[];
   isLoading: boolean;
 }
 
@@ -30,11 +27,11 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
     name: '',
     email: '',
     password: '',
-    teamId: '', // ID team (dari role.team.id)
-    roleId: '', // ID role (dari role.id)
+    teamId: '',
+    roleId: '',
   });
 
-  const [showPassword, setShowPassword] = useState(false); // State untuk toggle password
+  const [showPassword, setShowPassword] = useState(false); 
 
   const isEditMode = !!user;
 
@@ -43,21 +40,19 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
       setFormData({
         name: user?.name || '',
         email: user?.email || '',
-        password: '', // Selalu kosongkan password saat edit dimulai
+        password: '', 
         teamId: user?.role?.team?.id?.toString() || '',
         roleId: user?.role?.id?.toString() || '',
       });
-      setShowPassword(false); // Reset visibilitas password saat modal dibuka
+      setShowPassword(false); 
     }
   }, [isOpen, user, teams, roles]); 
 
-  // Opsi tim sekarang dari data API
   const teamOptions = useMemo(() => 
     teams.map(t => ({ value: t.id.toString(), label: t.name })),
     [teams]
   );
 
-  // Opsi role di-filter berdasarkan teamId yang dipilih
   const roleOptions = useMemo(() => 
     formData.teamId
       ? roles
@@ -69,6 +64,20 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // --- 2. TAMBAHKAN VALIDASI PASSWORD DI SINI ---
+    
+    // Cek Password minimal 8 karakter
+    // Logika:
+    // - Jika Mode Create (!isEditMode): Password wajib, jadi pasti dicek.
+    // - Jika Mode Edit (isEditMode): Password opsional, dicek HANYA JIKA user mengisi field password.
+    if ((!isEditMode || formData.password.length > 0) && formData.password.length < 8) {
+      toast.error("Password must be at least 8 characters long.");
+      return; // Hentikan proses submit
+    }
+
+    // ----------------------------------------------
+
     const modalData: UserModalData = {
       name: formData.name,
       email: formData.email,
@@ -76,7 +85,6 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
       teamId: formData.teamId,
       roleId: formData.roleId,
     };
-    // Kirim data modal ke parent, parent yg akan memformat payload API
     onSave(modalData, user?.id);
   };
 
@@ -102,10 +110,6 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
               />
             </div>
             
-            {/* PERBAIKAN BACKEND: 
-                API UpdateUser (Repository) tidak melakukan update pada kolom email.
-                Oleh karena itu, input email di-disable saat mode Edit.
-            */}
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Email 
@@ -123,17 +127,18 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
               />
             </div>
 
-            {/* FITUR BARU: Eye Icon untuk Show/Hide Password */}
             <div>
               <label className="block text-sm font-medium text-gray-700">Password</label>
               <div className="relative mt-1">
                 <input
                   type={showPassword ? "text" : "password"}
-                  placeholder={isEditMode ? "Leave blank to keep current" : "Enter password"}
+                  placeholder={isEditMode ? "Leave blank to keep current" : "Enter password (min. 8 chars)"}
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   className="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   required={!isEditMode}
+                  // Opsional: Tambahkan minLength di HTML juga untuk visual browser
+                  minLength={8} 
                 />
                 <button
                   type="button"
@@ -147,6 +152,8 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
                   )}
                 </button>
               </div>
+              {/* Opsional: Helper text kecil */}
+              <p className="text-xs text-gray-500 mt-1">Minimum 8 characters</p>
             </div>
 
             <div>
@@ -154,7 +161,7 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
               <CustomSelect
                 selectedType="default"
                 value={formData.teamId}
-                onChange={(value) => setFormData({ ...formData, teamId: value, roleId: '' })} // Reset role saat team berubah
+                onChange={(value) => setFormData({ ...formData, teamId: value, roleId: '' })} 
                 options={[{ value: '', label: 'Select a team' }, ...teamOptions]}
               />
             </div>

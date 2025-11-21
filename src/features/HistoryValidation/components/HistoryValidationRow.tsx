@@ -1,8 +1,9 @@
+// [GANTI: src/features/HistoryValidation/components/HistoryValidationRow.tsx]
+
 import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import type { ActionType, ValidationHistoryItem } from '../utils/types';
-// Tambahkan PencilIcon
-import { CheckCircle, XCircle, FileText, MoreVertical, Pencil } from 'lucide-react'; 
+import { CheckCircle, XCircle, FileText, MoreVertical } from 'lucide-react'; // Hapus Pencil icon
 import StatusBadge from './StatusBadge';
 import { useClickOutside } from '../../../shared/hooks/useClickOutside';
 
@@ -12,7 +13,6 @@ interface HistoryValidationTableRowProps {
   onViewText: (title: string, content: string) => void; 
 }
 
-// --- Komponen Helper TruncatedText (Tidak Berubah) ---
 const TruncatedText: React.FC<{ content: string; title: string; onIconClick: () => void }> = ({ content, title, onIconClick }) => {
   const [isTruncated, setIsTruncated] = useState(false);
   const textRef = useRef<HTMLParagraphElement>(null);
@@ -77,8 +77,6 @@ const TruncatedText: React.FC<{ content: string; title: string; onIconClick: () 
     </div>
   );
 };
-// --- Akhir Komponen Helper ---
-
 
 const HistoryValidationTableRow: React.FC<HistoryValidationTableRowProps> = ({ history, onAction, onViewText }) => {
   
@@ -99,7 +97,7 @@ const HistoryValidationTableRow: React.FC<HistoryValidationTableRowProps> = ({ h
 
     if (moreButtonRef.current) {
       const rect = moreButtonRef.current.getBoundingClientRect();
-      const dropdownHeight = 135; // Ditambah karena ada 3 menu
+      const dropdownHeight = 100; // Dikurangi karena menu revise hilang
       const spaceBelow = window.innerHeight - rect.bottom;
       const spaceAbove = rect.top;
 
@@ -136,14 +134,6 @@ const HistoryValidationTableRow: React.FC<HistoryValidationTableRowProps> = ({ h
         >
           <CheckCircle className="w-4 h-4" />
           <span>Approve</span>
-        </button>
-        {/* Menu Revisi Baru */}
-        <button
-          onClick={() => { onAction('revise', history); setIsDropdownOpen(false); }}
-          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-blue-600 hover:bg-blue-50"
-        >
-          <Pencil className="w-4 h-4" />
-          <span>Revise</span>
         </button>
         <button
           onClick={() => { onAction('reject', history); setIsDropdownOpen(false); }}
@@ -191,7 +181,7 @@ const HistoryValidationTableRow: React.FC<HistoryValidationTableRowProps> = ({ h
       
       <td className="px-4 py-3 text-center sticky right-0 bg-white group-hover:bg-gray-50 z-10 border-l border-gray-200">
         
-        {/* Layout Desktop: 3 Tombol */}
+        {/* Layout Desktop: 2 Tombol (Approve & Reject) */}
         <div className="hidden md:flex items-center justify-center gap-x-2">
           <button
             onClick={() => onAction('approve', history)}
@@ -201,7 +191,6 @@ const HistoryValidationTableRow: React.FC<HistoryValidationTableRowProps> = ({ h
             <CheckCircle className="w-4 h-4" />
           </button>
           
-          
           <button
             onClick={() => onAction('reject', history)}
             className="p-1 text-red-600 hover:bg-red-50 rounded-md transition-colors"
@@ -209,16 +198,6 @@ const HistoryValidationTableRow: React.FC<HistoryValidationTableRowProps> = ({ h
           >
             <XCircle className="w-4 h-4" />
           </button>
-
-          {/* Tombol Revisi Baru */}
-          <button
-            onClick={() => onAction('revise', history)}
-            className="p-1 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-            title="Revise"
-          >
-            <Pencil className="w-4 h-4" />
-          </button>
-
         </div>
 
         {/* Layout Mobile */}

@@ -20,6 +20,7 @@ import HelpDeskIntroPage from "./features/HelpDesk/pages/HelpDeskIntroPage";
 import HelpDeskChatPage from "./features/HelpDesk/pages/HelpDeskChatPage";
 
 import { useAuthStore } from "./shared/store/authStore";
+import HelpDeskPage from "./features/HelpDesk/pages/HelpDeskPage";
 
 // --- KONFIGURASI MAPPING ACCESS RIGHT KE URL ---
 // Key: Value dari database (team.pages) -> Value: URL Route Frontend
@@ -33,7 +34,7 @@ const PAGE_PATHS: Record<string, string> = {
   "user-management": "/user-management",
   "team-management": "/team-management",
   "role-management": "/role-management",
-  "helpdesk": "/agent-dashboard", // Perhatikan URL-nya beda dengan key
+  "helpdesk": "/helpdesk", // Perhatikan URL-nya beda dengan key
 };
 
 // --- HELPER: Dapatkan Halaman Default User ---
@@ -148,13 +149,20 @@ const Router = createBrowserRouter([
         path: "role-management",
         element: <ProtectedRoute allowedPage="role-management"><RoleManagementPage /></ProtectedRoute>,
       },
+      
       {
-        path: "agent-dashboard",
-        element: <ProtectedRoute allowedPage="helpdesk"><HelpDeskIntroPage /></ProtectedRoute>,
-      },
-      {
-        path: "agent-dashboard/chat/:id",
-        element: <ProtectedRoute allowedPage="helpdesk"><HelpDeskChatPage /></ProtectedRoute>,
+        path: "helpdesk",
+        element: <HelpDeskPage />,
+        children: [
+          {
+            index: true,
+             element: <ProtectedRoute allowedPage="helpdesk"><HelpDeskIntroPage /></ProtectedRoute>,
+          },
+          {
+            path: ":sessionId",
+             element: <ProtectedRoute allowedPage="helpdesk"><HelpDeskChatPage /></ProtectedRoute>,
+          },
+        ]
       },
     ],
   },

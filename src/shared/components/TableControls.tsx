@@ -60,7 +60,7 @@ const TableControls = <T extends Record<string, any>>({
   const dateRangeConfig = filterConfig.find(c => c.type === 'date-range');
   const dropdownFilters = filterConfig.filter(c => c.type !== 'date-range');
 
-  // --- 1. LOGIKA POSISI RESPONSIF ---
+  // --- LOGIKA POSISI RESPONSIF ---
   const updateDropdownPosition = (type: 'filter' | 'date') => {
     const ref = type === 'filter' ? filterBtnRef : dateBtnRef;
     if (ref.current) {
@@ -69,22 +69,18 @@ const TableControls = <T extends Record<string, any>>({
       const scrollY = window.scrollY;
       const scrollX = window.scrollX;
 
-      // Logika Mobile: Jika layar < 640px, paksa align kiri dengan margin
       if (screenW < 640) {
         setCoords({
           top: rect.bottom + scrollY + 8,
-          left: 16, // Margin kiri aman 1rem
+          left: 16,
         });
         return;
       }
 
-      // Logika Desktop: Cek overflow kanan
       const estimatedWidth = type === 'date' ? 340 : 300;
       let leftPos = rect.left + scrollX;
 
-      // Jika dropdown akan keluar layar kanan, geser ke kiri
       if (rect.left + estimatedWidth > screenW) {
-        // Align kanan dropdown dengan kanan button/layar
         const rightAlign = rect.right + scrollX;
         leftPos = Math.max(10, rightAlign - estimatedWidth); 
       }
@@ -101,11 +97,12 @@ const TableControls = <T extends Record<string, any>>({
       setActiveDropdown(null);
     } else {
       setActiveDropdown(type);
-      setTimeout(() => updateDropdownPosition(type), 0);
+      // Menggunakan requestAnimationFrame untuk memastikan posisi dihitung setelah render
+      requestAnimationFrame(() => updateDropdownPosition(type));
     }
   };
 
-  // --- SYNC STATE SAAT DIBUKA ---
+  // --- SYNC STATE ---
   useEffect(() => {
     if (activeDropdown === 'filter') {
       setTempFilters({ ...filters });
@@ -119,7 +116,6 @@ const TableControls = <T extends Record<string, any>>({
     }
   }, [activeDropdown, filters, dateRangeConfig]);
 
-  // Resize & Scroll Handler
   useEffect(() => {
     const handleResize = () => {
       if (activeDropdown) updateDropdownPosition(activeDropdown);
@@ -132,7 +128,6 @@ const TableControls = <T extends Record<string, any>>({
     };
   }, [activeDropdown]);
 
-  // Click Outside Handler
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const portalEl = document.getElementById('table-controls-portal');
@@ -154,9 +149,6 @@ const TableControls = <T extends Record<string, any>>({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-
-  // --- HANDLERS ---
-
   const handleApplyFilters = () => {
     dropdownFilters.forEach(config => {
       if (tempFilters[config.key] !== filters[config.key]) {
@@ -174,23 +166,12 @@ const TableControls = <T extends Record<string, any>>({
     setActiveDropdown(null);
   };
 
-  // --- 2. FIX RESET LOGIC ---
   const handleResetDate = () => {
-    // Reset state lokal UI
     setTempDateRange([null, null]);
-    
     if (dateRangeConfig) {
-      // Pastikan mengirim string KOSONG "" ke parent
-      // Ini akan menghapus param date dari API payload
-      if (dateRangeConfig.startDateKey) {
-        onFilterChange(dateRangeConfig.startDateKey as keyof T, "");
-      }
-      if (dateRangeConfig.endDateKey) {
-        onFilterChange(dateRangeConfig.endDateKey as keyof T, "");
-      }
+      if (dateRangeConfig.startDateKey) onFilterChange(dateRangeConfig.startDateKey as keyof T, "");
+      if (dateRangeConfig.endDateKey) onFilterChange(dateRangeConfig.endDateKey as keyof T, "");
     }
-    
-    // Tutup dropdown agar user melihat hasil refresh
     setActiveDropdown(null); 
   };
 
@@ -209,21 +190,25 @@ const TableControls = <T extends Record<string, any>>({
 
   return (
     <div className="flex flex-col md:flex-row gap-3 py-4">
-      {/* SEARCH INPUT */}
-      <div className="max-w-md relative flex-grow md:w-1/3">
-        <input
-          type="text"
-          placeholder={searchPlaceholder}
-          value={searchTerm}
-          onChange={(e) => onSearchChange(e.target.value)}
-          onKeyDown={handleKeyDown}
-          className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white"
-        />
+      {/* SEARCH SECTION: INPUT + BUTTON */}
+      <div className="flex w-full md:w-1/3 gap-2">
+        <div className="relative flex-grow">
+          <input
+            type="text"
+            placeholder={searchPlaceholder}
+            value={searchTerm}
+            onChange={(e) => onSearchChange(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white transition-shadow"
+          />
+        </div>
+        {/* Tombol Search Terpisah */}
         <button
           onClick={onSearchSubmit}
-          className="absolute left-0 top-0 mt-2.5 ml-3 text-gray-400 hover:text-blue-600 transition-colors"
+          className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+          aria-label="Search"
         >
-          <Search className="w-4 h-4" />
+           <Search className="w-4 h-4" />
         </button>
       </div>
 
@@ -264,11 +249,12 @@ const TableControls = <T extends Record<string, any>>({
       {activeDropdown && createPortal(
         <div
           id="table-controls-portal"
+          // z-index 9990 (di bawah CustomSelect yang 9999)
           className="absolute z-[9990] bg-white border border-gray-200 rounded-lg shadow-2xl animate-fade-in"
           style={{
             top: coords.top,
             left: coords.left,
-            maxWidth: 'calc(100vw - 32px)', // Prevent overflow di mobile
+            maxWidth: 'calc(100vw - 32px)',
             minWidth: activeDropdown === 'filter' ? '280px' : 'auto' 
           }}
         >
@@ -325,7 +311,7 @@ const TableControls = <T extends Record<string, any>>({
                 Filter Options
               </div>
               
-              <div className="space-y-4 max-h-[300px] overflow-y-auto custom-scrollbar pr-1">
+              <div className="space-y-4 max-h-[300px] p-1">
                 {dropdownFilters.map((config) => (
                   <div key={config.key as string}>
                     <label className="block text-xs font-medium text-gray-700 mb-1.5">

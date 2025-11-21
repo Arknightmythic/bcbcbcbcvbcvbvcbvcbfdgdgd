@@ -1,4 +1,4 @@
-// src/features/RoleManagements/components/RoleManagementModal.tsx
+
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Loader2, X, Check, Square, CheckSquare } from 'lucide-react';
@@ -32,13 +32,9 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      setName(role?.name || '');
-      
-      // PERBAIKAN 1: Mengakses team.id dari objek team, bukan team_id
-      // Menggunakan optional chaining (?.) untuk keamanan
+      setName(role?.name || '');   
       setTeamId(role?.team?.id ? String(role.team.id) : ''); 
-      
-      const permissionIds = role?.permissions.map(p => String(p.id)) || [];
+      const permissionIds = role?.permissions?.map(p => String(p.id)) || [];
       setSelectedPermissions(new Set(permissionIds));
     } else {
       setName('');
@@ -50,8 +46,6 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
   const groupedPermissions = useMemo(() => {
     const currentTeam = teams.find(t => String(t.id) === teamId);
     if (!currentTeam) return {};
-
-    // Menggunakan array kosong jika pages undefined
     const allowedPages = new Set(currentTeam.pages || []);
     const groups: Record<string, Permission[]> = {};
 
@@ -132,7 +126,7 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
             </button>
         </div>
 
-        <div className="overflow-y-auto flex-grow pr-2 mt-6 custom-scrollbar">
+        <div className="overflow-y-auto flex-grow p-2 mt-6 custom-scrollbar">
           <form id="role-form" onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 gap-4 mb-6">
               <div>

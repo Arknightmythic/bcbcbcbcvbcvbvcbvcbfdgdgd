@@ -1,11 +1,11 @@
-// arknightmythic/bcbcbcbcvbcvbvcbvcbfdgdgd/bcbcbcbcvbcvbvcbvcbfdgdgd-dev/src/features/TeamManagements/components/TeamManagementModal.tsx
+
 
 import React, { useState, useEffect } from 'react';
 import { Loader2, X } from 'lucide-react';
-import type { Team, TeamPayload } from '../utils/types'; // Import tipe baru
+import type { Team, TeamPayload } from '../utils/types'; 
 
-// Ganti nama variabel agar lebih jelas
-// DAFTAR HALAMAN DISEMPURNAKAN AGAR COCOK DENGAN BACKEND (superadmin_seeder.go)
+
+
 const VALID_PAGES = [
     "dashboard",
     "knowledge-base",
@@ -22,7 +22,7 @@ const VALID_PAGES = [
 interface TeamManagementModalProps {
   isOpen: boolean;
   onClose: () => void;
-  // Ubah onSave agar sesuai dengan payload baru
+  
   onSave: (teamData: TeamPayload, id?: number) => void; 
   team: Team | null;
   isLoading: boolean;
@@ -30,14 +30,14 @@ interface TeamManagementModalProps {
 
 const TeamManagementModal: React.FC<TeamManagementModalProps> = ({ isOpen, onClose, onSave, team, isLoading }) => {
   const [name, setName] = useState('');
-  // Ubah 'access' menjadi 'pages' agar sesuai dengan tipe data
+  
   const [pages, setPages] = useState<Set<string>>(new Set());
   const isEditMode = !!team;
 
   useEffect(() => {
     if (isOpen) {
       setName(team?.name || '');
-      // Gunakan 'team.pages'
+      
       setPages(new Set(team?.pages || []));
     }
   }, [isOpen, team]);
@@ -56,7 +56,7 @@ const TeamManagementModal: React.FC<TeamManagementModalProps> = ({ isOpen, onClo
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Kirim payload yang sesuai
+    
     onSave({ name, pages: Array.from(pages) }, team?.id);
   };
 

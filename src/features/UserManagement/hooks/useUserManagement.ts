@@ -78,7 +78,7 @@ export const useGetTeams = () => {
   return useQuery({
     queryKey: [TEAMS_KEY],
     queryFn: getTeams,
-    staleTime: 1000 * 60 * 5, // Cache selama 5 menit
+    // staleTime: 1000 * 60 * 5, // Cache selama 5 menit
   });
 };
 
@@ -87,6 +87,6 @@ export const useGetRoles = () => {
   return useQuery({
     queryKey: [ROLES_KEY],
     queryFn: getRoles,
-    staleTime: 1000 * 60 * 5, // Cache selama 5 menit
+    // staleTime: 1000 * 60 * 5, // Cache selama 5 menit
   });
 };

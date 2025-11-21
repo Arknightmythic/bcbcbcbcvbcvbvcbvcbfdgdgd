@@ -90,6 +90,8 @@ const RoleTableRow: React.FC<RoleTableRowProps> = ({ role, onAction }) => {
     </div>
   );
 
+  const safePermissions = role.permissions || [];
+
   return (
     <tr className="group hover:bg-gray-50 text-[10px] text-gray-700">
       <td className="px-4 py-3 font-medium text-gray-900 capitalize">{role.name}</td>
@@ -98,13 +100,13 @@ const RoleTableRow: React.FC<RoleTableRowProps> = ({ role, onAction }) => {
       </td>
       <td className="px-4 py-3">
         <div className="flex flex-wrap gap-1">
-          {role.permissions.slice(0, 3).map(p => (
+          {safePermissions.slice(0, 3).map(p => (
             <span key={p.id} className="px-2 py-0.5 text-[10px] bg-gray-200 text-gray-800 rounded-full">{p.name}</span>
           ))}
-          {role.permissions.length > 3 && (
-            <span className="px-2 py-0.5 text-[10px] bg-gray-300 text-gray-800 rounded-full">+{role.permissions.length - 3} more</span>
+          {safePermissions.length > 3 && (
+            <span className="px-2 py-0.5 text-[10px] bg-gray-300 text-gray-800 rounded-full">+{safePermissions.length - 3} more</span>
           )}
-          {role.permissions.length === 0 && (
+          {safePermissions.length === 0 && (
              <span className="text-xs text-gray-400">No permissions</span>
           )}
         </div>

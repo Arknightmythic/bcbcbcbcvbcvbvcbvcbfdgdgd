@@ -77,13 +77,13 @@ export const useGetModalDependencies = () => {
   const { data: teams, isLoading: isLoadingTeams } = useQuery({
     queryKey: [TEAMS_KEY],
     queryFn: getAllTeams,
-    staleTime: 1000 * 60 * 5, 
+    // staleTime: 1000 * 60 * 5, 
   });
 
   const { data: permissions, isLoading: isLoadingPermissions } = useQuery({
     queryKey: [PERMISSIONS_KEY],
     queryFn: getAllPermissions,
-    staleTime: 1000 * 60 * 5, 
+    // staleTime: 1000 * 60 * 5, 
   });
 
   return {

@@ -157,8 +157,8 @@ const UserManagementPage = () => {
   // --- PERUBAHAN 7: Update opsi filter ---
   const accountTypeOptions = [
     { value: '', label: 'All Types' },
-    { value: 'superadmin', label: 'Super Admin' },
     { value: 'credential', label: 'Credential' },
+    { value: 'microsoft', label: 'Microsoft' },
   ];
 
    const filterTeamOptions = useMemo(() => [
