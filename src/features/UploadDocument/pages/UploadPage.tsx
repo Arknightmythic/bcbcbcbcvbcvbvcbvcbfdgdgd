@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback } from "react";
 import toast from "react-hot-toast";
-import { useQueryClient } from "@tanstack/react-query";
+// Hapus useQueryClient yang tidak digunakan
+// import { useQueryClient } from "@tanstack/react-query";
 
 import { useGetDocuments, useUploadDocument, useUpdateDocument, useGetDocumentDetails, useDeleteDocument } from "../hooks/useDocument";
 import UploadZone from "../components/UploadZone";
@@ -10,24 +11,26 @@ import VersioningDocumentModal from "../components/VersioningDocument";
 import VersioningModal from "../components/VersioningModal";
 import ConfirmationModal from "../../../shared/components/ConfirmationModal";
 import TableControls, { type FilterConfig } from "../../../shared/components/TableControls";
-import type { UploadedDocument, DocumentCategory } from "../types/types";
+import type { UploadedDocument, DocumentCategory, SortOrder } from "../types/types";
 import { generateViewUrl } from "../api/document"; 
 import PdfViewModal from "../../../shared/components/PDFViewModal";
 
 
 type ModalAction = "upload" | "deleteSingle" | "deleteMultiple";
 
-
-export interface Filters {
-  date: string;
+// Update Interface Filters untuk mendukung date range
+export interface Filters extends Record<string, any> {
   type: string;
   category: DocumentCategory | "";
   status: string;
+  start_date: string;
+  end_date: string;
 }
 
 const filterConfig: FilterConfig<Filters>[] = [
     {
         key: "type",
+        type: "select",
         options: [
             { value: "", label: "All Types" },
             { value: "pdf", label: "PDF" },
@@ -36,6 +39,7 @@ const filterConfig: FilterConfig<Filters>[] = [
     },
     {
         key: "category",
+        type: "select",
         options: [
             { value: "", label: "All Categories" },
             { value: "panduan", label: "Panduan" },
@@ -45,6 +49,7 @@ const filterConfig: FilterConfig<Filters>[] = [
     },
     {
         key: "status",
+        type: "select",
         options: [
             { value: "", label: "All Status" },
             { value: "Approved", label: "Approved" },
@@ -52,22 +57,37 @@ const filterConfig: FilterConfig<Filters>[] = [
             { value: "Rejected", label: "Rejected" },
         ],
     },
+    {
+        key: "date_range",
+        type: "date-range",
+        startDateKey: "start_date",
+        endDateKey: "end_date",
+        placeholder: "Filter by Date",
+    },
 ];
 
 
 const UploadPage: React.FC = () => {
   
   const [filesToUpload, setFilesToUpload] = useState<File[]>([]);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  // Hapus setUploadProgress karena tidak digunakan saat ini
+  const [uploadProgress] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState<DocumentCategory | "">("");
 
   
   const [selectedDocs, setSelectedDocs] = useState<number[]>([]);
   const [searchInput, setSearchInput] = useState(""); 
   const [searchTerm, setSearchTerm] = useState("");   
-  const [filters, setFilters] = useState<Filters>({ date: "", type: "", category: "", status: "" });
+  
+  const [filters, setFilters] = useState<Filters>({ 
+    type: "", category: "", status: "", start_date: "", end_date: "" 
+  });
+  
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  const [sortColumn, setSortColumn] = useState<string>("created_at");
+  const [sortDirection, setSortDirection] = useState<SortOrder>("desc");
 
   
   const [isReplaceModalOpen, setReplaceModalOpen] = useState(false);
@@ -85,19 +105,29 @@ const UploadPage: React.FC = () => {
   const [viewableTitle, setViewableTitle] = useState<string>("");
   const [isGeneratingUrl, setIsGeneratingUrl] = useState(false);
 
-  
-  const queryClient = useQueryClient();
+  // Hapus queryClient yang tidak digunakan
+  // const queryClient = useQueryClient();
 
    const searchParams = useMemo(() => {
     const params = new URLSearchParams();
     params.set('limit', String(itemsPerPage));
     params.set('offset', String((currentPage - 1) * itemsPerPage));
+    
     if (searchTerm) params.set('search', searchTerm);
     if (filters.type) params.set('data_type', filters.type);
     if (filters.category) params.set('category', filters.category);
     if (filters.status) params.set('status', filters.status);
+    
+    if (filters.start_date) params.set('start_date', filters.start_date);
+    if (filters.end_date) params.set('end_date', filters.end_date);
+
+    if (sortColumn) {
+        params.set('sort_by', sortColumn);
+        params.set('sort_direction', sortDirection);
+    }
+
     return params;
-  }, [currentPage, itemsPerPage, searchTerm, filters]);
+  }, [currentPage, itemsPerPage, searchTerm, filters, sortColumn, sortDirection]);
 
 
   const { data: documentsData, isLoading: isLoadingDocs, isError } = useGetDocuments(searchParams);
@@ -115,6 +145,16 @@ const UploadPage: React.FC = () => {
   const handleSearchSubmit = () => {
     setSearchTerm(searchInput);
     setCurrentPage(1); 
+  };
+
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc'); 
+    }
+    setCurrentPage(1);
   };
 
   const handleOpenModal = (action: ModalAction, data: any = null) => setModalState({ isOpen: true, action, data });
@@ -176,7 +216,6 @@ const UploadPage: React.FC = () => {
         toast.success(`Successfully deleted ${successfulDeletes} document(s).`);
       }
       if (failedDeletes > 0) {
-        
         console.error(`Failed to delete ${failedDeletes} document(s).`);
       }
 
@@ -240,20 +279,19 @@ const UploadPage: React.FC = () => {
       }
     });
 
-    // Tampilkan pesan error jika ada file yang tidak valid
     if (invalidFiles.length > 0) {
       toast.error(`File type not supported for: ${invalidFiles.join(", ")}. Only PDF and TXT are allowed.`);
     }
 
-    // Tambahkan hanya file yang valid ke state
     if (validFiles.length > 0) {
       setFilesToUpload((prev) => [...prev, ...validFiles]);
     }
   }, []);
   const handleRemoveFile = useCallback((fileName: string) => setFilesToUpload((prev) => prev.filter((f) => f.name !== fileName)), []);
 
-  const handleFilterChange = (filterName: string, value: string) => {
-    setFilters((prev) => ({ ...prev, [filterName]: value as any }));
+  // PERBAIKAN: Ubah tipe parameter filterName menjadi keyof Filters
+  const handleFilterChange = (filterName: keyof Filters, value: any) => {
+    setFilters((prev) => ({ ...prev, [filterName]: value }));
     setCurrentPage(1);
   };
 
@@ -331,12 +369,11 @@ const UploadPage: React.FC = () => {
             filters={filters}
             onSearchChange={setSearchInput}
             onSearchSubmit={handleSearchSubmit}
-            onFilterChange={handleFilterChange as any}
+            onFilterChange={handleFilterChange}
             filterConfig={filterConfig}
           />
         </div>
 
-        {/* 6. Hubungkan props delete ke DocumentsTable */}
         <DocumentsTable
           documents={documents}
           selectedDocs={selectedDocs}
@@ -355,6 +392,9 @@ const UploadPage: React.FC = () => {
           totalItems={totalItems}
           onPageChange={setCurrentPage}
           onItemsPerPageChange={handleItemsPerPageChange}
+          sortColumn={sortColumn}
+          sortDirection={sortDirection}
+          onSort={handleSort}
         />
       </div>
 
@@ -380,7 +420,6 @@ const UploadPage: React.FC = () => {
         />
       )}
 
-      {/* 7. Hubungkan isDeleting ke ConfirmationModal */}
       <ConfirmationModal
         isOpen={modalState.isOpen}
         onClose={handleCloseModal}

@@ -1,8 +1,13 @@
-
+// src/features/RoleManagements/components/ViewPermissionModal.tsx
 
 import React from 'react';
 import { ShieldCheck, X } from 'lucide-react';
 import type { Role } from '../utils/types'; 
+
+// --- HELPER CONFIG (Sama dengan RoleTableRow) ---
+const shouldShowPermission = (name: string) => name.endsWith(':read');
+const formatPermissionLabel = (name: string) => name.replace(':read', ':access');
+// ------------------------------------------------
 
 interface ViewPermissionsModalProps {
   isOpen: boolean;
@@ -12,6 +17,11 @@ interface ViewPermissionsModalProps {
 
 const ViewPermissionsModal: React.FC<ViewPermissionsModalProps> = ({ isOpen, onClose, role }) => {
   if (!isOpen || !role) return null;
+
+  // 1. Ambil permission raw
+  const allPermissions = role.permissions || [];
+  // 2. Filter permission
+  const visiblePermissions = allPermissions.filter(p => shouldShowPermission(p.name));
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-sm p-4" onClick={onClose}>
@@ -30,26 +40,25 @@ const ViewPermissionsModal: React.FC<ViewPermissionsModalProps> = ({ isOpen, onC
           </div>
           <div>
             <span className="font-semibold text-gray-700">Team:</span>
-            {/* Baca dari objek team */}
             <p className="text-lg text-gray-900 capitalize">{role.team.name || 'Unknown Team'}</p>
           </div>
         </div>
 
         <div>
-          <h3 className="text-lg font-bold text-gray-800 mb-3">Assigned Permissions</h3>
+          <h3 className="text-lg font-bold text-gray-800 mb-3">Assigned Access Rights</h3>
           <div className="max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-            {/* role.permissions sekarang array of object Permission */}
-            {role.permissions && role.permissions.length > 0 ? (
+            {/* Render visiblePermissions yang sudah difilter */}
+            {visiblePermissions.length > 0 ? (
               <ul className="space-y-2">
-                {role.permissions.map(permission => (
+                {visiblePermissions.map(permission => (
                   <li key={permission.id} className="flex items-center bg-white p-2 border rounded-md">
                     <ShieldCheck className="w-5 h-5 text-green-500 mr-3" />
-                    <span className="text-gray-700">{permission.name}</span>
+                    <span className="text-gray-700">{formatPermissionLabel(permission.name)}</span>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-gray-500 text-center py-4">No permissions assigned.</p>
+              <p className="text-gray-500 text-center py-4">No specific access rights assigned.</p>
             )}
           </div>
         </div>

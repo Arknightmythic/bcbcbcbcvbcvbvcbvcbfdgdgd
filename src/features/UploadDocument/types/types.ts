@@ -1,7 +1,6 @@
-
-
 export type DocumentCategory = 'panduan' | 'uraian' | 'peraturan';
 
+export type SortOrder = 'asc' | 'desc' | '';
 
 export interface UploadedDocument {
   id: number;
@@ -16,7 +15,6 @@ export interface UploadedDocument {
   is_approve: boolean | null;
 }
 
-
 export interface DocumentVersion {
   id: number;
   document_name: string;
@@ -26,7 +24,6 @@ export interface DocumentVersion {
   is_approve: boolean | null;
   status: string | null;
 }
-
 
 export interface PendingDocument {
   document_name: string;

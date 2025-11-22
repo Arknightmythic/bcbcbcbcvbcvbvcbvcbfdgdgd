@@ -1,9 +1,21 @@
-
+// src/features/RoleManagements/components/RoleManagementModal.tsx
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Loader2, X, Check, Square, CheckSquare } from 'lucide-react';
 import CustomSelect from '../../../shared/components/CustomSelect';
 import type { Role, Permission, Team, RoleModalData } from '../utils/types';
+
+// --- HELPER PERMISSION FILTER ---
+const shouldShowPermission = (permissionName: string): boolean => {
+  return permissionName.endsWith(':read');
+};
+
+// --- HELPER FORMAT LABEL ---
+// Mengubah tampilan ':read' menjadi ':access' tanpa mengubah data asli
+const formatPermissionLabel = (permissionName: string): string => {
+  return permissionName.replace(':read', ':access');
+};
+// --------------------------------
 
 interface RoleManagementModalProps {
   isOpen: boolean;
@@ -50,6 +62,11 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
     const groups: Record<string, Permission[]> = {};
 
     permissions.forEach((perm) => {
+      // Filter: Hanya ambil permission yang disetujui helper
+      if (!shouldShowPermission(perm.name)) {
+        return;
+      }
+
       const [category] = perm.name.split(':');
       if (allowedPages.has(category)) {
         if (!groups[category]) {
@@ -144,7 +161,6 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Assign Team</label>
-                {/* PERBAIKAN 2: Menghapus prop className yang tidak valid */}
                 <div className="w-full"> 
                   <CustomSelect
                     options={teams.map(t => ({ value: String(t.id), label: t.name }))}
@@ -228,8 +244,9 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
                                 />
                                 <Check className="pointer-events-none absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 peer-checked:opacity-100" />
                               </div>
+                              {/* PERUBAHAN DI SINI: Gunakan helper formatPermissionLabel */}
                               <span className="ml-3 text-sm text-gray-700 select-none">
-                                {permission.name}
+                                {formatPermissionLabel(permission.name)}
                               </span>
                             </label>
                           ))}

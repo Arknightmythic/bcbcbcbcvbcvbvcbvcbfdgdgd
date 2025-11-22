@@ -1,8 +1,9 @@
+// [UPDATE: src/features/KnowledgeBase/components/DocumentsTable.tsx]
 
 import React from "react";
-import { Loader2, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2, Trash2, ChevronLeft, ChevronRight, ArrowUp, ArrowDown } from "lucide-react";
 import DocumentRow from "./DocumentRow";
-import type { UploadedDocument } from "../types/types";
+import type { UploadedDocument, SortOrder } from "../types/types";
 import CustomSelect from "../../../shared/components/CustomSelect";
 
 
@@ -27,6 +28,10 @@ interface DocumentsTableProps {
   totalItems: number;
   onPageChange: (page: number) => void;
   onItemsPerPageChange: (items: number) => void;
+  // --- TAMBAHAN: Props Sorting ---
+  sortColumn: string;
+  sortDirection: SortOrder;
+  onSort: (column: string) => void;
 }
 
 const itemsPerPageOptions = [
@@ -55,6 +60,10 @@ const DocumentsTable: React.FC<DocumentsTableProps> = (props) => {
     totalItems,
     onPageChange,
     onItemsPerPageChange,
+    // Props Sorting
+    sortColumn,
+    sortDirection,
+    onSort,
   } = props;
 
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -62,6 +71,36 @@ const DocumentsTable: React.FC<DocumentsTableProps> = (props) => {
     documents.length > 0 && selectedDocs.length === documents.length;
   const startItem = (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+
+  // Helper Component untuk Header yang bisa di-sort
+  const SortableHeader = ({ 
+    label, 
+    columnKey, 
+    className = "" 
+  }: { 
+    label: string; 
+    columnKey: string; 
+    className?: string; 
+  }) => {
+    const isActive = sortColumn === columnKey;
+    
+    return (
+      <th 
+        className={`px-6 py-4 cursor-pointer hover:bg-gray-200 transition-colors ${className}`}
+        onClick={() => onSort(columnKey)}
+      >
+        <div className="flex items-center gap-1">
+          {label}
+          {isActive && (
+            sortDirection === 'asc' 
+              ? <ArrowUp className="w-3 h-3 text-blue-600" /> 
+              : <ArrowDown className="w-3 h-3 text-blue-600" />
+          )}
+          {!isActive && <div className="w-3 h-3" />} {/* Spacer agar tidak lompat */}
+        </div>
+      </th>
+    );
+  };
 
   return (
     <div className="bg-white p-6 rounded-b-lg shadow">
@@ -83,7 +122,6 @@ const DocumentsTable: React.FC<DocumentsTableProps> = (props) => {
         )}
       </div>
 
-      {/* Wrapper untuk overflow/scroll horizontal */}
       <div className="relative overflow-x-auto">
         <table className="w-full text-sm text-left text-gray-500 min-w-[900px]">
           <thead className="text-[10px] text-gray-700 uppercase bg-gray-100 sticky top-0">
@@ -96,13 +134,18 @@ const DocumentsTable: React.FC<DocumentsTableProps> = (props) => {
                   className="h-3 w-3"
                 />
               </th>
-              <th className="px-6 py-4">Uploaded Date</th>
-              <th className="px-6 py-4">Document Name</th>
-              <th className="px-6 py-4">Staff</th>
+              {/* Ganti th biasa dengan SortableHeader untuk kolom yang didukung backend */}
+              {/* Backend supports: created_at, document_name, staff */}
+              <SortableHeader label="Uploaded Date" columnKey="created_at" />
+              <SortableHeader label="Document Name" columnKey="document_name" />
+              <SortableHeader label="Staff" columnKey="staff" />
+              
+              {/* Kolom di bawah ini mungkin belum didukung sort backend, jadi tetap th biasa */}
               <th className="px-6 py-4">Type</th>
               <th className="px-6 py-4">Category</th>
-              <th className="px-6 py-4 ">Team</th>
+              <th className="px-6 py-4">Team</th>
               <th className="px-6 py-4">Status</th>
+              
               <th className="px-6 py-4 text-center sticky right-0 bg-gray-100 z-10">Action</th>
             </tr>
           </thead>

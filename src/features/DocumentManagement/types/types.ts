@@ -1,6 +1,9 @@
 export type DocumentCategory = 'panduan' | 'uraian' | 'peraturan';
 export type ActionType = 'approve' | 'reject' | 'delete';
 
+// Tambahkan tipe SortOrder
+export type SortOrder = 'asc' | 'desc';
+
 export interface Document {
   id: number;
   created_at: string;

@@ -1,3 +1,5 @@
+// src/features/RoleManagements/components/RoleTableRow.tsx
+
 import React, { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Eye, Edit, Trash2, MoreVertical } from 'lucide-react';
@@ -10,8 +12,15 @@ interface RoleTableRowProps {
   onAction: (action: ActionType, role: Role) => void;
 }
 
+// --- HELPER CONFIG ---
+// 1. Filter: Apakah permission ini boleh ditampilkan?
+const shouldShowPermission = (name: string) => name.endsWith(':read');
+
+// 2. Format: Ubah teks ':read' menjadi ':access' agar lebih user-friendly
+const formatPermissionLabel = (name: string) => name.replace(':read', ':access');
+// ---------------------
+
 const RoleTableRow: React.FC<RoleTableRowProps> = ({ role, onAction }) => {
-  // --- State & Ref untuk Dropdown Portal ---
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [position, setPosition] = useState<{ top?: number, bottom?: number, right?: number }>({});
   const moreButtonRef = useRef<HTMLButtonElement>(null);
@@ -20,7 +29,6 @@ const RoleTableRow: React.FC<RoleTableRowProps> = ({ role, onAction }) => {
     setIsDropdownOpen(false);
   });
 
-  // Handler untuk membuka/menutup dan menghitung posisi dropdown
   const handleDropdownToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isDropdownOpen) {
@@ -30,7 +38,7 @@ const RoleTableRow: React.FC<RoleTableRowProps> = ({ role, onAction }) => {
 
     if (moreButtonRef.current) {
       const rect = moreButtonRef.current.getBoundingClientRect();
-      const dropdownHeight = 130; // Perkiraan tinggi: 3 item * 44px
+      const dropdownHeight = 130;
       const spaceBelow = window.innerHeight - rect.bottom;
       const spaceAbove = rect.top;
 
@@ -49,7 +57,6 @@ const RoleTableRow: React.FC<RoleTableRowProps> = ({ role, onAction }) => {
     }
   };
 
-  // --- Komponen Konten Dropdown (untuk Portal) ---
   const DropdownContent = () => (
     <div
       ref={dropdownRef}
@@ -90,7 +97,11 @@ const RoleTableRow: React.FC<RoleTableRowProps> = ({ role, onAction }) => {
     </div>
   );
 
-  const safePermissions = role.permissions || [];
+  // PERBAIKAN UTAMA DI SINI:
+  // 1. Ambil semua permission
+  const allPermissions = role.permissions || [];
+  // 2. Filter permission yang hanya boleh tampil (helper shouldShowPermission)
+  const visiblePermissions = allPermissions.filter(p => shouldShowPermission(p.name));
 
   return (
     <tr className="group hover:bg-gray-50 text-[10px] text-gray-700">
@@ -100,20 +111,27 @@ const RoleTableRow: React.FC<RoleTableRowProps> = ({ role, onAction }) => {
       </td>
       <td className="px-4 py-3">
         <div className="flex flex-wrap gap-1">
-          {safePermissions.slice(0, 3).map(p => (
-            <span key={p.id} className="px-2 py-0.5 text-[10px] bg-gray-200 text-gray-800 rounded-full">{p.name}</span>
+          {/* Gunakan visiblePermissions untuk mapping badge */}
+          {visiblePermissions.slice(0, 3).map(p => (
+            <span key={p.id} className="px-2 py-0.5 text-[10px] bg-gray-200 text-gray-800 rounded-full">
+              {formatPermissionLabel(p.name)}
+            </span>
           ))}
-          {safePermissions.length > 3 && (
-            <span className="px-2 py-0.5 text-[10px] bg-gray-300 text-gray-800 rounded-full">+{safePermissions.length - 3} more</span>
+          
+          {/* Hitung sisa hidden permission berdasarkan visiblePermissions */}
+          {visiblePermissions.length > 3 && (
+            <span className="px-2 py-0.5 text-[10px] bg-gray-300 text-gray-800 rounded-full">
+              +{visiblePermissions.length - 3} more
+            </span>
           )}
-          {safePermissions.length === 0 && (
-             <span className="text-xs text-gray-400">No permissions</span>
+          
+          {visiblePermissions.length === 0 && (
+             <span className="text-xs text-gray-400">No specific access</span>
           )}
         </div>
       </td>
       <td className="px-4 py-3 text-center sticky right-0 bg-white group-hover:bg-gray-50 z-10 border-l border-gray-200">
         
-        {/* Layout Desktop */}
         <div className="hidden md:flex items-center justify-center gap-x-3">
           <button onClick={() => onAction('view', role)} className="text-green-600 hover:text-green-800" title="View Details">
             <Eye className="w-4 h-4" />
@@ -126,7 +144,6 @@ const RoleTableRow: React.FC<RoleTableRowProps> = ({ role, onAction }) => {
           </button>
         </div>
 
-        {/* Layout Mobile */}
         <div className="md:hidden">
           <button
             ref={moreButtonRef}
@@ -137,7 +154,6 @@ const RoleTableRow: React.FC<RoleTableRowProps> = ({ role, onAction }) => {
           </button>
         </div>
 
-        {/* Render Portal */}
         {isDropdownOpen && createPortal(<DropdownContent />, document.body)}
       </td>
     </tr>
