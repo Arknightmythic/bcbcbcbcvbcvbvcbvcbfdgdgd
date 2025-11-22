@@ -37,15 +37,22 @@ const PAGE_PATHS: Record<string, string> = {
   "helpdesk": "/helpdesk", // Perhatikan URL-nya beda dengan key
 };
 
-// --- HELPER: Dapatkan Halaman Default User ---
 const getDefaultPath = () => {
-  const { user } = useAuthStore.getState();
+  // Ambil state isAuthenticated juga
+  const { user, isAuthenticated } = useAuthStore.getState();
+
+  // PERBAIKAN: Jika user belum login, arahkan ke /login, bukan ke logic permission
+  if (!isAuthenticated || !user) {
+    return "/login";
+  }
+
   const userPages = user?.role?.team?.pages || [];
 
   // Cari permission valid pertama yang dimiliki user
   const firstAllowedKey = Object.keys(PAGE_PATHS).find(key => userPages.includes(key));
 
-  // Jika ketemu, return URL-nya. Jika tidak punya akses apapun, lempar ke 404.
+  // Jika ketemu, return URL-nya. 
+  // Jika User Login tapi tidak punya akses apapun, baru lempar ke 404.
   return firstAllowedKey ? PAGE_PATHS[firstAllowedKey] : "/404";
 };
 

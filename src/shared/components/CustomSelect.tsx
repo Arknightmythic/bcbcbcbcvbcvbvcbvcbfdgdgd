@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronDown } from 'lucide-react';
 
@@ -42,22 +42,17 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
     }
   };
 
-  useEffect(() => {
+  // PERBAIKAN 1: Menggunakan useLayoutEffect
+  // Ini berjalan secara sinkron setelah semua mutasi DOM tetapi SEBELUM browser 'melukis' (paint) layar.
+  // Ini mencegah user melihat dropdown di posisi yang salah (0,0) sebelum pindah.
+  useLayoutEffect(() => {
     if (isOpen) {
-      // 1. Hitung langsung
       updateCoords();
       
-      // 2. FIX GLITCH: Hitung ulang setelah frame animasi browser selesai
-      // Ini mengatasi masalah saat Panel Filter baru saja terbuka/animasi
-      const animFrame = requestAnimationFrame(() => {
-        updateCoords();
-      });
-
       window.addEventListener("scroll", updateCoords, true);
       window.addEventListener("resize", updateCoords);
 
       return () => {
-        cancelAnimationFrame(animFrame);
         window.removeEventListener("scroll", updateCoords, true);
         window.removeEventListener("resize", updateCoords);
       };
@@ -81,7 +76,6 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
       }
     };
     
-    // Gunakan mousedown agar lebih cepat dari click
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
@@ -135,7 +129,9 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
         <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
-      {isOpen && !disabled && createPortal(
+      {/* PERBAIKAN 2: Menambahkan pengecekan `&& buttonRect` */}
+      {/* Portal tidak akan dirender sama sekali sampai koordinat (buttonRect) tersedia */}
+      {isOpen && !disabled && buttonRect && createPortal(
         <div 
           id="custom-select-dropdown"
           className={`absolute z-[9999] bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden animate-fade-in

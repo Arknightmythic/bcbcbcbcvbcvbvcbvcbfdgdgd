@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect, useRef } from "react";
+import React, { useCallback, useState, useEffect, useRef, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 import { Search, Filter, Calendar, Check } from "lucide-react";
 import CustomSelect from "./CustomSelect";
@@ -49,7 +49,8 @@ const TableControls = <T extends Record<string, any>>({
 }: React.PropsWithChildren<TableControlsProps<T>>) => {
   
   const [activeDropdown, setActiveDropdown] = useState<'filter' | 'date' | null>(null);
-  const [coords, setCoords] = useState({ top: 0, left: 0 });
+  // PERBAIKAN 1: Gunakan null sebagai nilai awal untuk menandakan koordinat belum siap
+  const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
   
   const filterBtnRef = useRef<HTMLButtonElement>(null);
   const dateBtnRef = useRef<HTMLButtonElement>(null);
@@ -60,45 +61,53 @@ const TableControls = <T extends Record<string, any>>({
   const dateRangeConfig = filterConfig.find(c => c.type === 'date-range');
   const dropdownFilters = filterConfig.filter(c => c.type !== 'date-range');
 
-  // --- LOGIKA POSISI RESPONSIF ---
-  const updateDropdownPosition = (type: 'filter' | 'date') => {
-    const ref = type === 'filter' ? filterBtnRef : dateBtnRef;
-    if (ref.current) {
-      const rect = ref.current.getBoundingClientRect();
-      const screenW = window.innerWidth;
-      const scrollY = window.scrollY;
-      const scrollX = window.scrollX;
+  // --- PERBAIKAN 2: Fungsi Kalkulasi Posisi Murni ---
+  // Fungsi ini hanya menghitung dan mengembalikan nilai, tidak meng-set state langsung
+  const calculatePosition = (element: HTMLElement | null, type: 'filter' | 'date') => {
+    if (!element) return null;
 
-      if (screenW < 640) {
-        setCoords({
-          top: rect.bottom + scrollY + 8,
-          left: 16,
-        });
-        return;
-      }
+    const rect = element.getBoundingClientRect();
+    const screenW = window.innerWidth;
+    const scrollY = window.scrollY;
+    const scrollX = window.scrollX;
 
-      const estimatedWidth = type === 'date' ? 340 : 300;
-      let leftPos = rect.left + scrollX;
-
-      if (rect.left + estimatedWidth > screenW) {
-        const rightAlign = rect.right + scrollX;
-        leftPos = Math.max(10, rightAlign - estimatedWidth); 
-      }
-
-      setCoords({
-        top: rect.bottom + scrollY + 6,
-        left: leftPos, 
-      });
+    if (screenW < 640) {
+      return {
+        top: rect.bottom + scrollY + 8,
+        left: 16,
+      };
     }
+
+    const estimatedWidth = type === 'date' ? 340 : 300;
+    let leftPos = rect.left + scrollX;
+
+    if (rect.left + estimatedWidth > screenW) {
+      const rightAlign = rect.right + scrollX;
+      leftPos = Math.max(10, rightAlign - estimatedWidth); 
+    }
+
+    return {
+      top: rect.bottom + scrollY + 6,
+      left: leftPos, 
+    };
   };
 
+  // --- PERBAIKAN 3: Toggle Logic ---
   const toggleDropdown = (type: 'filter' | 'date') => {
     if (activeDropdown === type) {
       setActiveDropdown(null);
+      setCoords(null); // Reset coords
     } else {
-      setActiveDropdown(type);
-      // Menggunakan requestAnimationFrame untuk memastikan posisi dihitung setelah render
-      requestAnimationFrame(() => updateDropdownPosition(type));
+      // Hitung posisi DULUAN
+      const ref = type === 'filter' ? filterBtnRef : dateBtnRef;
+      const newCoords = calculatePosition(ref.current, type);
+      
+      // Set posisi, BARU set active state
+      // Urutan ini penting agar saat React merender Portal, koordinatnya sudah benar
+      if (newCoords) {
+        setCoords(newCoords);
+        setActiveDropdown(type);
+      }
     }
   };
 
@@ -116,10 +125,16 @@ const TableControls = <T extends Record<string, any>>({
     }
   }, [activeDropdown, filters, dateRangeConfig]);
 
-  useEffect(() => {
+  // PERBAIKAN 4: Gunakan useLayoutEffect untuk resize/scroll handling
+  useLayoutEffect(() => {
     const handleResize = () => {
-      if (activeDropdown) updateDropdownPosition(activeDropdown);
+      if (activeDropdown) {
+        const ref = activeDropdown === 'filter' ? filterBtnRef : dateBtnRef;
+        const newCoords = calculatePosition(ref.current, activeDropdown);
+        if (newCoords) setCoords(newCoords);
+      }
     };
+    
     window.addEventListener('resize', handleResize);
     window.addEventListener('scroll', handleResize, true);
     return () => {
@@ -143,6 +158,7 @@ const TableControls = <T extends Record<string, any>>({
         (!customSelectDropdown || !customSelectDropdown.contains(event.target as Node))
       ) {
         setActiveDropdown(null);
+        setCoords(null);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -156,6 +172,7 @@ const TableControls = <T extends Record<string, any>>({
       }
     });
     setActiveDropdown(null);
+    setCoords(null);
   };
 
   const handleApplyDate = () => {
@@ -164,6 +181,7 @@ const TableControls = <T extends Record<string, any>>({
     onFilterChange(dateRangeConfig.startDateKey as keyof T, formatDate(start));
     onFilterChange(dateRangeConfig.endDateKey as keyof T, formatDate(end));
     setActiveDropdown(null);
+    setCoords(null);
   };
 
   const handleResetDate = () => {
@@ -172,7 +190,8 @@ const TableControls = <T extends Record<string, any>>({
       if (dateRangeConfig.startDateKey) onFilterChange(dateRangeConfig.startDateKey as keyof T, "");
       if (dateRangeConfig.endDateKey) onFilterChange(dateRangeConfig.endDateKey as keyof T, "");
     }
-    setActiveDropdown(null); 
+    setActiveDropdown(null);
+    setCoords(null); 
   };
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -246,7 +265,8 @@ const TableControls = <T extends Record<string, any>>({
       </div>
 
       {/* PORTAL DROPDOWN CONTENT */}
-      {activeDropdown && createPortal(
+      {/* PERBAIKAN 5: Cek activeDropdown DAN coords sebelum render */}
+      {activeDropdown && coords && createPortal(
         <div
           id="table-controls-portal"
           // z-index 9990 (di bawah CustomSelect yang 9999)
@@ -280,7 +300,7 @@ const TableControls = <T extends Record<string, any>>({
                 </button>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => setActiveDropdown(null)}
+                    onClick={() => { setActiveDropdown(null); setCoords(null); }}
                     className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
                   >
                     Cancel
@@ -329,7 +349,7 @@ const TableControls = <T extends Record<string, any>>({
 
               <div className="flex justify-end items-center gap-2 mt-5 pt-3 border-t border-gray-100">
                 <button
-                  onClick={() => setActiveDropdown(null)}
+                  onClick={() => { setActiveDropdown(null); setCoords(null); }}
                   className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors"
                 >
                   Cancel
