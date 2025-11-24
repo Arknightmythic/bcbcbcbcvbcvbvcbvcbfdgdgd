@@ -1,12 +1,10 @@
-// [GANTI: src/features/Dashboard/pages/Dashboard.tsx]
-
 import { useState, useEffect, useCallback } from "react";
 import { DashboardHeader } from "../components/FilterCustom";
-// import { useGenerateGrafanaUrl } from "../hooks/useGrafanaEmbed"; // DINONAKTIFKAN SEMENTARA
+import { useGenerateGrafanaUrl } from "../hooks/useGrafanaEmbed";
 import type {
   Period,
   DashboardFilterState,
-  // GenerateEmbedRequest, // DINONAKTIFKAN SEMENTARA
+  GenerateEmbedRequest,
 } from "../utils/types";
 import { Loader2 } from "lucide-react";
 
@@ -24,7 +22,7 @@ const getInitialFilterState = (): DashboardFilterState => {
       }
       return parsed;
     } catch (e) {
-      // Abaikan jika JSON korup
+      // Abaikan error JSON
     }
   }
   return {
@@ -35,68 +33,55 @@ const getInitialFilterState = (): DashboardFilterState => {
 };
 
 function Dashboard() {
-  const [loading, setLoading] = useState(true);
-  
-  // --- PERUBAHAN: Langsung arahkan ke file HTML statis di folder /public ---
-  const [iframeUrl, setIframeUrl] = useState<string | null>('/DashboardBKPM.html');
+  const [iframeLoading, setIframeLoading] = useState(true);
+  const [iframeUrl, setIframeUrl] = useState<string | null>(null);
   
   const [filterState, setFilterState] = useState<DashboardFilterState>(
     getInitialFilterState
   );
 
-  // --- DINONAKTIFKAN SEMENTARA ---
-  // const { mutate: getEmbedUrl, isPending: isGeneratingUrl } =
-  //   useGenerateGrafanaUrl();
-  // -----------------------------
+  const { mutate: getEmbedUrl, isPending: isGeneratingUrl } = useGenerateGrafanaUrl();
 
-  // --- DINONAKTIFKAN SEMENTARA ---
-  // Fungsi untuk mengambil URL, dibungkus useCallback
-  // const fetchUrl = useCallback((state: DashboardFilterState) => {
-  //   setLoading(true);
+  const fetchUrl = useCallback((state: DashboardFilterState) => {
+    setIframeLoading(true);
     
-  //   const payload: GenerateEmbedRequest = { category: state.period };
-  //   if (state.period === 'custom' && state.startDate && state.endDate) {
-  //     payload.start_date = state.startDate;
-  //     payload.end_date = state.endDate;
-  //   }
+    const payload: GenerateEmbedRequest = { category: state.period };
+    
+    if (state.period === 'custom' && state.startDate && state.endDate) {
+      payload.start_date = state.startDate;
+      payload.end_date = state.endDate;
+    }
 
-  //   getEmbedUrl(payload, {
-  //     onSuccess: (data) => {
-  //       setIframeUrl(data.data.url);
-  //       // 'loading' akan dimatikan oleh iframe.onLoad
-  //     },
-  //     onError: (err: any) => {
-  //       console.error("Failed to load dashboard:", err);
-  //       setLoading(false);
-  //     },
-  //   });
-  // }, [getEmbedUrl]); // Dependensi hanya getEmbedUrl
-  // -----------------------------
+    getEmbedUrl(payload, {
+      onSuccess: (data) => {
+        setIframeUrl(data.data.url);
+      },
+      onError: (err: any) => {
+        console.error("Failed to load dashboard:", err);
+        setIframeLoading(false); 
+      },
+    });
+  }, [getEmbedUrl]);
 
-  
-  // --- DINONAKTIFKAN SEMENTARA ---
-  // useEffect untuk load pertama kali
-  // useEffect(() => {
-  //   fetchUrl(filterState);
-  // }, [fetchUrl]);
-  // -----------------------------
+  useEffect(() => {
+    fetchUrl(filterState);
+  }, [fetchUrl, filterState]);
 
-  const handleLoad = () => {
-    setLoading(false);
+  const handleIframeLoad = () => {
+    setIframeLoading(false);
   };
 
-  // Handler untuk periode (Daily, Monthly, Yearly)
   const handlePeriodChange = (period: Period) => {
     if (period === "custom") return;
 
-    const newState: DashboardFilterState = { period };
+    const newState: DashboardFilterState = { 
+      ...filterState,
+      period 
+    };
     setFilterState(newState);
-    localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(newState)); // Simpan
-    
-    // fetchUrl(newState); // DINONAKTIFKAN SEMENTARA
+    localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(newState));
   };
 
-  // Handler untuk tanggal kustom
   const handleCustomDateApply = (dates: {
     startDate: string;
     endDate: string;
@@ -107,45 +92,50 @@ function Dashboard() {
       endDate: dates.endDate,
     };
     setFilterState(newState);
-    localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(newState)); // Simpan
-    
-    // fetchUrl(newState); // DINONAKTIFKAN SEMENTARA
+    localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(newState));
   };
 
-  // --- PERUBAHAN: 'isGeneratingUrl' tidak ada, jadi hanya 'loading' ---
-  const isOverallLoading = loading;
+  const isOverallLoading = isGeneratingUrl || iframeLoading;
 
   return (
-    <div className="relative w-full h-full flex flex-col">
-      <div
-        className={`
-          absolute inset-0 flex flex-col items-center justify-center bg-white z-10 
-          transition-opacity duration-300 ease-in-out
-          ${isOverallLoading ? 'opacity-100' : 'opacity-0 pointer-events-none'}
-        `}
-      >
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-        <p className="text-gray-500 mt-3 text-sm">
-          {/* --- PERUBAHAN: Hapus teks 'Membuat URL aman...' --- */}
-          Memuat dashboard...
-        </p>
-      </div>
-
-      {/* <DashboardHeader
+    <div className="w-full h-full flex flex-col">
+      {/* 1. HEADER: Ditempatkan di luar area loading */}
+      <DashboardHeader
         onPeriodChange={handlePeriodChange}
         onCustomDateApply={handleCustomDateApply}
         defaultPeriod={filterState.period}
         defaultStartDate={filterState.startDate || getTodayDateString()}
         defaultEndDate={filterState.endDate || getTodayDateString()}
-      /> */}
+      />
 
-      <iframe
-        src={iframeUrl || undefined}
-        key={iframeUrl} // 'key' tetap ada, meskipun URL statis
-        title="Dashboard"
-        onLoad={handleLoad}
-        className="w-full flex-1 border-0"
-      ></iframe>
+      {/* 2. CONTENT AREA: Wrapper relatif untuk Iframe & Loading */}
+      <div className="relative flex-1 w-full flex flex-col min-h-0">
+        
+        {/* Loading Overlay (Hanya menutupi area ini) */}
+        <div
+          className={`
+            absolute inset-0 flex flex-col items-center justify-center bg-white z-10 
+            transition-opacity duration-300 ease-in-out
+            ${isOverallLoading ? 'opacity-100' : 'opacity-0 pointer-events-none'}
+          `}
+        >
+          <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+          <p className="text-gray-500 mt-3 text-sm">
+            {isGeneratingUrl ? "Membuat sesi aman..." : "Memuat visualisasi..."}
+          </p>
+        </div>
+
+        {/* Iframe */}
+        {iframeUrl && (
+          <iframe
+            src={iframeUrl}
+            key={iframeUrl}
+            title="Grafana Dashboard"
+            onLoad={handleIframeLoad}
+            className="w-full flex-1 border-0 rounded-lg shadow-sm"
+          ></iframe>
+        )}
+      </div>
     </div>
   );
 }

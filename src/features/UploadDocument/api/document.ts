@@ -71,3 +71,9 @@ export const deleteDocument = async (documentId: number) => {
   const response = await instanceApiToken.delete(`/api/documents/${documentId}`);
   return response.data;
 };
+
+export const batchDeleteDocuments = async (ids: number[]) => {
+  // Backend mengharapkan body: { ids: [1, 2, 3] }
+  const response = await instanceApiToken.post('/api/documents/batch-delete', { ids });
+  return response.data;
+};

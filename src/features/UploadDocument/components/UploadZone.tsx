@@ -1,9 +1,8 @@
-import React, { useState, useCallback } from 'react';
-import { UploadCloud, X, Loader2} from 'lucide-react';
+import React, { useState, useCallback, useRef } from 'react';
+import { UploadCloud, X, Loader2 } from 'lucide-react';
 import type { DocumentCategory } from '../types/types';
 import { getFileIcon } from '../utils/GetFileIcon';
 import CustomSelect from '../../../shared/components/CustomSelect';
-
 
 interface UploadZoneProps {
   stagedFiles: File[];
@@ -31,14 +30,38 @@ const UploadZone: React.FC<UploadZoneProps> = ({
   onCategoryChange,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
+  
+  // 1. Tambahkan Ref untuk input file agar bisa di-reset manual
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDragOver = useCallback((e: React.DragEvent) => { e.preventDefault(); setIsDragging(true); }, []);
   const handleDragLeave = useCallback(() => setIsDragging(false), []);
+  
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    onFilesSelected(e.dataTransfer.files);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        onFilesSelected(e.dataTransfer.files);
+    }
   }, [onFilesSelected]);
+
+  // 2. Handler Baru: Handle perubahan input file & Reset Value
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      onFilesSelected(e.target.files);
+      
+      // PENTING: Reset value input agar file yang sama bisa dipilih kembali
+      // atau file baru bisa terdeteksi change-nya
+      e.target.value = ''; 
+    }
+  };
+
+  // 3. Handler Trigger Klik Manual (Opsional, untuk memastikan ref terpakai benar)
+  const handleChooseFileClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
 
   const canUpload = stagedFiles.length > 0 && !isUploading && selectedCategory !== '';
 
@@ -49,24 +72,43 @@ const UploadZone: React.FC<UploadZoneProps> = ({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        /* --- PERUBAHAN DI SINI: Kurangi padding di mobile (p-4) --- */
         className={`p-4 md:p-8 border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-center transition-colors ${ isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300' }`}
       >
-        <input type="file" id="file-input" multiple className="hidden" onChange={(e) => e.target.files && onFilesSelected(e.target.files)} accept=".pdf,.txt" />
+        {/* PERBAIKAN DI SINI: 
+            1. Tambahkan ref={fileInputRef}
+            2. Ganti onChange inline dengan handleFileInputChange
+        */}
+        <input 
+            type="file" 
+            id="file-input" 
+            ref={fileInputRef}
+            multiple 
+            className="hidden" 
+            onChange={handleFileInputChange} 
+            accept=".pdf,.txt" 
+        />
+        
         <UploadCloud className="w-12 h-12 text-gray-400 mb-4" />
-        {/* --- PERUBAHAN DI SINI: Kecilkan teks di mobile --- */}
-        <p className="text-sm md:text-base text-gray-600">Drag the document here, or <label htmlFor="file-input" className="text-blue-600 font-semibold cursor-pointer hover:underline">choose file</label></p>
+        
+        <p className="text-sm md:text-base text-gray-600">
+            Drag the document here, or{' '}
+            {/* Ubah label menjadi span dengan onClick handler untuk kontrol lebih baik */}
+            <span 
+                onClick={handleChooseFileClick} 
+                className="text-blue-600 font-semibold cursor-pointer hover:underline"
+            >
+                choose file
+            </span>
+        </p>
         <p className="text-xs text-gray-400 mt-2">Supports: PDF, txt.</p>
       </div>
 
-      
       {stagedFiles.length > 0 && (
         <div className="mt-4 space-y-2">
           <h3 className="font-semibold text-gray-700">File ready to be uploaded:</h3>
           {stagedFiles.map((file, index) => (
             <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded-md">
               <div className="flex items-center space-x-2">
-                
                 {getFileIcon(file.name)} 
                 <span className="text-sm text-gray-800">{file.name}</span>
               </div>
@@ -76,11 +118,7 @@ const UploadZone: React.FC<UploadZoneProps> = ({
         </div>
       )}
 
-      
-      {/* --- PERUBAHAN DI SINI: Buat layout flex-col di mobile, md:flex-row di desktop --- */}
       <div className="flex flex-col md:flex-row md:justify-end md:items-center mt-6 gap-4">
-        
-        {/* --- PERUBAHAN DI SINI: Buat dropdown w-full di mobile --- */}
         <div className="relative w-full md:w-auto md:min-w-25">
           <CustomSelect
             value={selectedCategory}
@@ -89,13 +127,8 @@ const UploadZone: React.FC<UploadZoneProps> = ({
             placeholder="choose category..."
             selectedType='default'
           />
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-            
-          </div>
         </div>
         
-        
-        {/* --- PERUBAHAN DI SINI: Buat tombol w-full di mobile --- */}
         <button
           onClick={onUpload}
           disabled={!canUpload}

@@ -3,7 +3,7 @@ import toast from "react-hot-toast";
 // Hapus useQueryClient yang tidak digunakan
 // import { useQueryClient } from "@tanstack/react-query";
 
-import { useGetDocuments, useUploadDocument, useUpdateDocument, useGetDocumentDetails, useDeleteDocument } from "../hooks/useDocument";
+import { useGetDocuments, useUploadDocument, useUpdateDocument, useGetDocumentDetails, useDeleteDocument, useBatchDeleteDocuments } from "../hooks/useDocument";
 import UploadZone from "../components/UploadZone";
 import UploadProgress from "../components/UploadProgress";
 import DocumentsTable from "../components/DocumentsTable";
@@ -135,8 +135,14 @@ const UploadPage: React.FC = () => {
   const { mutate: replaceDocument, isPending: isReplacing } = useUpdateDocument();
   const { data: versionHistoryData } = useGetDocumentDetails(currentDocumentIdForDetails);
   
+  // [UPDATE] Rename isPending single delete agar tidak bentrok
+  const { mutate: deleteDocument, isPending: isDeletingSingle } = useDeleteDocument();
   
-  const { mutate: deleteDocument, isPending: isDeleting } = useDeleteDocument();
+  // [BARU] Panggil hook batch delete
+  const { mutate: batchDelete, isPending: isDeletingBatch } = useBatchDeleteDocuments();
+
+  // Gabungkan status loading delete
+  const isDeleting = isDeletingSingle || isDeletingBatch;
 
   const documents = useMemo(() => documentsData?.documents || [], [documentsData]);
   const totalItems = useMemo(() => documentsData?.total || 0, [documentsData]);
@@ -200,27 +206,21 @@ const UploadPage: React.FC = () => {
         return;
       }
 
-      
-      const results = await Promise.allSettled(
-        selectedDocs.map(id => 
-          new Promise((resolve, reject) => 
-            deleteDocument(id, { onSuccess: resolve, onError: reject })
-          )
-        )
-      );
-
-      const successfulDeletes = results.filter(r => r.status === 'fulfilled').length;
-      const failedDeletes = results.filter(r => r.status === 'rejected').length;
-
-      if (successfulDeletes > 0) {
-        toast.success(`Successfully deleted ${successfulDeletes} document(s).`);
-      }
-      if (failedDeletes > 0) {
-        console.error(`Failed to delete ${failedDeletes} document(s).`);
-      }
-
-      setSelectedDocs([]); 
-      handleCloseModal();
+      // Panggil API Batch Delete
+      batchDelete(selectedDocs, {
+        onSuccess: (response: any) => {
+          // Tampilkan pesan sukses dari backend atau default
+          const message = response?.message || `Successfully deleted ${selectedDocs.length} document(s).`;
+          toast.success(message);
+          
+          setSelectedDocs([]); // Reset seleksi
+          handleCloseModal();
+        },
+        onError: (err: any) => {
+          toast.error(err.response?.data?.message || "Failed to batch delete documents.");
+          handleCloseModal();
+        }
+      });
     }
   };
   

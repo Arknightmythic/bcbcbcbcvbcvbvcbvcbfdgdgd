@@ -245,7 +245,7 @@ const DocumentManagementPage = () => {
         <div className="px-4 bg-gray-50 rounded-t-lg shadow-md">
             <TableControls
                 searchTerm={searchInput}
-                searchPlaceholder="Search by name, staff..."
+                searchPlaceholder="Search by name, staff, team..."
                 filters={filters}
                 onSearchChange={setSearchInput}
                 onSearchSubmit={handleSearchSubmit} 
