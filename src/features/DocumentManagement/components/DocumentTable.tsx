@@ -5,20 +5,18 @@ import DocumentTableRow from "./DocumentTableRow";
 
 import { ChevronLeft, ChevronRight, ArrowUp, ArrowDown } from "lucide-react";
 import CustomSelect from "../../../shared/components/CustomSelect"; 
-import type { ActionType, Document, SortOrder } from "../types/types"; // Import SortOrder
+import type { ActionType, Document, SortOrder } from "../types/types"; 
 
 interface DocumentTableProps {
   documents: Document[];
   hasManagerAccess: boolean;
   onAction: (action: ActionType, doc: Document) => void;
-  // Props Paginasi
   currentPage: number;
   itemsPerPage: number;
   totalItems: number;
   onPageChange: (page: number) => void;
   onItemsPerPageChange: (items: number) => void;
   onViewFile: (doc: Document) => void;
-  // --- TAMBAHAN: Props Sorting ---
   sortColumn: string;
   sortDirection: SortOrder;
   onSort: (column: string) => void;
@@ -40,7 +38,6 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
   totalItems,
   onPageChange,
   onItemsPerPageChange,
-  // Destructure Props Sorting
   sortColumn,
   sortDirection,
   onSort,
@@ -49,7 +46,6 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
   const startItem = (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
-  // Helper Component untuk Sortable Header
   const SortableHeader = ({ label, columnKey, className = "" }: { label: string; columnKey: string; className?: string }) => {
     const isActive = sortColumn === columnKey;
     return (
@@ -72,17 +68,20 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
   return (
     <div className="bg-white p-6 rounded-b-lg shadow-md">
       <div className="overflow-x-auto relative">
-        <table className="min-w-full min-w-[900px]">
+        {/* Tambahkan min-w-full agar tabel bisa scroll horizontal di layar kecil */}
+        <table className="min-w-full min-w-[1000px]">
           <thead className="bg-gray-100 sticky top-0 ">
             <tr className="text-left text-[10px] font-semibold text-gray-600">
-              {/* Gunakan SortableHeader untuk kolom yang disupport backend */}
               <SortableHeader label="Request Date" columnKey="created_at" />
               <SortableHeader label="Document Name" columnKey="document_name" className="text-left !justify-start" />
               <SortableHeader label="User Request" columnKey="staff" />
               
-              {/* Kolom non-sortable */}
               <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">Doc Type</th>
               <th className="px-4 py-3 sticky top-0 bg-gray-100">Category</th>
+              
+              {/* --- PERUBAHAN DI SINI: Tambahkan Header Team --- */}
+              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">Team</th>
+              
               <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">Status</th>
               
               <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center right-0 z-10">Actions</th>
@@ -101,7 +100,7 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
               ))
             ) : (
               <tr>
-                <td colSpan={7} className="text-center py-10 text-gray-500">
+                <td colSpan={8} className="text-center py-10 text-gray-500"> {/* Update colSpan jadi 8 */}
                   <p>No documents found matching your criteria.</p>
                 </td>
               </tr>

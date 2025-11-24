@@ -45,11 +45,11 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
     setIsDropdownOpen(false);
   });
   
-  const isPending = doc.is_approve === null;
-  const isRejected = doc.is_approve === false;
+  const isPending = doc.status === "Pending";
+  const isRejected = doc.status === "Rejected";
 
   const getStatusComponent = () => {
-    if (doc.is_approve === true) {
+    if (doc.status === "Approved") {
       return (
         <span className="inline-flex items-center px-2 py-1 text-[10px] font-semibold rounded-full bg-green-100 text-green-800">
           <CheckCircle2 className="w-2 h-2 mr-1" /> Approved

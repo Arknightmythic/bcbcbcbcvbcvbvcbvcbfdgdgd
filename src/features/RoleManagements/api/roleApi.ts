@@ -1,5 +1,3 @@
-
-
 import { instanceApiToken } from "../../../shared/utils/Axios";
 import type {
   Role,
@@ -10,8 +8,6 @@ import type {
   TeamResponse,
   ApiResponse,
 } from "../utils/types";
-
-
 
 
 export const getRoles = async (
@@ -55,16 +51,51 @@ export const deleteRole = async (id: number): Promise<void> => {
 
 
 
-
-export const getAllTeams = async (): Promise<Team[]> => {
-  const params = new URLSearchParams();
-  params.set("limit", "1000"); 
-  params.set("offset", "0");
-  const response = await instanceApiToken.get<ApiResponse<TeamResponse>>(
-    "/api/teams",
-    { params }
+async function fetchAllData<T>(
+  endpoint: string, 
+  dataExtractor: (data: any) => T[]
+): Promise<T[]> {
+  const LIMIT = 100; // Sesuaikan dengan limit backend
+  
+  // 1. Request batch pertama
+  const firstResponse = await instanceApiToken.get<ApiResponse<{ total: number; [key: string]: any }>>(
+    endpoint, 
+    { params: { limit: LIMIT, offset: 0 } }
   );
-  return response.data.data.teams;
+
+  const totalItems = firstResponse.data.data.total;
+  const firstBatchData = dataExtractor(firstResponse.data.data);
+  
+  // Jika total data <= limit, langsung return
+  if (totalItems <= LIMIT) {
+    return firstBatchData;
+  }
+
+  // 2. Hitung sisa halaman
+  const totalPages = Math.ceil(totalItems / LIMIT);
+  const promises = [];
+
+  for (let i = 1; i < totalPages; i++) {
+    const offset = i * LIMIT;
+    promises.push(
+      instanceApiToken.get<ApiResponse<any>>(endpoint, {
+        params: { limit: LIMIT, offset: offset },
+      })
+    );
+  }
+
+  // 3. Request paralel sisanya
+  const remainingResponses = await Promise.all(promises);
+
+  // 4. Gabungkan data
+  const remainingData = remainingResponses.flatMap(res => dataExtractor(res.data.data));
+  
+  return [...firstBatchData, ...remainingData];
+}
+
+// PERBAIKAN DI SINI: Gunakan fetchAllData untuk Teams
+export const getAllTeams = async (): Promise<Team[]> => {
+  return fetchAllData<Team>("/api/teams", (data: any) => data.teams);
 };
 
 
