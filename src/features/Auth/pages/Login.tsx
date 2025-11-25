@@ -8,7 +8,7 @@ import { z } from 'zod';
 import toast from 'react-hot-toast';
 import { useAuthActions } from '../../../shared/store/authStore';
 import { useSignIn } from '../hooks/useSignIn';
-
+import { useMicrosoftSSO } from '../hooks/useMicrosoftSSO';
 
 const signInSchema = z.object({
   email: z.email('Invalid email address'),
@@ -21,6 +21,7 @@ function Login() {
   const navigate = useNavigate();
   const { login: loginAction } = useAuthActions();
   const { mutate: loginMutation, isPending } = useSignIn();
+  const { mutate: microsoftLogin, isPending: isMicrosoftPending } = useMicrosoftSSO();
 
   const {
     register,
@@ -47,12 +48,15 @@ function Login() {
     });
   };
 
+  const handleMicrosoftLogin = () => {
+    microsoftLogin();
+  };
+
   return (
-    
     <div className="bg-gray-50 min-h-screen flex flex-col md:flex-row w-full font-sans">
       {/* Panel Kiri (Branding) */}
       <div
-        className="relative w-full md:w-1/2 hidden md:flex items-center justify-start px-8 md:px-12 lg:px-20 py-10 md:py-16 text-white" 
+        className="relative w-full md:w-1/2 hidden md:flex items-center justify-start px-8 md:px-12 lg:px-20 py-10 md:py-16 text-white"
         style={{
           backgroundImage: 'url("/oss-red-bg.jpeg")',
           backgroundSize: 'cover',
@@ -62,13 +66,9 @@ function Login() {
         <div className="absolute inset-0 bg-black opacity-30 z-0" />
         <div className="relative z-10">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold mb-4">
-            {' '}
-            {/* Poin 4: Ukuran teks responsif */}
             Welcome to
           </h1>
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white">
-            {' '}
-            {/* Poin 4: Ukuran teks responsif */}
             Dokuprime
           </h2>
         </div>
@@ -76,21 +76,17 @@ function Login() {
 
       {/* Panel Kanan (Form) */}
       <div className="w-full md:w-1/2 flex flex-col items-center justify-center p-6 sm:p-8 md:p-12 lg:p-16 relative overflow-auto flex-grow">
-
         {/* Logo */}
         <div className="absolute top-6 right-6 md:top-12 md:right-12 lg:top-16 lg:right-16">
-          {' '}
-          {/* Poin 3: Posisi logo di mobile */}
           <img
             src="/LOGO KEMENTERIAN INVESTASI DAN HILIRISASI BKPM-Horizontal.png"
             alt="Logo Dokuprime"
-            className="h-7 md:h-12" 
+            className="h-7 md:h-12"
           />
         </div>
 
         {/* Form Card */}
         <div className="bg-white p-6 sm:p-10 rounded-xl shadow-lg border border-gray-200 w-full max-w-lg mt-10 lg:mt-32">
-          
           <h2 className="text-2xl font-bold text-gray-800 mb-2 text-center">
             SIGN IN
           </h2>
@@ -127,8 +123,7 @@ function Login() {
                   type="email"
                   {...register('email')}
                   placeholder="Enter your email"
-                  
-                  className="pl-10 pr-3 py-3 w-full border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-Oss-blue focus:border-blue-500 text-sm overflow-hidden text-ellipsis"
+                  className="pl-10 pr-3 py-3 w-full border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm overflow-hidden text-ellipsis"
                 />
               </div>
               {errors.email && (
@@ -166,8 +161,7 @@ function Login() {
                   type={showPassword ? 'text' : 'password'}
                   {...register('password')}
                   placeholder="Enter your password"
-                  
-                  className="pl-10 pr-12 py-3 w-full border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-Oss-blue focus:border-blue-500 text-sm overflow-hidden text-ellipsis"
+                  className="pl-10 pr-12 py-3 w-full border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm overflow-hidden text-ellipsis"
                 />
                 <button
                   type="button"
@@ -192,8 +186,7 @@ function Login() {
             <button
               type="submit"
               disabled={isPending}
-              
-              className="w-full flex justify-center items-center py-3 px-4 rounded-md shadow-sm text-white bg-bOss-blue hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-Oss-blue transition-colors duration-200 text-sm font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="w-full flex justify-center items-center py-3 px-4 rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 text-sm font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               {isPending ? 'Signing In...' : 'Sign In'}
             </button>
@@ -206,7 +199,6 @@ function Login() {
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="px-2 bg-white text-gray-500 text-xs">
-                  {/* Poin 5: Cleanup - mengganti style 13px menjadi text-xs (12px) */}
                   Or continue with
                 </span>
               </div>
@@ -215,23 +207,22 @@ function Login() {
             <div className="mt-6">
               <button
                 type="button"
-                
-                className="w-full inline-flex justify-center items-center py-3 px-4 border border-Oss-blue rounded-md shadow-sm bg-white font-medium text-gray-700 hover:bg-bOss-hblue transition-colors duration-200 text-sm"
+                onClick={handleMicrosoftLogin}
+                disabled={isMicrosoftPending}
+                className="w-full inline-flex justify-center items-center py-3 px-4 border border-blue-600 rounded-md shadow-sm bg-white font-medium text-gray-700 hover:bg-blue-50 transition-colors duration-200 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
               >
                 <img
                   src="/microsoft-svgrepo-com.svg"
                   alt="Microsoft icon"
                   className="w-5 h-5 mr-2"
                 />
-                SSO with Microsoft
+                {isMicrosoftPending ? 'Redirecting...' : 'SSO with Microsoft'}
               </button>
             </div>
           </div>
         </div>
 
         <p className="mt-8 text-center text-xs text-gray-500">
-          {' '}
-          {/* Poin 5: Cleanup - menghapus style 11px */}
           &copy; 2025 Dokuprime. All rights reserved.
         </p>
       </div>
