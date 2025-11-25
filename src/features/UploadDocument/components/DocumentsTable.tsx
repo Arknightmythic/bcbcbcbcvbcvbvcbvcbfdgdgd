@@ -124,7 +124,7 @@ const DocumentsTable: React.FC<DocumentsTableProps> = (props) => {
 
       <div className="relative overflow-x-auto">
         <table className="w-full text-sm text-left text-gray-500 min-w-[900px]">
-          <thead className="text-[10px] text-gray-700 uppercase bg-gray-100 sticky top-0">
+          <thead className="text-[10px] text-gray-700 bg-gray-100 sticky top-0">
             <tr>
               <th className="px-4 py-4 w-1/24">
                 <input
@@ -146,7 +146,7 @@ const DocumentsTable: React.FC<DocumentsTableProps> = (props) => {
               <th className="px-6 py-4">Team</th>
               <th className="px-6 py-4">Status</th>
               
-              <th className="px-6 py-4 text-center sticky right-0 bg-gray-100 z-10">Action</th>
+              <th className="px-6 py-4 text-center sticky right-0 bg-gray-100 z-10">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
