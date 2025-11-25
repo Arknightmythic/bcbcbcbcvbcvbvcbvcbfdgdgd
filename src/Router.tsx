@@ -18,6 +18,7 @@ import TeamManagementPage from "./features/TeamManagements/pages/TeamManagementP
 import RoleManagementPage from "./features/RoleManagements/pages/RoleManagementPage";
 import HelpDeskIntroPage from "./features/HelpDesk/pages/HelpDeskIntroPage";
 import HelpDeskChatPage from "./features/HelpDesk/pages/HelpDeskChatPage";
+import MicrosoftCallback from "./features/Auth/pages/MicrosoftCallback";
 
 import { useAuthStore } from "./shared/store/authStore";
 import HelpDeskPage from "./features/HelpDesk/pages/HelpDeskPage";
@@ -101,6 +102,10 @@ const Router = createBrowserRouter([
     path: "/login",
     loader: loginLoader,
     element: <Login />,
+  },
+  {
+    path: "/auth-microsoft/callback",
+    element: <MicrosoftCallback />,
   },
   {
     path: "/",
