@@ -76,7 +76,7 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
               <SortableHeader label="Document Name" columnKey="document_name" className="text-left !justify-start" />
               <SortableHeader label="User Request" columnKey="staff" />
               
-              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">Doc Type</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">Type</th>
               <th className="px-4 py-3 sticky top-0 bg-gray-100">Category</th>
               
               {/* --- PERUBAHAN DI SINI: Tambahkan Header Team --- */}

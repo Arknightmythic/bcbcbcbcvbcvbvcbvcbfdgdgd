@@ -74,7 +74,7 @@ const GuideTable: React.FC<GuideTableProps> = ({
     <div className="bg-white p-6 rounded-b-lg shadow-md">
       <div className="overflow-x-auto relative">
         <table className="w-full text-sm text-left text-gray-500 min-w-[800px]">
-          <thead className="text-[10px] text-gray-700 uppercase bg-gray-100 sticky top-0">
+          <thead className="text-[10px] text-gray-700 bg-gray-100 sticky top-0">
             <tr>
               {/* Backend guide/repository.go mendukung sort: created_at, title, updated_at */}
               <SortableHeader label="Date Created" columnKey="created_at" />

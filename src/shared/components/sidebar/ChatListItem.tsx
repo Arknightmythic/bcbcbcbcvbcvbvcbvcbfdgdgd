@@ -12,11 +12,11 @@ interface ChatListItemProps {
 }
 
 const typeMessages = {
-  active: "Percakapan sedang berlangsung...",
-  queue: "Menunggu di antrian...",
-  history: "Percakapan telah selesai.",
-  pending: "Menunggu tindakan agen...",
-  resolve: "Percakapan telah selesai.",
+  active: "on live chat...",
+  queue: "waiting queue...",
+  history: "conversation closed..",
+  pending: "waiting agent actions...",
+  resolve: "conversation closed.",
 };
 
 // --- PERUBAHAN DI SINI: Komponen Ikon Kanal Dimodifikasi ---

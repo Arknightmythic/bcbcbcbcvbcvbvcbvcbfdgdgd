@@ -26,7 +26,7 @@ const DUMMY_CHAT_LISTS: ChatLists = {
 
 
 const channelFilterOptions = [
-  { value: "", label: "Semua Kanal" },
+  { value: "", label: "all channels" },
   { value: "web", label: "Web" },
   { value: "whatsapp", label: "WhatsApp" },
   { value: "instagram", label: "Instagram" },

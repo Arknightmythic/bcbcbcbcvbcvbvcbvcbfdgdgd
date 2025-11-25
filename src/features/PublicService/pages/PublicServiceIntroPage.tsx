@@ -167,7 +167,7 @@ const PublicServiceIntroPage: React.FC = () => {
                     <span className="w-full border-t border-gray-300"></span>
                   </div>
                   <div className="relative flex justify-center text-sm">
-                    <span className="bg-white px-2 text-gray-500">atau</span>
+                    <span className="bg-white px-2 text-gray-500">or</span>
                   </div>
                 </div>
               </>
