@@ -289,6 +289,7 @@ const TableControls = <T extends Record<string, any>>({
                   endDate={tempDateRange[1]}
                   selectsRange
                   inline
+                  maxDate={new Date()}
                 />
               </div>
               <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-100 gap-2">

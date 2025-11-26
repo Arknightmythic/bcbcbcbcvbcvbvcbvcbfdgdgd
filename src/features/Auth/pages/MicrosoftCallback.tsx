@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import toast from 'react-hot-toast';
 import { useAuthActions, useAuthStore } from '../../../shared/store/authStore';
@@ -23,37 +23,37 @@ function MicrosoftCallback() {
   const { login: loginAction } = useAuthActions();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { data: userData, isLoading, isError, refetch } = useGetMe();
+  
+  // [2] Tambahkan Ref untuk menandai apakah proses sudah dijalankan
+  const isProcessed = useRef(false);
 
   useEffect(() => {
     const handleCallback = async () => {
-      console.log('MicrosoftCallback mounted');
-      console.log('Search params:', Object.fromEntries(searchParams.entries()));
-      
+      // [3] Cek jika sudah diproses, langsung berhenti
+      if (isProcessed.current) return;
+
       const status = searchParams.get('status');
       const error = searchParams.get('error');
       const logout = searchParams.get('logout');
 
-      
       if (logout === 'logout') {
-        console.log('Logout callback detected');
+        isProcessed.current = true; // Tandai selesai
         toast.success('Logged out successfully');
         navigate('/login', { replace: true });
         return;
       }
 
-      
       if (status === 'login-failed' || error) {
-        console.log('Login failed:', error);
+        isProcessed.current = true; // Tandai selesai
         toast.error(error || 'Microsoft login failed. Please try again.');
         navigate('/login', { replace: true });
         return;
       }
 
-      
       if (status === 'login-success') {
+        isProcessed.current = true; // [4] KUNCI DI SINI SEBELUM PROSES ASYNC
+
         console.log('Login success detected, fetching user data...');
-        
-        
         const result = await refetch();
         
         if (result.isError || !result.data) {
@@ -63,46 +63,48 @@ function MicrosoftCallback() {
           return;
         }
 
-        console.log('User data fetched:', result.data);
-        
-        
         loginAction({
           user: {
             id: result.data.id,
             name: result.data.name,
             email: result.data.email,
-            role: result.data.role,
+            role: result.data.role, // Ingat perbaikan role undefined sebelumnya
           },
           access_token: 'token_from_cookie',
           refresh_token: 'refresh_from_cookie',
         });
 
         toast.success('Login successful!');
-        
-        
-        const userPages = result.data.role?.team?.pages || [];
+
+        // --- Logika Redirect yang sudah diperbaiki ---
+        if (!result.data.role || !result.data.role.team) {
+            navigate("/unauthorized", { replace: true });
+            return;
+        }
+
+        const userPages = result.data.role.team.pages || [];
         const firstAllowedKey = Object.keys(PAGE_PATHS).find(key => userPages.includes(key));
-        const defaultPath = firstAllowedKey ? PAGE_PATHS[firstAllowedKey] : "/404";
+        const defaultPath = firstAllowedKey ? PAGE_PATHS[firstAllowedKey] : "/unauthorized";
         
-        console.log('Navigating to:', defaultPath);
         navigate(defaultPath, { replace: true });
         return;
       }
 
-      
+      // Block ini hanya jalan jika TIDAK ADA status di URL (misal user akses langsung URL callback)
       if (isAuthenticated && !status && !error && !logout) {
-        console.log('Already authenticated, redirecting home');
         navigate('/', { replace: true });
         return;
       }
 
-      
-      console.log('No valid status, redirecting to login');
-      navigate('/login', { replace: true });
+      // Fallback
+      if (!status && !error && !logout) {
+         navigate('/login', { replace: true });
+      }
     };
 
     handleCallback();
-  }, [searchParams, navigate, loginAction, isAuthenticated, refetch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
