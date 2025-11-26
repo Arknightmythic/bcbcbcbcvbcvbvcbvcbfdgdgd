@@ -119,11 +119,14 @@ const UserManagementPage = () => {
   };
 
   const handleSaveUser = (modalData: UserModalData, id?: number) => {
-    
+    const currentAccountType = (id && selectedUser?.account_type) 
+      ? selectedUser.account_type 
+      : 'credential';
+
     const payload: CreateUserPayload | UpdateUserPayload = {
       name: modalData.name,
       email: modalData.email,
-      account_type: 'credential',
+      account_type: currentAccountType, 
       role_id: modalData.roleId ? Number(modalData.roleId) : null,
       phone: null,
     };

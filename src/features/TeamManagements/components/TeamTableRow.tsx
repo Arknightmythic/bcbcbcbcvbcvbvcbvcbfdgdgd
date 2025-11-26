@@ -11,7 +11,9 @@ interface TeamTableRowProps {
 }
 
 const TeamTableRow: React.FC<TeamTableRowProps> = ({ team, onAction }) => {
-  // --- State & Ref untuk Dropdown Portal ---
+  // --- CEK DEFAULT ---
+  const isDefault = team.name.toLowerCase() === 'default';
+
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [position, setPosition] = useState<{ top?: number, bottom?: number, right?: number }>({});
   const moreButtonRef = useRef<HTMLButtonElement>(null);
@@ -20,7 +22,6 @@ const TeamTableRow: React.FC<TeamTableRowProps> = ({ team, onAction }) => {
     setIsDropdownOpen(false);
   });
 
-  // Handler untuk membuka/menutup dan menghitung posisi dropdown
   const handleDropdownToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isDropdownOpen) {
@@ -30,7 +31,7 @@ const TeamTableRow: React.FC<TeamTableRowProps> = ({ team, onAction }) => {
 
     if (moreButtonRef.current) {
       const rect = moreButtonRef.current.getBoundingClientRect();
-      const dropdownHeight = 90; // Perkiraan tinggi: 2 item * 44px
+      const dropdownHeight = 90;
       const spaceBelow = window.innerHeight - rect.bottom;
       const spaceAbove = rect.top;
 
@@ -49,7 +50,6 @@ const TeamTableRow: React.FC<TeamTableRowProps> = ({ team, onAction }) => {
     }
   };
 
-  // --- Komponen Konten Dropdown (untuk Portal) ---
   const DropdownContent = () => (
     <div
       ref={dropdownRef}
@@ -64,16 +64,18 @@ const TeamTableRow: React.FC<TeamTableRowProps> = ({ team, onAction }) => {
       <div className="flex flex-col py-1">
         <button
           onClick={() => { onAction('edit', team); setIsDropdownOpen(false); }}
-          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-          title="Edit Team"
+          disabled={isDefault} // Disabled jika default
+          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:text-gray-400 disabled:bg-white disabled:cursor-not-allowed"
+          title={isDefault ? "Cannot edit default team" : "Edit Team"}
         >
           <Edit className="w-4 h-4" />
           <span>Edit Team</span>
         </button>
         <button
           onClick={() => { onAction('delete', team); setIsDropdownOpen(false); }}
-          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
-          title="Delete Team"
+          disabled={isDefault} // Disabled jika default
+          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 disabled:text-gray-400 disabled:bg-white disabled:cursor-not-allowed"
+          title={isDefault ? "Cannot delete default team" : "Delete Team"}
         >
           <Trash2 className="w-4 h-4" />
           <span>Delete Team</span>
@@ -92,10 +94,20 @@ const TeamTableRow: React.FC<TeamTableRowProps> = ({ team, onAction }) => {
         
         {/* Layout Desktop */}
         <div className="hidden md:flex items-center justify-center gap-x-3">
-          <button onClick={() => onAction('edit', team)} className="text-blue-600 hover:text-blue-800" title="Edit">
+          <button 
+            onClick={() => onAction('edit', team)} 
+            disabled={isDefault}
+            className={`hover:text-blue-800 ${isDefault ? 'text-gray-300 cursor-not-allowed' : 'text-blue-600'}`}
+            title={isDefault ? "Cannot edit default team" : "Edit"}
+          >
             <Edit className="w-4 h-4" />
           </button>
-          <button onClick={() => onAction('delete', team)} className="text-red-600 hover:text-red-800" title="Delete">
+          <button 
+            onClick={() => onAction('delete', team)} 
+            disabled={isDefault}
+            className={`hover:text-red-800 ${isDefault ? 'text-gray-300 cursor-not-allowed' : 'text-red-600'}`}
+            title={isDefault ? "Cannot delete default team" : "Delete"}
+          >
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
@@ -111,7 +123,6 @@ const TeamTableRow: React.FC<TeamTableRowProps> = ({ team, onAction }) => {
           </button>
         </div>
 
-        {/* Render Portal */}
         {isDropdownOpen && createPortal(<DropdownContent />, document.body)}
       </td>
     </tr>

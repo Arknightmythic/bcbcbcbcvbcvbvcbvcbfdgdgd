@@ -1,21 +1,16 @@
-// src/features/RoleManagements/components/RoleManagementModal.tsx
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { Loader2, X, Check, Square, CheckSquare } from 'lucide-react';
 import CustomSelect from '../../../shared/components/CustomSelect';
 import type { Role, Permission, Team, RoleModalData } from '../utils/types';
+import toast from 'react-hot-toast';
 
-// --- HELPER PERMISSION FILTER ---
 const shouldShowPermission = (permissionName: string): boolean => {
   return permissionName.endsWith(':read');
 };
 
-// --- HELPER FORMAT LABEL ---
-// Mengubah tampilan ':read' menjadi ':access' tanpa mengubah data asli
 const formatPermissionLabel = (permissionName: string): string => {
   return permissionName.replace(':read', ':access');
 };
-// --------------------------------
 
 interface RoleManagementModalProps {
   isOpen: boolean;
@@ -62,7 +57,7 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
     const groups: Record<string, Permission[]> = {};
 
     permissions.forEach((perm) => {
-      // Filter: Hanya ambil permission yang disetujui helper
+      
       if (!shouldShowPermission(perm.name)) {
         return;
       }
@@ -109,8 +104,15 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // --- VALIDASI BARU: Cegah nama "default" ---
+    if (name.trim().toLowerCase() === 'default') {
+        toast.error("Cannot use restricted name 'Default'.");
+        return;
+    }
+    // -------------------------------------------
+
     if (!teamId) {
-        alert("Please select a team."); 
+        toast.error("Please select a team."); 
         return;
     }
 

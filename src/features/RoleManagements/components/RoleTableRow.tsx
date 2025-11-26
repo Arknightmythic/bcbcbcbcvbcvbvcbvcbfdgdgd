@@ -1,5 +1,3 @@
-// src/features/RoleManagements/components/RoleTableRow.tsx
-
 import React, { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Eye, Edit, Trash2, MoreVertical } from 'lucide-react';
@@ -12,15 +10,13 @@ interface RoleTableRowProps {
   onAction: (action: ActionType, role: Role) => void;
 }
 
-// --- HELPER CONFIG ---
-// 1. Filter: Apakah permission ini boleh ditampilkan?
 const shouldShowPermission = (name: string) => name.endsWith(':read');
-
-// 2. Format: Ubah teks ':read' menjadi ':access' agar lebih user-friendly
 const formatPermissionLabel = (name: string) => name.replace(':read', ':access');
-// ---------------------
 
 const RoleTableRow: React.FC<RoleTableRowProps> = ({ role, onAction }) => {
+  // --- CEK DEFAULT ---
+  const isDefault = role.name.toLowerCase() === 'default';
+
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [position, setPosition] = useState<{ top?: number, bottom?: number, right?: number }>({});
   const moreButtonRef = useRef<HTMLButtonElement>(null);
@@ -79,16 +75,18 @@ const RoleTableRow: React.FC<RoleTableRowProps> = ({ role, onAction }) => {
         </button>
         <button
           onClick={() => { onAction('edit', role); setIsDropdownOpen(false); }}
-          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-          title="Edit Role"
+          disabled={isDefault}
+          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:text-gray-400 disabled:bg-white disabled:cursor-not-allowed"
+          title={isDefault ? "Cannot edit default role" : "Edit Role"}
         >
           <Edit className="w-4 h-4" />
           <span>Edit Role</span>
         </button>
         <button
           onClick={() => { onAction('delete', role); setIsDropdownOpen(false); }}
-          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
-          title="Delete Role"
+          disabled={isDefault}
+          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 disabled:text-gray-400 disabled:bg-white disabled:cursor-not-allowed"
+          title={isDefault ? "Cannot delete default role" : "Delete Role"}
         >
           <Trash2 className="w-4 h-4" />
           <span>Delete Role</span>
@@ -97,10 +95,7 @@ const RoleTableRow: React.FC<RoleTableRowProps> = ({ role, onAction }) => {
     </div>
   );
 
-  // PERBAIKAN UTAMA DI SINI:
-  // 1. Ambil semua permission
   const allPermissions = role.permissions || [];
-  // 2. Filter permission yang hanya boleh tampil (helper shouldShowPermission)
   const visiblePermissions = allPermissions.filter(p => shouldShowPermission(p.name));
 
   return (
@@ -111,14 +106,12 @@ const RoleTableRow: React.FC<RoleTableRowProps> = ({ role, onAction }) => {
       </td>
       <td className="px-4 py-3">
         <div className="flex flex-wrap gap-1">
-          {/* Gunakan visiblePermissions untuk mapping badge */}
           {visiblePermissions.slice(0, 3).map(p => (
             <span key={p.id} className="px-2 py-0.5 text-[10px] bg-gray-200 text-gray-800 rounded-full">
               {formatPermissionLabel(p.name)}
             </span>
           ))}
           
-          {/* Hitung sisa hidden permission berdasarkan visiblePermissions */}
           {visiblePermissions.length > 3 && (
             <span className="px-2 py-0.5 text-[10px] bg-gray-300 text-gray-800 rounded-full">
               +{visiblePermissions.length - 3} more
@@ -136,10 +129,20 @@ const RoleTableRow: React.FC<RoleTableRowProps> = ({ role, onAction }) => {
           <button onClick={() => onAction('view', role)} className="text-green-600 hover:text-green-800" title="View Details">
             <Eye className="w-4 h-4" />
           </button>
-          <button onClick={() => onAction('edit', role)} className="text-blue-600 hover:text-blue-800" title="Edit">
+          <button 
+            onClick={() => onAction('edit', role)} 
+            disabled={isDefault}
+            className={`hover:text-blue-800 ${isDefault ? 'text-gray-300 cursor-not-allowed' : 'text-blue-600'}`}
+            title={isDefault ? "Cannot edit default role" : "Edit"}
+          >
             <Edit className="w-4 h-4" />
           </button>
-          <button onClick={() => onAction('delete', role)} className="text-red-600 hover:text-red-800" title="Delete">
+          <button 
+            onClick={() => onAction('delete', role)} 
+            disabled={isDefault}
+            className={`hover:text-red-800 ${isDefault ? 'text-gray-300 cursor-not-allowed' : 'text-red-600'}`}
+            title={isDefault ? "Cannot delete default role" : "Delete"}
+          >
             <Trash2 className="w-4 h-4" />
           </button>
         </div>

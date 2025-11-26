@@ -37,7 +37,7 @@ const UserTable: React.FC<UserTableProps> = ({
     <div className="bg-white p-6 rounded-b-lg shadow-md">
       {/* --- PERUBAHAN DI SINI: ganti overflow-y-auto -> overflow-x-auto --- */}
       <div className="overflow-x-auto relative">
-        <table className="min-w-full min-w-[900px]"> {/* Tambah min-w */}
+        <table className="min-w-full"> {/* Tambah min-w */}
           <thead className="bg-gray-100 sticky top-0 "> {/* Tambah sticky & z-index */}
             <tr className="text-left text-[10px] font-semibold text-gray-600">
               <th className="px-4 py-3 sticky top-0 bg-gray-100">Name</th>
