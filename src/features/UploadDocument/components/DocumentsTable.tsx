@@ -146,7 +146,7 @@ const DocumentsTable: React.FC<DocumentsTableProps> = (props) => {
               <th className="px-6 py-4">Team</th>
               <th className="px-6 py-4">Status</th>
               
-              <th className="px-6 py-4 text-center sticky right-0 bg-gray-100 z-10">Action</th>
+              <th className="px-6 py-4 text-center sticky right-0 bg-gray-100 z-10">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">

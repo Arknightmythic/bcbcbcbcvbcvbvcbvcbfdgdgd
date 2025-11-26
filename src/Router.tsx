@@ -22,6 +22,7 @@ import RoleManagementPage from "./features/RoleManagements/pages/RoleManagementP
 import HelpDeskPage from "./features/HelpDesk/pages/HelpDeskPage";
 import HelpDeskIntroPage from "./features/HelpDesk/pages/HelpDeskIntroPage";
 import HelpDeskChatPage from "./features/HelpDesk/pages/HelpDeskChatPage";
+import MicrosoftCallback from "./features/Auth/pages/MicrosoftCallback";
 
 
 import { useAuthStore } from "./shared/store/authStore";
@@ -173,6 +174,10 @@ const Router = createBrowserRouter([
     path: "/unauthorized",
     loader: unauthorizedLoader, 
     element: <UnauthorizedPage />,
+  },
+  {
+    path: "/auth-microsoft/callback",
+    element: <MicrosoftCallback />,
   },
   {
     path: "/",
