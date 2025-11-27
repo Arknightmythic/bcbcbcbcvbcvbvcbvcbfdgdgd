@@ -49,8 +49,6 @@ const HistoryValidationTable: React.FC<HistoryValidationTableProps> = ({
   const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
-  // Helper Component untuk Sortable Header (Diadaptasi dari DocumentTable)
-  // Karena di sini sortingnya global (hanya date), kita anggap isActive selalu true untuk kolom Date
   const SortableHeader = ({ 
     label, 
     onClick, 
@@ -85,31 +83,31 @@ const HistoryValidationTable: React.FC<HistoryValidationTableProps> = ({
             <tr className="text-left text-[10px] font-semibold text-gray-600">
               
               {/* Kolom 1: Request Date (Sortable) */}
-              <SortableHeader label="Request Date" onClick={onSortToggle} />
+              <SortableHeader label="Tanggal" onClick={onSortToggle} />
 
               {/* Kolom 2: User */}
               <th className="px-4 py-3 sticky top-0 bg-gray-100">
-                User
+                Pengguna
               </th>
 
               {/* Kolom 3: Session ID */}
               <th className="px-4 py-3 sticky top-0 bg-gray-100">
-                Session ID
+                ID sesi
               </th>
 
               {/* Kolom 4: Question */}
               <th className="px-4 py-3 sticky top-0 bg-gray-100 max-w-xs">
-                Question
+                Pertanyaan
               </th>
 
               {/* Kolom 5: AI Answer */}
               <th className="px-4 py-3 sticky top-0 bg-gray-100 max-w-xs">
-                AI Answer
+                Jawaban AI
               </th>
 
               {/* Kolom 6: Not Answered */}
               <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">
-                Not Answered
+                Tidak terjawab
               </th>
 
               {/* Kolom 7: Status */}
@@ -119,7 +117,7 @@ const HistoryValidationTable: React.FC<HistoryValidationTableProps> = ({
 
               {/* Kolom 8: Action (Sticky Right) */}
               <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center right-0 z-10">
-                Action
+                aksi
               </th>
             </tr>
           </thead>

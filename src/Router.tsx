@@ -1,14 +1,7 @@
-import React from "react";
 import { createBrowserRouter, redirect, Navigate } from "react-router";
-
-
 import Layout from "./shared/components/Layout";
-
-
 import Login from "./features/Auth/pages/Login";
-import UnauthorizedPage from "./features/Auth/pages/UnauthorizedPage";
-
-
+import UnauthorizedPage from "./shared/components/UnauthorizedPage";
 import Dashboard from "./features/Dashboard/pages/Dashboard";
 import DocumentManagementPage from "./features/DocumentManagement/pages/DocumentManagement";
 import UploadPage from "./features/UploadDocument/pages/UploadPage"; 
@@ -23,145 +16,8 @@ import HelpDeskPage from "./features/HelpDesk/pages/HelpDeskPage";
 import HelpDeskIntroPage from "./features/HelpDesk/pages/HelpDeskIntroPage";
 import HelpDeskChatPage from "./features/HelpDesk/pages/HelpDeskChatPage";
 import MicrosoftCallback from "./features/Auth/pages/MicrosoftCallback";
-
-
-import { useAuthStore } from "./shared/store/authStore";
-
-
-
-
-const PAGE_PATHS: Record<string, string> = {
-  "dashboard": "/dashboard",
-  "knowledge-base": "/knowledge-base",
-  "document-management": "/document-management",
-  "public-service": "/public-service",
-  "validation-history": "/validation-history",
-  "guide": "/guide",
-  "user-management": "/user-management",
-  "team-management": "/team-management",
-  "role-management": "/role-management",
-  "helpdesk": "/helpdesk",
-};
-
-
-
-
-const hasReadAccess = (user: any, pageIdentifier: string) => {
-  const userPermissions = user?.role?.permissions || [];
-  
-  return userPermissions.some((p: any) => p.name === `${pageIdentifier}:read`);
-};
-
-
-const getDefaultPath = () => {
-  const { user, isAuthenticated } = useAuthStore.getState();
-
-  
-  if (!isAuthenticated || !user) {
-    return "/login";
-  }
-
-  
-  if (!user.role || !user.role.team) {
-    return "/unauthorized";
-  }
-
-  const userPages = user.role.team.pages || [];
-
-  
-  
-  const firstAllowedKey = Object.keys(PAGE_PATHS).find(key => {
-    const isPageInTeam = userPages.includes(key);
-    const isPermitted = hasReadAccess(user, key);
-    return isPageInTeam && isPermitted;
-  });
-
-  
-  
-  return firstAllowedKey ? PAGE_PATHS[firstAllowedKey] : "/unauthorized";
-};
-
-
-
-
-const authLoader = () => {
-  const { isAuthenticated } = useAuthStore.getState();
-  if (!isAuthenticated) {
-    return redirect("/login");
-  }
-  return null;
-};
-
-
-const loginLoader = () => {
-  const { isAuthenticated } = useAuthStore.getState();
-  if (isAuthenticated) {
-    const defaultPath = getDefaultPath();
-    return redirect(defaultPath);
-  }
-  return null;
-};
-
-
-const unauthorizedLoader = () => {
-  const { isAuthenticated } = useAuthStore.getState();
-  
-  
-  if (!isAuthenticated) {
-    return redirect("/login");
-  }
-
-  
-  const correctPath = getDefaultPath();
-
-  
-  
-  if (correctPath !== "/unauthorized") {
-    return redirect(correctPath);
-  }
-
-  
-  return null;
-};
-
-
-
-
-const ProtectedRoute = ({ allowedPage, children }: { allowedPage: string, children: React.ReactNode }) => {
-  const { user } = useAuthStore.getState();
-  
-  
-  if (!user?.role || !user?.role?.team) {
-    return <Navigate to="/unauthorized" replace />;
-  }
-
-  const userPages = user.role.team.pages || [];
-  
-  
-  const hasPageInTeam = userPages.includes(allowedPage);
-
-  
-  const hasPermission = hasReadAccess(user, allowedPage);
-
-  
-  if (!hasPageInTeam || !hasPermission) {
-    return <Navigate to="/404" replace />;
-  }
-
-  return <>{children}</>;
-};
-
-
-const NotFoundPage = () => (
-  <div className="flex flex-col items-center justify-center h-screen bg-gray-50 text-center px-4">
-    <h1 className="text-6xl font-bold text-gray-800">404</h1>
-    <p className="text-xl text-gray-600 mt-4">Page Not Found or Access Denied</p>
-    <a href="/" className="mt-6 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
-      Back to Home
-    </a>
-  </div>
-);
-
+import { authLoader, getDefaultPath, loginLoader, ProtectedRoute, unauthorizedLoader } from "./shared/utils/Guard";
+import { NotFoundPage } from "./shared/components/notfound";
 
 
 const Router = createBrowserRouter([

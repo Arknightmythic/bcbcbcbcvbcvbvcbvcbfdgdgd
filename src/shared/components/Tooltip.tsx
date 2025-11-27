@@ -6,7 +6,6 @@ interface TooltipProps {
   children: ReactNode;
 }
 
-// Tentukan di mana portal akan di-render. document.body adalah pilihan umum.
 const portalRoot = document.body;
 
 const Tooltip = ({ text, children }: TooltipProps) => {
@@ -17,10 +16,9 @@ const Tooltip = ({ text, children }: TooltipProps) => {
   const handleMouseEnter = () => {
     if (ref.current) {
       const rect = ref.current.getBoundingClientRect();
-      // Posisi: (top) sejajar dengan tengah elemen, (left) di sebelah kanan elemen + 8px margin
       setPosition({
-        top: rect.top + rect.height / 2, // Pusatkan secara vertikal
-        left: rect.right + 8, // 8px di sebelah kanan
+        top: rect.top + rect.height / 2,
+        left: rect.right + 8,
       });
       setIsVisible(true);
     }
@@ -31,7 +29,6 @@ const Tooltip = ({ text, children }: TooltipProps) => {
     setPosition(null);
   };
 
-  // Gunakan useLayoutEffect untuk menangani positioning jika user scroll
   useLayoutEffect(() => {
     if (isVisible && ref.current) {
       const rect = ref.current.getBoundingClientRect();
@@ -40,7 +37,7 @@ const Tooltip = ({ text, children }: TooltipProps) => {
         left: rect.right + 8,
       });
     }
-  }, [isVisible]); // Hitung ulang jika isVisible berubah (misal: saat scroll)
+  }, [isVisible]);
 
   return (
     <div
@@ -53,8 +50,6 @@ const Tooltip = ({ text, children }: TooltipProps) => {
       {isVisible && position && createPortal(
         <div 
           className="fixed z-[9999] w-auto min-w-max rounded-md bg-gray-800 p-2 text-xs text-white shadow-lg"
-          // Terapkan style untuk positioning
-          // Tambahkan transform untuk memusatkan vertikal dengan sempurna
           style={{ 
             top: `${position.top}px`, 
             left: `${position.left}px`,
@@ -63,7 +58,7 @@ const Tooltip = ({ text, children }: TooltipProps) => {
         >
           {text}
         </div>,
-        portalRoot // Render di luar #root
+        portalRoot 
       )}
     </div>
   );

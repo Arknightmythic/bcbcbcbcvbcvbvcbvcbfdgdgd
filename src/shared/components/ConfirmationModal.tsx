@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Loader2 } from 'lucide-react'; // Import Loader2
+import { X, Loader2 } from 'lucide-react'; 
 
 interface ConfirmationModalProps {
   isOpen: boolean;
@@ -9,7 +9,7 @@ interface ConfirmationModalProps {
   children: React.ReactNode;
   confirmText?: string;
   confirmColor?: string;
-  isConfirming?: boolean; // Prop baru ditambahkan di sini
+  isConfirming?: boolean; 
 }
 
 const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
@@ -20,7 +20,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   children,
   confirmText = "Confirm",
   confirmColor = "bg-blue-600 hover:bg-blue-700",
-  isConfirming = false, // Nilai default
+  isConfirming = false, 
 }) => {
   if (!isOpen) {
     return null;
@@ -33,13 +33,13 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
           <h3 className="text-xl font-semibold text-gray-900">{title}</h3>
           <button type="button" className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center" onClick={onClose}>
             <X className="w-5 h-5" />
-            <span className="sr-only">Close modal</span>
+            <span className="sr-only">Tutup modal</span>
           </button>
         </div>
         <div className="py-5 text-base leading-relaxed text-gray-600">{children}</div>
         <div className="flex items-center justify-end pt-4 space-x-3 border-t border-gray-200">
           <button onClick={onClose} type="button" className="px-5 py-2.5 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg hover:bg-gray-100" disabled={isConfirming}>
-            Cancel
+            Batal
           </button>
           <button
             onClick={onConfirm}
@@ -48,7 +48,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
             className={`px-5 py-2.5 text-sm font-medium text-white rounded-lg focus:ring-4 focus:outline-none flex items-center justify-center ${confirmColor} disabled:bg-gray-400`}
           >
             {isConfirming && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            {isConfirming ? 'Processing...' : confirmText}
+            {isConfirming ? 'memproses...' : confirmText}
           </button>
         </div>
       </div>

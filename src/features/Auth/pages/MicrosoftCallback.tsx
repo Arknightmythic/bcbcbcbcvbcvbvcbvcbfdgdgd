@@ -22,36 +22,34 @@ function MicrosoftCallback() {
   const [searchParams] = useSearchParams();
   const { login: loginAction } = useAuthActions();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const { data: userData, isLoading, isError, refetch } = useGetMe();
+  const { refetch } = useGetMe();
   
-  // [2] Tambahkan Ref untuk menandai apakah proses sudah dijalankan
+
   const isProcessed = useRef(false);
 
   useEffect(() => {
     const handleCallback = async () => {
-      // [3] Cek jika sudah diproses, langsung berhenti
       if (isProcessed.current) return;
-
       const status = searchParams.get('status');
       const error = searchParams.get('error');
       const logout = searchParams.get('logout');
 
       if (logout === 'logout') {
-        isProcessed.current = true; // Tandai selesai
+        isProcessed.current = true; 
         toast.success('Logged out successfully');
         navigate('/login', { replace: true });
         return;
       }
 
       if (status === 'login-failed' || error) {
-        isProcessed.current = true; // Tandai selesai
+        isProcessed.current = true; 
         toast.error(error || 'Microsoft login failed. Please try again.');
         navigate('/login', { replace: true });
         return;
       }
 
       if (status === 'login-success') {
-        isProcessed.current = true; // [4] KUNCI DI SINI SEBELUM PROSES ASYNC
+        isProcessed.current = true; 
 
         console.log('Login success detected, fetching user data...');
         const result = await refetch();
@@ -68,7 +66,7 @@ function MicrosoftCallback() {
             id: result.data.id,
             name: result.data.name,
             email: result.data.email,
-            role: result.data.role, // Ingat perbaikan role undefined sebelumnya
+            role: result.data.role, 
           },
           access_token: 'token_from_cookie',
           refresh_token: 'refresh_from_cookie',
@@ -76,7 +74,7 @@ function MicrosoftCallback() {
 
         toast.success('Login successful!');
 
-        // --- Logika Redirect yang sudah diperbaiki ---
+        
         if (!result.data.role || !result.data.role.team) {
             navigate("/unauthorized", { replace: true });
             return;
@@ -90,28 +88,27 @@ function MicrosoftCallback() {
         return;
       }
 
-      // Block ini hanya jalan jika TIDAK ADA status di URL (misal user akses langsung URL callback)
       if (isAuthenticated && !status && !error && !logout) {
         navigate('/', { replace: true });
         return;
       }
 
-      // Fallback
+     
       if (!status && !error && !logout) {
          navigate('/login', { replace: true });
       }
     };
 
     handleCallback();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="text-center">
         <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        <p className="mt-4 text-gray-600 font-medium">Processing Microsoft login...</p>
-        <p className="mt-2 text-sm text-gray-500">Please wait...</p>
+        <p className="mt-4 text-gray-600 font-medium">Memproses Autentikasi dengan akun Microsoft</p>
+        <p className="mt-2 text-sm text-gray-500">mohon tunggu...</p>
       </div>
     </div>
   );

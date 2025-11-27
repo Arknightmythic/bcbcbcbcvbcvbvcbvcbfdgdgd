@@ -105,7 +105,7 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
               onClick={() => { onAction("reject", doc); setIsDropdownOpen(false); }}
               disabled={!isPending}
               className={`flex items-center gap-3 w-full px-4 py-2 text-left text-sm ${
-                isPending ? "text-orange-600 hover:bg-orange-50" : "text-gray-400"
+                isPending ? "text-red-600 hover:bg-red-50" : "text-gray-400"
               } disabled:bg-transparent`}
               title="Reject"
             >
@@ -149,7 +149,7 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
               onClick={() => onAction("reject", doc)}
               disabled={!isPending}
               className={`p-1 rounded-md transition-colors ${
-                isPending ? "text-orange-600 hover:bg-orange-50" : "text-gray-400 cursor-not-allowed"
+                isPending ? "text-red-600 hover:bg-red-50" : "text-gray-400 cursor-not-allowed"
               }`}
               title="Reject"
             >

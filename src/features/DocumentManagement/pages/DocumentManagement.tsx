@@ -8,7 +8,7 @@ import { useGetDocuments, useApproveDocument, useRejectDocument, useDeleteDocume
 import { generateViewUrl} from "../api/document";
 import DocumentTable from "../components/DocumentTable";
 import ConfirmationModal from "../../../shared/components/ConfirmationModal";
-import TableControls, { type FilterConfig } from "../../../shared/components/TableControls";
+import TableControls, { type FilterConfig } from "../../../shared/components/tablecontrols/TableControls";
 import PdfViewModal from "../../../shared/components/PDFViewModal";
 
 // Update Interface Filters
@@ -56,7 +56,7 @@ const filterConfig: FilterConfig<Filters>[] = [
         type: "date-range",
         startDateKey: "start_date",
         endDateKey: "end_date",
-        placeholder: "Filter by Date",
+        placeholder: "Filter Tanggal",
     },
 ];
 
@@ -245,7 +245,7 @@ const DocumentManagementPage = () => {
         <div className="px-4 bg-gray-50 rounded-t-lg shadow-md">
             <TableControls
                 searchTerm={searchInput}
-                searchPlaceholder="Search by name, staff, team..."
+                searchPlaceholder="Cari bedasarkan nama, staff, tim..."
                 filters={filters}
                 onSearchChange={setSearchInput}
                 onSearchSubmit={handleSearchSubmit} 
@@ -264,7 +264,6 @@ const DocumentManagementPage = () => {
           onPageChange={setCurrentPage}
           onItemsPerPageChange={handleItemsPerPageChange}
           onViewFile={handleOpenViewFile}
-          // --- Pass Props Sorting ---
           sortColumn={sortColumn}
           sortDirection={sortDirection}
           onSort={handleSort}

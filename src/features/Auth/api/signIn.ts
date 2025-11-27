@@ -1,8 +1,8 @@
 import type { AuthData } from '../../../shared/store/authStore';
 import instanceApi from '../../../shared/utils/Axios';
-import type { SignInValues } from '../utils/schema'; // Akan kita buat
+import type { SignInValues } from '../utils/schema';
 
-// Tipe untuk response dari backend Go
+
 interface ApiResponse {
   status: string;
   message: string;

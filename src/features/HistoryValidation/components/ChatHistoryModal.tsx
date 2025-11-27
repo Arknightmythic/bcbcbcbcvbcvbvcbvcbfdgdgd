@@ -45,7 +45,7 @@ const ChatHistoryModal: React.FC<ChatHistoryModalProps> = ({ isOpen, onClose, ch
                       <CheckCircle className="w-5 h-5" />
                     </button>
                     <button
-                      className="p-1 text-orange-600 hover:bg-orange-50 rounded-md transition-colors"
+                      className="p-1 text-red-600 hover:bg-red-50 rounded-md transition-colors"
                       title="Reject"
                     >
                       <XCircle className="w-5 h-5" />

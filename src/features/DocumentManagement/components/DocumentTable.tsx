@@ -72,19 +72,19 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
         <table className="min-w-full min-w-[1000px]">
           <thead className="bg-gray-100 sticky top-0 ">
             <tr className="text-left text-[10px] font-semibold text-gray-600">
-              <SortableHeader label="Request Date" columnKey="created_at" />
-              <SortableHeader label="Document Name" columnKey="document_name" className="text-left !justify-start" />
+              <SortableHeader label="Tanggal Unggah" columnKey="created_at" />
+              <SortableHeader label="Nama Dokumen" columnKey="document_name" className="text-left !justify-start" />
               <SortableHeader label="staff" columnKey="staff" />
               
-              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">Type</th>
-              <th className="px-4 py-3 sticky top-0 bg-gray-100">Category</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">Tipe</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100">Kategori</th>
               
               {/* --- PERUBAHAN DI SINI: Tambahkan Header Team --- */}
-              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">Team</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">Tim</th>
               
               <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">Status</th>
               
-              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center right-0 z-10">Actions</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center right-0 z-10">Aksi</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -101,7 +101,7 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
             ) : (
               <tr>
                 <td colSpan={8} className="text-center py-10 text-gray-500"> {/* Update colSpan jadi 8 */}
-                  <p>No documents found matching your criteria.</p>
+                  <p>Tidak ada dokumen ditemukan</p>
                 </td>
               </tr>
             )}

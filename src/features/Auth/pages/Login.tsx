@@ -11,8 +11,8 @@ import { useSignIn } from '../hooks/useSignIn';
 import { useMicrosoftSSO } from '../hooks/useMicrosoftSSO';
 
 const signInSchema = z.object({
-  email: z.email('Invalid email address'),
-  password: z.string().min(1, 'Password is required'),
+  email: z.email('email tidak valid'),
+  password: z.string().min(1, 'sandi diperlukan'),
 });
 
 type SignInValues = z.infer<typeof signInSchema>;
@@ -37,12 +37,12 @@ function Login() {
     loginMutation(data, {
       onSuccess: (response) => {
         loginAction(response.data);
-        toast.success('Login successful!');
+        toast.success('Berhasil masuk!');
         navigate('/');
       },
       onError: (error: any) => {
         const errorMessage =
-          error.response?.data?.message || 'Login failed. Please try again.';
+          error.response?.data?.message || 'Autentikasi gagal. Coba lagi.';
         toast.error(errorMessage);
       },
     });
@@ -54,7 +54,6 @@ function Login() {
 
   return (
     <div className="bg-gray-50 min-h-screen flex flex-col md:flex-row w-full font-sans">
-      {/* Panel Kiri (Branding) */}
       <div
         className="relative w-full md:w-1/2 hidden md:flex items-center justify-start px-8 md:px-12 lg:px-20 py-10 md:py-16 text-white"
         style={{
@@ -65,8 +64,8 @@ function Login() {
       >
         <div className="absolute inset-0 bg-black opacity-30 z-0" />
         <div className="relative z-10">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold mb-4">
-            Welcome to
+          <h1 className="text-2xl sm:text-2xl lg:text-4xl font-extrabold mb-4">
+            Selamat Datang Di Layanan
           </h1>
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white">
             Dokuprime
@@ -88,10 +87,10 @@ function Login() {
         {/* Form Card */}
         <div className="bg-white p-6 sm:p-10 rounded-xl shadow-lg border border-gray-200 w-full max-w-lg mt-10 lg:mt-32">
           <h2 className="text-2xl font-bold text-gray-800 mb-2 text-center">
-            SIGN IN
+            MASUK
           </h2>
           <p className="text-gray-500 mb-8 text-center text-xs">
-            Sign in with your email credentials.
+            Masuk dengan kredensial email Anda.
           </p>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -122,7 +121,7 @@ function Login() {
                   id="email"
                   type="email"
                   {...register('email')}
-                  placeholder="Enter your email"
+                  placeholder="silahkan masukan email"
                   className="pl-10 pr-3 py-3 w-full border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm overflow-hidden text-ellipsis"
                 />
               </div>
@@ -138,7 +137,7 @@ function Login() {
                 htmlFor="password"
                 className="block text-xs font-medium text-gray-700 mb-1"
               >
-                Password
+                Sandi
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none z-10">
@@ -160,14 +159,14 @@ function Login() {
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   {...register('password')}
-                  placeholder="Enter your password"
+                  placeholder="Silahkan masukkan sandi"
                   className="pl-10 pr-12 py-3 w-full border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm overflow-hidden text-ellipsis"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none z-10"
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-label={showPassword ? 'sembunyikan sandi' : 'memperlihatkan sandi'}
                 >
                   {showPassword ? (
                     <EyeOff className="w-5 h-5" />
@@ -188,7 +187,7 @@ function Login() {
               disabled={isPending}
               className="w-full flex justify-center items-center py-3 px-4 rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 text-sm font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              {isPending ? 'Signing In...' : 'Sign In'}
+              {isPending ? 'sedang autentikasi...' : 'Masuk'}
             </button>
           </form>
 
@@ -199,7 +198,7 @@ function Login() {
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="px-2 bg-white text-gray-500 text-xs">
-                  Or continue with
+                  atau masuk dengan
                 </span>
               </div>
             </div>
@@ -216,7 +215,7 @@ function Login() {
                   alt="Microsoft icon"
                   className="w-5 h-5 mr-2"
                 />
-                {isMicrosoftPending ? 'Redirecting...' : 'SSO with Microsoft'}
+                {isMicrosoftPending ? 'mengalihkan...' : 'SSO Microsoft'}
               </button>
             </div>
           </div>

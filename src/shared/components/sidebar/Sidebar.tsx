@@ -1,173 +1,11 @@
-import { Link, useLocation } from "react-router";
-import {
-  Users,
-  Shield,
-  LayoutDashboard,
-  Dock,
-  Database,
-  BotIcon,
-  History,
-  SearchSlash,
-  User2,
-  Headset,
-} from "lucide-react";
+import {  useLocation } from "react-router";
 import { useRef } from "react";
-
 import { AgentPanel } from "./AgentPanel";
-import type { Chat, MenuItem } from "../../types/types";
-import Tooltip from "../Tooltip";
 import { useAuthStore } from "../../store/authStore";
+import { SidebarMenu } from "../../utils/title_content";
+import { DummyChats } from "../../utils/dummy";
+import { NavigationMenu } from "./NavigationMenu";
 
-const dummyMenu: MenuItem[] = [
-  {
-    path: "/dashboard",
-    title: "Dashboard",
-    icon: LayoutDashboard,
-    identifier: "dashboard",
-  },
-  {
-    path: "/knowledge-base",
-    title: "Knowledge base",
-    icon: Database,
-    identifier: "knowledge-base",
-  },
-  {
-    path: "/document-management",
-    title: "Document Management",
-    icon: Dock,
-    identifier: "document-management",
-  },
-  {
-    path: "/public-service",
-    title: "Public service",
-    icon: BotIcon,
-    identifier: "public-service",
-  },
-  {
-    path: "/validation-history",
-    title: "Validation History",
-    icon: History,
-    identifier: "validation-history",
-  },
-  { path: "/guide", title: "Guide", icon: SearchSlash, identifier: "guide" },
-  {
-    path: "/user-management",
-    title: "User Management",
-    icon: User2,
-    identifier: "user-management",
-  },
-  {
-    path: "/team-management",
-    title: "Team Management ",
-    icon: Users,
-    identifier: "team-management",
-  },
-  {
-    path: "/role-management",
-    title: "Role Management",
-    icon: Shield,
-    identifier: "role-management",
-  },
-  {
-    path: "/helpdesk",
-    title: "Help Desk",
-    icon: Headset,
-    identifier: "helpdesk",
-  },
-];
-
-const dummyChats: {
-  queue: Chat[];
-  active: Chat[];
-  history: Chat[];
-  pending: Chat[];
-} = {
-  queue: [
-    {
-      id: "q1",
-      user_name: "Antrian User 1",
-      last_message: "",
-      timestamp: new Date().toISOString(),
-      channel: "web",
-    },
-    {
-      id: "q2",
-      user_name: "Antrian User 2",
-      last_message: "",
-      timestamp: new Date().toISOString(),
-      channel: "whatsapp",
-    },
-  ],
-  active: [
-    {
-      id: "a1",
-      user_name: "User Aktif",
-      last_message: "",
-      timestamp: new Date().toISOString(),
-      channel: "web",
-    },
-  ],
-  history: [
-    {
-      id: "h1",
-      user_name: "User Riwayat",
-      last_message: "",
-      timestamp: new Date().toISOString(),
-      channel: "email",
-    },
-  ],
-  pending: [],
-};
-
-const NavigationMenu = ({
-  menuItems,
-  currentPath,
-  isCollapsed,
-}: {
-  menuItems: MenuItem[];
-  currentPath: string;
-  isCollapsed: boolean;
-}) => (
-  <div className="space-y-1 px-2 pb-4 md:px-4">
-    {menuItems.map((item) => {
-      const isActive =
-        currentPath === item.path || currentPath.startsWith(`${item.path}/`);
-      const linkContent = (
-        <Link
-          key={item.path}
-          to={item.path}
-          className={`group flex items-center rounded-lg px-3 h-12 mx-2 transition-colors duration-200 ${
-            isCollapsed ? "justify-center" : "justify-start"
-          } ${
-            isActive
-              ? "bg-bOss-red text-white"
-              : "hover:bg-bOss-red-50 text-gray-600"
-          }`}
-        >
-          <item.icon className="h-4 w-4 flex-shrink-0" />
-          <span
-            className={`
-                font-medium overflow-hidden transition-all duration-300 ease-in-out leading-snug text-xs
-                ${
-                  isCollapsed ? "w-0 opacity-0 ml-0" : "w-auto opacity-100 ml-3"
-                }
-              `}
-          >
-            {item.title}
-          </span>
-        </Link>
-      );
-
-      return isCollapsed ? (
-        <Tooltip key={item.path} text={item.title}>
-          {linkContent}
-        </Tooltip>
-      ) : (
-        linkContent
-      );
-    })}
-  </div>
-);
 
 const Sidebar = ({
   isCollapsed,
@@ -186,7 +24,7 @@ const Sidebar = ({
   const { user } = useAuthStore();
   const userPages = user?.role?.team?.pages || [];
   const userPermissions = user?.role?.permissions || [];
-  const accessibleMenu = dummyMenu.filter((item) => {
+  const accessibleMenu = SidebarMenu.filter((item) => {
     const isPageInTeam = userPages.includes(item.identifier);
 
     const hasReadPermission = userPermissions.some(
@@ -210,7 +48,6 @@ const Sidebar = ({
       ${isDesktop ? "z-50" : isMobileOpen ? "z-[60]" : "z-50 -translate-x-full"}
       `}
     >
-      {/* 1. LOGO */}
       <div
         className={`flex h-20 items-center px-4 mt-4 mb-4 transition-all duration-300 ${
           isCollapsed ? "justify-center" : "justify-start"
@@ -234,9 +71,7 @@ const Sidebar = ({
         </div>
       </div>
 
-      {/* 2. Container untuk layout internal */}
       <div className={`flex flex-1 flex-col overflow-hidden`}>
-        {/* 3. AREA MENU (Scrollable) */}
         <div className={`flex-1 overflow-y-auto custom-scrollbar-overlay`}>
           <NavigationMenu
             menuItems={accessibleMenu}
@@ -245,13 +80,12 @@ const Sidebar = ({
           />
         </div>
 
-        {/* 4. AGENT PANEL (Didorong ke bawah) */}
         {showAgentSection && (
           <div style={{ height: "auto" }} className="mt-auto">
             <AgentPanel
               panelRef={agentPanelRef}
               agentName={user?.name || "Guest"}
-              chats={dummyChats}
+              chats={DummyChats}
               agentStatus={agentStatus}
               isCollapsed={isCollapsed}
               setOutletBlurred={setOutletBlurred}

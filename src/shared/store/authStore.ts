@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import secureLocalStorage from 'react-secure-storage';
 import { ACCESS_TOKEN_KEY, USER_KEY } from '../utils/constant';
 
-// Tipe User tetap sama
 interface User {
   id: number;
   name: string;
@@ -12,10 +11,10 @@ interface User {
   phone?: string;
 }
 
-// AuthData tidak lagi memerlukan refresh_token di sisi klien
+
 export interface AuthData {
   access_token: string;
-  refresh_token: string; // Tetap ada di tipe untuk mencocokkan response API
+  refresh_token: string;
   user: User;
 }
 
@@ -41,7 +40,6 @@ const storage = {
   },
 
   setItems: (data: AuthData) => {
-    // Hanya simpan access_token dan user, refresh_token ada di cookie HttpOnly
     if (isDevelopment) {
       localStorage.setItem(ACCESS_TOKEN_KEY, data.access_token);
       localStorage.setItem(USER_KEY, JSON.stringify(data.user));
@@ -78,7 +76,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   accessToken: initialAccessToken,
   actions: {
     login: (data) => {
-      storage.setItems(data); // Browser akan otomatis menyimpan cookie refresh_token dari response
+      storage.setItems(data); 
       set({
         isAuthenticated: true,
         user: data.user,
@@ -90,7 +88,6 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ isAuthenticated: false, user: null, accessToken: null });
     },
     setUser: (user) => {
-      // Logika ini tetap sama
       if (isDevelopment) {
           localStorage.setItem(USER_KEY, JSON.stringify(user));
       } else {

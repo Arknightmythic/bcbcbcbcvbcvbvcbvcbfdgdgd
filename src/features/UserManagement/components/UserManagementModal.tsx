@@ -97,10 +97,6 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
       className="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-sm p-4"
       onClick={handleBackdropClick}
     >
-      {/* PERUBAHAN 1: 
-        - Added 'max-h-[90vh]' untuk membatasi tinggi modal 
-        - Added 'flex flex-col' untuk layout vertikal 
-      */}
       <div
         className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md animate-fade-in-up max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
@@ -108,7 +104,7 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
         {/* Header: Added 'flex-shrink-0' agar tidak mengecil */}
         <div className="flex justify-between items-center pb-4 border-b flex-shrink-0">
           <h2 className="text-2xl font-bold">
-            {isEditMode ? "Edit User" : "Create New User"}
+            {isEditMode ? "Ubah Pengguna" : "Buat Pengguna Baru"}
           </h2>
           <button
             onClick={onClose}
@@ -118,10 +114,7 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
           </button>
         </div>
 
-        {/* PERUBAHAN 2: 
-          - Wrapper div untuk konten scrollable
-          - Form dipindahkan ke sini 
-        */}
+       
         <div className="overflow-y-auto flex-grow mt-6 p-2 custom-scrollbar">
           <form id="user-form" onSubmit={handleSubmit} autoComplete="off">
             {/* Hack untuk mematikan autofill Chrome */}
@@ -131,7 +124,7 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Name
+                  Nama
                 </label>
                 <input
                   type="text"
@@ -175,7 +168,7 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Password
+                  Sandi
                 </label>
                 <div className="relative mt-1">
                   <input
@@ -183,10 +176,10 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
                     // Ubah placeholder jika akun Microsoft
                     placeholder={
                       isMicrosoftAccount
-                        ? "Managed by Microsoft SSO"
+                        ? "Dikelola oleh Microsoft SSO"
                         : isEditMode
-                        ? "Leave blank to keep current"
-                        : "Enter password (min. 8 chars)"
+                        ? "Kosongkan jika tidak ingin mengubah"
+                        : "Masukkan kata sandi (min. 8 karakter)"
                     }
                     value={formData.password}
                     onChange={(e) =>
@@ -229,13 +222,13 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
                   </p>
                 ) : (
                   <p className="text-xs text-gray-500 mt-1">
-                    Minimum 8 characters
+                    Minimal 8 karakter
                   </p>
                 )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Team
+                  TIm
                 </label>
                 <CustomSelect
                   selectedType="default"
@@ -244,7 +237,7 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
                     setFormData({ ...formData, teamId: value, roleId: "" })
                   }
                   options={[
-                    { value: "", label: "Select a team" },
+                    { value: "", label: "Pilih Team" },
                     ...teamOptions,
                   ]}
                 />
@@ -263,8 +256,8 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
                     {
                       value: "",
                       label: formData.teamId
-                        ? "Select a role"
-                        : "Select a team first",
+                        ? "Pilih role"
+                        : "Pilih tim terdahulu",
                     },
                     ...roleOptions,
                   ]}
@@ -280,7 +273,7 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
             onClick={onClose}
             className="px-5 py-2.5 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg hover:bg-gray-100"
           >
-            Cancel
+            Batal
           </button>
           <button
             type="submit"
@@ -289,7 +282,7 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
             className="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 flex items-center"
           >
             {isLoading && <Loader2 className="animate-spin w-5 h-5 mr-2" />}
-            {isEditMode ? "Save Changes" : "Create User"}
+            {isEditMode ? "Simpan Perubahan" : "Simpan"}
           </button>
         </div>
       </div>

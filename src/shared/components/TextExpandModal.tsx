@@ -1,5 +1,3 @@
-// [File: src/shared/components/TextExpandModal.tsx]
-
 import React from 'react';
 import { X } from 'lucide-react';
 

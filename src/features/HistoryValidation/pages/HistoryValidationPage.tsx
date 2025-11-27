@@ -18,7 +18,7 @@ import HistoryValidationTable from "../components/HistoryValidationTable";
 import ChatHistoryModal from "../components/ChatHistoryModal";
 import TableControls, {
   type FilterConfig,
-} from "../../../shared/components/TableControls";
+} from "../../../shared/components/tablecontrols/TableControls";
 import ConfirmationModal from "../../../shared/components/ConfirmationModal";
 import toast from "react-hot-toast";
 import TextExpandModal from "../../../shared/components/TextExpandModal";
@@ -242,7 +242,7 @@ const HistoryValidationPage = () => {
         <div className="px-4 bg-gray-50 rounded-t-lg shadow-md">
           <TableControls
             searchTerm={searchInput}
-            searchPlaceholder="Search by user, session ID, or question...."
+            searchPlaceholder="Cari bedasarkan nama, id sesi...."
             filters={filters}
             onSearchChange={setSearchInput}
             onSearchSubmit={handleSearchSubmit}

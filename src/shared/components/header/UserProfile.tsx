@@ -23,7 +23,6 @@ const UserProfile = () => {
         className="w-10 h-10 cursor-pointer rounded-full bg-gray-200 flex items-center justify-center"
         onClick={() => setIsMenuOpen((prev) => !prev)}
       >
-        {/* Menampilkan inisial nama jika ada user */}
         {user ? (
           <span className="font-bold text-gray-600">{user.name.charAt(0).toUpperCase()}</span>
         ) : (

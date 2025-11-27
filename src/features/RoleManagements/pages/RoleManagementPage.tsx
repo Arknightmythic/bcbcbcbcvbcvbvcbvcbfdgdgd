@@ -12,7 +12,7 @@ import {
   useGetModalDependencies, 
 } from '../hooks/useRoleManagement';
 
-import TableControls from '../../../shared/components/TableControls';
+import TableControls from '../../../shared/components/tablecontrols/TableControls';
 import RoleTable from '../components/RoleTable';
 import ConfirmationModal from '../../../shared/components/ConfirmationModal';
 import RoleManagementModal from '../components/RoleManagementModal';

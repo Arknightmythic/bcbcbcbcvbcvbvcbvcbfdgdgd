@@ -5,8 +5,7 @@ import { Calendar } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 
-// --- COMPONENT: DASHBOARD RANGE PICKER ---
-// Menggabungkan tampilan From/To tapi menggunakan logika Range Picker
+
 interface DashboardRangePickerProps {
   startDateStr: string;
   endDateStr: string;
@@ -20,11 +19,9 @@ const DashboardRangePicker: React.FC<DashboardRangePickerProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
-  
-  // Ref untuk container pembungkus agar posisi popover bisa dihitung relatif terhadap area input
+
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Konversi string state ke Date object untuk React Datepicker
   const startDate = startDateStr ? new Date(startDateStr) : null;
   const endDate = endDateStr ? new Date(endDateStr) : null;
 
@@ -36,10 +33,8 @@ const DashboardRangePicker: React.FC<DashboardRangePickerProps> = ({
       const rect = containerRef.current.getBoundingClientRect();
       const screenW = window.innerWidth;
       
-      // Default: Align left dengan container
       let left = rect.left + window.scrollX;
       
-      // Jika mepet kanan layar, geser ke kiri (lebar kalender datepicker ~240-300px)
       if (left + 300 > screenW) {
         left = Math.max(10, (rect.right + window.scrollX) - 300);
       }
@@ -52,31 +47,22 @@ const DashboardRangePicker: React.FC<DashboardRangePickerProps> = ({
     }
   };
 
-  // Handle Range Change
   const handleDateChange = (dates: [Date | null, Date | null]) => {
     const [start, end] = dates;
     
-    // Helper convert Date -> YYYY-MM-DD string
     const toDateStr = (d: Date) => {
       const offset = d.getTimezoneOffset();
       const adjusted = new Date(d.getTime() - (offset * 60 * 1000));
       return adjusted.toISOString().split('T')[0];
     };
 
-    // Update parent state
-    // Jika start null (reset), kirim empty string
+    
     const newStartStr = start ? toDateStr(start) : "";
     const newEndStr = end ? toDateStr(end) : "";
 
     onChange(newStartStr, newEndStr);
-
-    // Jangan tutup otomatis jika baru pilih start date, tunggu user pilih end date
-    // Tapi jika user ingin mengubah start date saja, datepicker tetap terbuka.
-    // Opsional: Tutup jika kedua tanggal sudah terisi (end !== null)
-    // if (end) setIsOpen(false); 
   };
 
-  // Close when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
@@ -94,7 +80,6 @@ const DashboardRangePicker: React.FC<DashboardRangePickerProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
-  // Tombol visual reusable
   const renderDateBox = (label: string, value: string) => (
     <div 
       className="flex items-center justify-between bg-white py-2 px-3 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer w-full md:flex-1"
@@ -112,11 +97,9 @@ const DashboardRangePicker: React.FC<DashboardRangePickerProps> = ({
 
   return (
     <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto flex-1" ref={containerRef}>
-      {/* Tampilan Visual: From & To terpisah tapi fungsinya satu trigger */}
       {renderDateBox("From", startDateStr)}
       {renderDateBox("To", endDateStr)}
 
-      {/* Portal Popover */}
       {isOpen && coords && createPortal(
         <div
           id="dashboard-range-portal"
@@ -130,10 +113,9 @@ const DashboardRangePicker: React.FC<DashboardRangePickerProps> = ({
             endDate={endDate}
             selectsRange
             inline
-            maxDate={new Date()} // Disable future dates
-            monthsShown={1} // Tampilkan 1 bulan agar compact
+            maxDate={new Date()} 
+            monthsShown={1} 
           />
-          {/* Style Custom untuk Datepicker */}
           <style>{`
             .react-datepicker { border: none; font-family: inherit; }
             .react-datepicker__header { background-color: white; border-bottom: 1px solid #f3f4f6; }
@@ -144,7 +126,6 @@ const DashboardRangePicker: React.FC<DashboardRangePickerProps> = ({
             .react-datepicker__month-container { float: none; }
           `}</style>
 
-          {/* Footer Reset Button (Opsional) */}
           <div className="flex justify-end pt-2 border-t border-gray-100 mt-2">
             <button 
               onClick={() => onChange("", "")}
@@ -160,7 +141,6 @@ const DashboardRangePicker: React.FC<DashboardRangePickerProps> = ({
   );
 };
 
-// --- MAIN COMPONENT: DASHBOARD HEADER ---
 
 interface DashboardHeaderProps {
   onPeriodChange: (period: Period) => void;
@@ -169,8 +149,6 @@ interface DashboardHeaderProps {
   defaultStartDate?: string;
   defaultEndDate?: string;
 }
-
-// Helper
 const getTodayDateString = () => new Date().toISOString().split('T')[0];
 
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
@@ -252,7 +230,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         transition-[grid-template-rows] duration-300 ease-in-out
         ${isCustomDateVisible ? 'grid-rows-[auto_1fr]' : 'grid-rows-[auto_0fr]'}
       `}>
-        {/* BUTTON GROUP PERIOD */}
+
         <div className="flex gap-2 bg-gray-50 p-1 rounded-md border border-gray-200 items-center w-full mb-2 md:mb-0">
           {(['daily', 'monthly', 'yearly', 'custom'] as const).map((period) => (
              <button
@@ -267,19 +245,16 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           ))}
         </div>
 
-        {/* CUSTOM DATE AREA */}
+
         <div className="overflow-visible"> 
-          {/* Note: overflow-visible agar popover range picker tidak terpotong jika menggunakan relative positioning biasa, 
-              tapi karena kita pakai Portal, overflow hidden/visible di container animasi mungkin tidak masalah untuk popover,
-              tapi 'h-0' vs 'h-auto' di grid-rows mengontrol layout. */}
-              
+          
           <div className={`
             flex flex-col md:flex-row flex-wrap gap-2 items-center 
             transition-all duration-300 ease-in-out
             ${isCustomDateVisible ? 'opacity-100 pt-2' : 'opacity-0 pt-0 h-0 pointer-events-none'}
           `}>
             
-            {/* Range Picker Component (From & To UI) */}
+
             <DashboardRangePicker 
               startDateStr={startDate} 
               endDateStr={endDate} 

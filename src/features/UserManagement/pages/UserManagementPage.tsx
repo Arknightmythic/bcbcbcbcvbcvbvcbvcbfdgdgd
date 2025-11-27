@@ -22,7 +22,7 @@ import {
   useGetRoles,
 } from '../hooks/useUserManagement';
 
-import TableControls from '../../../shared/components/TableControls';
+import TableControls from '../../../shared/components/tablecontrols/TableControls';
 import UserTable from '../components/UserTable';
 import ConfirmationModal from '../../../shared/components/ConfirmationModal';
 import UserManagementModal from '../components/UserManagementModal';
@@ -198,7 +198,7 @@ const UserManagementPage = () => {
                  <div className="flex-grow">
                     <TableControls
                         searchTerm={searchInput}
-                        searchPlaceholder="Search by name or email..."
+                        searchPlaceholder="Cari bedasarkan nama atau email..."
                         filters={filters}
                         onSearchChange={setSearchInput}
                         onSearchSubmit={handleSearchSubmit}

@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import toast from "react-hot-toast";
-import TableControls from "../../../shared/components/TableControls"; // Pastikan path ini sesuai
+import TableControls from "../../../shared/components/tablecontrols/TableControls"; // Pastikan path ini sesuai
 import PdfViewModal from "../../../shared/components/PDFViewModal"; // Pastikan path ini sesuai
 import GuideTable from "../components/GuideTable";
 import { useGetGuides } from "../hooks/useGuide";

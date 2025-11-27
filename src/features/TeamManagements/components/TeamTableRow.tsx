@@ -66,19 +66,19 @@ const TeamTableRow: React.FC<TeamTableRowProps> = ({ team, onAction }) => {
           onClick={() => { onAction('edit', team); setIsDropdownOpen(false); }}
           disabled={isDefault} // Disabled jika default
           className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:text-gray-400 disabled:bg-white disabled:cursor-not-allowed"
-          title={isDefault ? "Cannot edit default team" : "Edit Team"}
+          title={isDefault ? "tidak bisa edit tim 'default'" : "Ubah tim"}
         >
           <Edit className="w-4 h-4" />
-          <span>Edit Team</span>
+          <span>Ubah Tim</span>
         </button>
         <button
           onClick={() => { onAction('delete', team); setIsDropdownOpen(false); }}
           disabled={isDefault} // Disabled jika default
           className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 disabled:text-gray-400 disabled:bg-white disabled:cursor-not-allowed"
-          title={isDefault ? "Cannot delete default team" : "Delete Team"}
+          title={isDefault ? "'Tidak bisa hapus tim'" : "Hapus Tim"}
         >
           <Trash2 className="w-4 h-4" />
-          <span>Delete Team</span>
+          <span>Hapus Tim</span>
         </button>
       </div>
     </div>
@@ -98,7 +98,7 @@ const TeamTableRow: React.FC<TeamTableRowProps> = ({ team, onAction }) => {
             onClick={() => onAction('edit', team)} 
             disabled={isDefault}
             className={`hover:text-blue-800 ${isDefault ? 'text-gray-300 cursor-not-allowed' : 'text-blue-600'}`}
-            title={isDefault ? "Cannot edit default team" : "Edit"}
+            title={isDefault ? "'tidak bisa ubah tim default'" : "ubah"}
           >
             <Edit className="w-4 h-4" />
           </button>
@@ -106,7 +106,7 @@ const TeamTableRow: React.FC<TeamTableRowProps> = ({ team, onAction }) => {
             onClick={() => onAction('delete', team)} 
             disabled={isDefault}
             className={`hover:text-red-800 ${isDefault ? 'text-gray-300 cursor-not-allowed' : 'text-red-600'}`}
-            title={isDefault ? "Cannot delete default team" : "Delete"}
+            title={isDefault ? "tidak bisa hapus tim 'default'" : "hapus"}
           >
             <Trash2 className="w-4 h-4" />
           </button>

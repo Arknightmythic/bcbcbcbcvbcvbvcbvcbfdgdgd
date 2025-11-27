@@ -18,3 +18,11 @@ export interface Chat {
 }
 
 export type DocumentCategory = "panduan" | "uraian" | "peraturan";
+
+export interface PdfViewModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  url: string | null;      
+  isLoading: boolean;  
+  title: string;
+}
