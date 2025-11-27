@@ -187,7 +187,14 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
             {message.sender === "agent" ? (
               // JIKA DARI AI: Gunakan ReactMarkdown
               <div className="prose prose-sm max-w-none prose-ol:list-decimal prose-ol:list-inside prose-ol:pl-4 prose-li:before:hidden hover:prose-a:text-blue-700 hover:prose-a:underline prose-p:my-1 prose-ol:my-1 prose-li:my-0.5 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    a: ({ node, ...props }) => (
+                      <a {...props} target="_blank" rel="noopener noreferrer" />
+                    ),
+                  }}
+                >
                   {/* Gabungkan kembali baris-baris untuk di-parse oleh Markdown */}
                   {normalizeMarkdown(displayedLines.join("\n"))}
                 </ReactMarkdown>
