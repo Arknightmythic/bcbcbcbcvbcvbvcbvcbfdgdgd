@@ -9,9 +9,9 @@ const HelpDeskIntroPage: React.FC = () => {
   return (
     <div className="flex-1 flex flex-col justify-center items-center text-center p-8 bg-gray-50 h-full">
       <MessageSquareText className="w-16 h-16 text-gray-300 mb-4" />
-      <h2 className="text-xl font-semibold text-gray-700">Welcome,  {user?.name}</h2>
+      <h2 className="text-xl font-semibold text-gray-700">Selamat datang,  {user?.name}</h2>
       <p className="text-gray-500 mt-2">
-        Select a conversation from the 'Active' or 'Queue' list on the left to begin.
+        Pilih percakapan dari daftar 'Aktif' atau 'Antrian' di sebelah kiri untuk memulai.
       </p>
     </div>
   );

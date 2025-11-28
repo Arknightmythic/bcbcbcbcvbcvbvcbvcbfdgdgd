@@ -156,6 +156,10 @@ const HelpDeskChatPage: React.FC = () => {
 
   const handleSend = async () => {
     if (!input.trim() || !sessionId) return;
+
+    const sendTime = new Date();
+    // Format timestamp menjadi string: "YYYY-MM-DD HH:mm:ss.sss"
+    const startTimestampString = sendTime.toISOString().replace('T', ' ').replace('Z', '').slice(0, 23);
     
     const messageText = input.trim();
     setInput('');
@@ -170,6 +174,7 @@ const HelpDeskChatPage: React.FC = () => {
         session_id: sessionId,
         message: messageText,
         user_type: "agent",
+        start_timestamp: startTimestampString,
       });
       
       // Scroll to bottom after sending

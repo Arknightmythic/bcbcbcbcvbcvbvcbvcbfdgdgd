@@ -200,7 +200,7 @@ const HelpDeskListPanel: React.FC = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-gray-500">Loading helpdesk data...</div>
+        <div className="text-gray-500">memuat data...</div>
       </div>
     );
   }
@@ -208,7 +208,7 @@ const HelpDeskListPanel: React.FC = () => {
   if (isError) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-red-500">Failed to load helpdesk data</div>
+        <div className="text-red-500">gagal memuat data</div>
       </div>
     );
   }

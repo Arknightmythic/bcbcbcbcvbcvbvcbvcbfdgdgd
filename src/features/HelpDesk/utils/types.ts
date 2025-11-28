@@ -45,6 +45,13 @@ export interface HelpDeskPayload {
   user_id: number;
 }
 
+export interface SendHelpdeskMessagePayload {
+  session_id: string;
+  message: string;
+  user_type: "user" | "agent";
+  start_timestamp?: string; // Tambahan yang diminta
+}
+
 export interface HelpDeskStatusUpdate {
   status: HelpDeskStatus;
 }
@@ -115,3 +122,4 @@ export interface HelpDeskMessage {
   text: string;
   timestamp: string;
 }
+

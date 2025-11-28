@@ -114,7 +114,7 @@ const RoleTableRow: React.FC<RoleTableRowProps> = ({ role, onAction }) => {
           
           {visiblePermissions.length > 3 && (
             <span className="px-2 py-0.5 text-[10px] bg-gray-300 text-gray-800 rounded-full">
-              +{visiblePermissions.length - 3} more
+              +{visiblePermissions.length - 3} lebih banyak
             </span>
           )}
           

@@ -33,6 +33,7 @@ export interface AskPayload {
   query: string;
   conversation_id: string; // Kirim string kosong untuk sesi baru
   platform: string;
+  start_timestamp?: string;
 }
 
 /**

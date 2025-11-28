@@ -12,7 +12,7 @@ import {
   getChatHistoryBySession,
   sendHelpdeskMessage,
 } from "../api/helpDeskApi";
-import type { HelpDeskPayload } from "../utils/types";
+import type { HelpDeskPayload, SendHelpdeskMessagePayload } from "../utils/types";
 import toast from "react-hot-toast";
 
 const QUERY_KEY = "helpdesks";
@@ -230,11 +230,7 @@ export const useSendHelpdeskMessage = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (data: {
-      session_id: string;
-      message: string;
-      user_type: "user" | "agent";
-    }) => sendHelpdeskMessage(data),
+   mutationFn: (data: SendHelpdeskMessagePayload) => sendHelpdeskMessage(data),
     onSuccess: (_, variables) => {
       // Invalidate chat history to refetch
       queryClient.invalidateQueries({ 

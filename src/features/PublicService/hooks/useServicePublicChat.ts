@@ -20,10 +20,10 @@ import {
 } from "../api/chatApi";
 import { getWebSocketService } from "../../../shared/utils/WebsocketService";
 
-// Helper to clean text - remove "None" and trim
+
 const cleanText = (text: string): string => {
   if (!text) return "";
-  // Remove "None" at start of text (case insensitive)
+  
   let cleaned = text.replace(/^None\s*/i, "");
   return cleaned.trim();
 };
@@ -36,22 +36,22 @@ const mapBackendHistoryToFrontend = (
       let sender: "user" | "agent" | "system" = "agent";
       let text = "";
       
-      // Extract content from various possible structures
+      
       if (msg.message.data?.content) {
         text = msg.message.data.content;
       } else if (msg.message.content) {
         text = msg.message.content;
       }
       
-      // Clean and validate text
+      
       text = cleanText(text);
       
-      // Skip messages with no content after cleaning
+      
       if (!text) {
         return null;
       }
       
-      // Determine sender type
+      
       if (msg.message.type === "human" || msg.message.data?.type === "human") {
         sender = "user";
       } else if (msg.message.type === "ai" || msg.message.data?.type === "ai") {
@@ -62,7 +62,7 @@ const mapBackendHistoryToFrontend = (
         sender = "agent";
       }
       
-      // Create consistent message ID using backend ID
+      
       const messageId = `${sender}-${msg.id}`;
       
       const chatMessage: ChatMessage = {
@@ -136,7 +136,7 @@ export const useServicePublicChat = () => {
     retry: false,
   });
 
-  // WebSocket connection initialization
+  
   useEffect(() => {
     const initWebSocket = async () => {
       try {
@@ -157,7 +157,7 @@ export const useServicePublicChat = () => {
     };
   }, []);
 
-  // Reset for new session
+  
   useEffect(() => {
     if (sessionId === "new") {
       hasLoadedHistoryRef.current = false;
@@ -166,15 +166,15 @@ export const useServicePublicChat = () => {
     }
   }, [sessionId]);
   
-  // WebSocket subscription - ONLY ENABLED AFTER FIRST API RESPONSE
+  
   useEffect(() => {
-    // Don't subscribe until WebSocket is explicitly enabled
+    
     if (!wsEnabledRef.current || !sessionId || sessionId === "new") {
       console.log('⏸️ WebSocket subscription paused');
       return;
     }
 
-    // Unsubscribe from previous session
+    
     if (unsubscribeRef.current) {
       unsubscribeRef.current();
       unsubscribeRef.current = null;
@@ -190,11 +190,11 @@ export const useServicePublicChat = () => {
     const unsubscribe = wsService.current.onMessage(sessionId, (data) => {
       console.log('📨 WebSocket message received:', data);
       
-      // Handle bot responses from WebSocket
+      
       if (data.answer && data.chat_history_id) {
         const botMessageId = `agent-${data.chat_history_id}`;
         
-        // Skip if already exists from API
+        
         if (processedMessageIdsRef.current.has(botMessageId)) {
           console.log('⏭️ Skip WebSocket - already have this message from API:', botMessageId);
           return;
@@ -233,7 +233,7 @@ export const useServicePublicChat = () => {
 
         setCitations((prev) => [...prev, ...mapAskResponseToCitations(data, botMessageId)]);
       }
-      // Handle helpdesk agent messages
+      
       else if (data.user_type === 'agent' && data.message) {
         const agentMessageId = data.chat_history_id 
           ? `agent-${data.chat_history_id}` 
@@ -290,31 +290,31 @@ export const useServicePublicChat = () => {
     };
   }, [sessionId, wsEnabledRef.current]);
 
-  // Load history data
+  
   useEffect(() => {
     if (historyData && !hasLoadedHistoryRef.current && sessionId !== "new") {
       console.log('📦 Loading history from API');
       
-      // Clear tracking
+      
       processedMessageIdsRef.current.clear();
       
       const mappedHistory = mapBackendHistoryToFrontend(
         historyData.chat_history || []
       );
       
-      // Remove duplicates by ID
+      
       const uniqueMessages = Array.from(
         new Map(mappedHistory.map(msg => [msg.id, msg])).values()
       );
       
-      // Sort by timestamp from backend
+      
       const sortedMessages = uniqueMessages.sort((a, b) => {
         const timeA = new Date(a.timestamp || 0).getTime();
         const timeB = new Date(b.timestamp || 0).getTime();
         return timeA - timeB;
       });
       
-      // Track all loaded message IDs
+      
       sortedMessages.forEach(msg => {
         processedMessageIdsRef.current.add(msg.id);
       });
@@ -322,13 +322,13 @@ export const useServicePublicChat = () => {
       console.log(`✅ History loaded: ${sortedMessages.length} messages`);
       console.log('Message IDs:', sortedMessages.map(m => ({ id: m.id, text: m.text.substring(0, 30) })));
       
-      // Set state
+      
       setMessages(sortedMessages);
       setCitations([]);
       setIsHistoryLoaded(true);
       hasLoadedHistoryRef.current = true;
       
-      // Enable WebSocket after history is loaded
+      
       setTimeout(() => {
         setIsInitialLoad(false);
         wsEnabledRef.current = true;
@@ -337,7 +337,7 @@ export const useServicePublicChat = () => {
     }
   }, [historyData, sessionId]);
 
-  // Reset for new session
+  
   useEffect(() => {
     if (sessionId === "new") {
       console.log('🆕 Resetting for new session');
@@ -351,7 +351,7 @@ export const useServicePublicChat = () => {
     }
   }, [sessionId]);
 
-  // Handle history errors
+  
   useEffect(() => {
     if (isHistoryError && historyError) {
       toast.error(`Gagal memuat riwayat: ${(historyError as Error).message}`);
@@ -360,7 +360,7 @@ export const useServicePublicChat = () => {
     }
   }, [isHistoryError, historyError]);
 
-  // Initialize new session with welcome message
+  
   useEffect(() => {
     if (sessionId === "new" && !isHistoryLoaded) {
       const initialMessageId = "msg-initial";
@@ -421,7 +421,7 @@ export const useServicePublicChat = () => {
       hideLoadingToast();
       console.log('📬 API Response received:', data);
       
-      // Clean the answer text
+      
       const cleanedAnswer = cleanText(data.answer);
       
       if (!cleanedAnswer) {
@@ -429,8 +429,8 @@ export const useServicePublicChat = () => {
         return;
       }
       
-      // ALWAYS use API response as the source of truth for first render
-      // Generate temporary ID since we don't have chat_history_id yet
+      
+      
       const botMessageId = `agent-api-${Date.now()}`;
       
       console.log('➕ Adding API response message:', botMessageId);
@@ -455,14 +455,14 @@ export const useServicePublicChat = () => {
       
       setCitations((prev) => [...prev, ...mapAskResponseToCitations(data, botMessageId)]);
 
-      // Navigate if new session
+      
       if (sessionId === "new") {
         console.log('🔄 Navigating to new session:', data.conversation_id);
-        // Enable WebSocket for the new session
+        
         wsEnabledRef.current = true;
         navigate(`/public-service/${data.conversation_id}`, { replace: true });
       } else {
-        // Enable WebSocket after first API response
+        
         wsEnabledRef.current = true;
         console.log('✅ WebSocket enabled after API response');
       }
@@ -485,8 +485,15 @@ export const useServicePublicChat = () => {
   const handleSendMessage = useCallback(() => {
     if (input.trim() === "" || isBotLoading) return;
 
-    const timestamp = Date.now();
-    const userMessageId = `user-${timestamp}`;
+    
+    const sendTime = new Date();
+    
+    
+    
+    const startTimestampString = sendTime.toISOString().replace('T', ' ').replace('Z', '').slice(0, 23); 
+    
+    const userMessageId = `user-${sendTime.getTime()}`;
+    
     
     processedMessageIdsRef.current.add(userMessageId);
     
@@ -494,7 +501,7 @@ export const useServicePublicChat = () => {
       id: userMessageId,
       sender: "user",
       text: input,
-      timestamp: new Date(timestamp).toISOString(),
+      timestamp: sendTime.toISOString(),
     };
     
     console.log('📤 Sending user message:', userMessageId);
@@ -511,6 +518,8 @@ export const useServicePublicChat = () => {
       platform: "web",
       platform_unique_id: user?.email || "anonymous_user",
       conversation_id: (sessionId === "new" ? "" : sessionId) || "",
+      start_timestamp: startTimestampString,
+      
     });
 
     setInput("");
