@@ -3,9 +3,9 @@
 import React from "react";
 import DocumentTableRow from "./DocumentTableRow";
 
-import { ChevronLeft, ChevronRight, ArrowUp, ArrowDown } from "lucide-react";
-import CustomSelect from "../../../shared/components/CustomSelect"; 
+import {  ArrowUp, ArrowDown } from "lucide-react";
 import type { ActionType, Document, SortOrder } from "../types/types"; 
+import TablePagination from "../../../shared/components/TablePagination";
 
 interface DocumentTableProps {
   documents: Document[];
@@ -22,11 +22,7 @@ interface DocumentTableProps {
   onSort: (column: string) => void;
 }
 
-const itemsPerPageOptions = [
-  { value: "10", label: "10" },
-  { value: "20", label: "20" },
-  { value: "30", label: "30" },
-];
+
 
 const DocumentTable: React.FC<DocumentTableProps> = ({
   documents,
@@ -42,9 +38,7 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
   sortDirection,
   onSort,
 }) => {
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-  const startItem = (currentPage - 1) * itemsPerPage + 1;
-  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+
 
   const SortableHeader = ({ label, columnKey, className = "" }: { label: string; columnKey: string; className?: string }) => {
     const isActive = sortColumn === columnKey;
@@ -109,60 +103,13 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
         </table>
       </div>
 
-      <nav
-        className="flex flex-col md:flex-row items-center justify-between pt-4 gap-4 md:gap-0"
-        aria-label="Table navigation"
-      >
-        <span className="text-xs font-normal text-gray-500">
-          Showing{" "}
-          <span className="font-semibold text-gray-900">
-            {startItem}-{endItem}
-          </span>{" "}
-          of <span className="font-semibold text-gray-900">{totalItems}</span>
-        </span>
-        <div className="flex items-center space-x-3">
-          <span className="text-xs font-normal text-gray-500">
-            Rows per page:
-          </span>
-          <CustomSelect
-            value={String(itemsPerPage)}
-            onChange={(value) => onItemsPerPageChange(Number(value))}
-            options={itemsPerPageOptions}
-            selectedType="pagerow"
-            direction="up"
-          />
-          <ul className="inline-flex -space-x-px text-xs">
-            <li>
-              <button
-                onClick={() => onPageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="flex items-center justify-center h-[30px] px-3 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50"
-              >
-                <span className="sr-only">Previous</span>
-                <ChevronLeft className="w-3 h-3" />
-              </button>
-            </li>
-            <li>
-              <span
-                aria-current="page"
-                className="flex items-center justify-center h-[30px] px-4 leading-tight text-gray-700 bg-white border border-gray-300"
-              >
-                Page {currentPage} of {totalPages > 0 ? totalPages : 1}
-              </span>
-            </li>
-            <li>
-              <button
-                onClick={() => onPageChange(currentPage + 1)}
-                disabled={currentPage === totalPages || totalPages === 0}
-                className="flex items-center justify-center h-[30px] px-3 leading-tight text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50"
-              >
-                <span className="sr-only">Next</span>
-                <ChevronRight className="w-3 h-3" />
-              </button>
-            </li>
-          </ul>
-        </div>
-      </nav>
+     <TablePagination
+        currentPage={currentPage}
+        itemsPerPage={itemsPerPage}
+        totalItems={totalItems}
+        onPageChange={onPageChange}
+        onItemsPerPageChange={onItemsPerPageChange}
+      />
     </div>
   );
 };

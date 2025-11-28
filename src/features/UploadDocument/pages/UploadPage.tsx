@@ -55,7 +55,7 @@ const filterConfig: FilterConfig<Filters>[] = [
     options: [
       { value: "", label: "Semua Kategori" },
       { value: "panduan", label: "Panduan" },
-      { value: "uraian", label: "Uraian" },
+      { value: "qna", label: "Tanya Jawab" },
       { value: "peraturan", label: "Peraturan" },
     ],
   },

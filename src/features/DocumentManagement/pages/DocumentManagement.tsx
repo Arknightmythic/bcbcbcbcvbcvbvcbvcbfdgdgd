@@ -1,9 +1,7 @@
-// [UPDATE: src/features/DocumentManagement/pages/DocumentManagement.tsx]
-
 import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { Loader2 } from "lucide-react";
-import type { ActionType, Document, DocumentCategory, SortOrder } from "../types/types"; // Import SortOrder
+import type { ActionType, Document, DocumentCategory, SortOrder } from "../types/types"; 
 import { useGetDocuments, useApproveDocument, useRejectDocument, useDeleteDocument } from "../hooks/useDocument";
 import { generateViewUrl} from "../api/document";
 import DocumentTable from "../components/DocumentTable";
@@ -11,13 +9,13 @@ import ConfirmationModal from "../../../shared/components/ConfirmationModal";
 import TableControls, { type FilterConfig } from "../../../shared/components/tablecontrols/TableControls";
 import PdfViewModal from "../../../shared/components/PDFViewModal";
 
-// Update Interface Filters
+
 export interface Filters extends Record<string, any> {
   type: string;
   category: DocumentCategory | "";
   status: string;
-  start_date: string; // Tambahan
-  end_date: string;   // Tambahan
+  start_date: string; 
+  end_date: string;   
 }
 
 const filterConfig: FilterConfig<Filters>[] = [
@@ -36,7 +34,7 @@ const filterConfig: FilterConfig<Filters>[] = [
         options: [
             { value: "", label: "All Categories" },
             { value: "panduan", label: "Panduan" },
-            { value: "uraian", label: "Uraian" },
+            { value: "qna", label: "Tanya Jawab" },
             { value: "peraturan", label: "Peraturan" },
         ],
     },
@@ -50,7 +48,7 @@ const filterConfig: FilterConfig<Filters>[] = [
             { value: "Rejected", label: "Rejected" },
         ],
     },
-    // --- TAMBAHAN: Config Date Range ---
+    
     {
         key: "date_range",
         type: "date-range",
@@ -65,13 +63,13 @@ const DocumentManagementPage = () => {
   
   const [searchInput, setSearchInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  // State Filters default
+  
   const [filters, setFilters] = useState<Filters>({ type: "", category: "", status: "", start_date: "", end_date: "" });
   
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // --- TAMBAHAN: State Sorting ---
+  
   const [sortColumn, setSortColumn] = useState<string>("created_at");
   const [sortDirection, setSortDirection] = useState<SortOrder>("desc");
 
@@ -85,7 +83,7 @@ const DocumentManagementPage = () => {
     setCurrentPage(1);
   };
 
-  // --- UPDATE: Search Params Logic ---
+  
   const searchParams = useMemo(() => {
     const params = new URLSearchParams();
     params.set('limit', String(itemsPerPage));
@@ -96,11 +94,11 @@ const DocumentManagementPage = () => {
     if (filters.category) params.set('category', filters.category);
     if (filters.status) params.set('status', filters.status);
     
-    // Date Params
+    
     if (filters.start_date) params.set('start_date', filters.start_date);
     if (filters.end_date) params.set('end_date', filters.end_date);
 
-    // Sort Params
+    
     if (sortColumn) {
         params.set('sort_by', sortColumn);
         params.set('sort_direction', sortDirection);
@@ -119,7 +117,7 @@ const DocumentManagementPage = () => {
 
   const hasManagerAccess = true;
 
-  // Handler Filter
+  
   const handleFilterChange = (filterName: keyof Filters, value: any) => {
     setFilters((prev) => ({ ...prev, [filterName]: value }));
     setCurrentPage(1);
@@ -130,13 +128,13 @@ const DocumentManagementPage = () => {
     setCurrentPage(1);
   };
 
-  // --- TAMBAHAN: Handler Sort ---
+  
   const handleSort = (column: string) => {
     if (sortColumn === column) {
-      // Toggle asc/desc
+      
       setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
     } else {
-      // Kolom baru, default asc/desc
+      
       setSortColumn(column);
       setSortDirection('asc'); 
     }

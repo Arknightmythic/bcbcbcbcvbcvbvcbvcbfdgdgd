@@ -16,7 +16,7 @@ interface UploadZoneProps {
 
 const categoryOptions = [
   { value: 'panduan', label: 'Panduan' },
-  { value: 'uraian', label: 'Uraian' },
+  { value: 'qna', label: 'Tanya Jawab' },
   { value: 'peraturan', label: 'Peraturan' },
 ];
 
