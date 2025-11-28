@@ -24,7 +24,7 @@ export interface UserData {
   name: string;
   email: string;
   account_type: string;
-  role: Role;
+  role?: Role;
 }
 
 interface UserMeResponse {

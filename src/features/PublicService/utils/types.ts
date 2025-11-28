@@ -33,6 +33,7 @@ export interface AskPayload {
   query: string;
   conversation_id: string; // Kirim string kosong untuk sesi baru
   platform: string;
+  start_timestamp?: string;
 }
 
 /**
@@ -60,8 +61,15 @@ export interface BackendChatHistory {
   id: number;
   session_id: string;
   message: {
-    role: "user" | "assistant";
-    content: string;
+    type?: "human" | "ai";
+    role?: "user" | "assistant";
+    content?: string;
+    data?: {
+      content: string;
+      type?: string;
+      [key: string]: any;
+    };
+    [key: string]: any;
   };
   created_at: string;
   user_id: number | null;

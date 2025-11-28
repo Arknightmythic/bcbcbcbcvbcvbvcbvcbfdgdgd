@@ -1,4 +1,4 @@
-export type DocumentCategory = 'panduan' | 'uraian' | 'peraturan';
+export type DocumentCategory = 'panduan' | 'qna' | 'peraturan';
 export type ActionType = 'approve' | 'reject' | 'delete';
 
 // Tambahkan tipe SortOrder

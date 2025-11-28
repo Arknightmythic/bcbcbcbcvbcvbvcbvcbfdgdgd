@@ -1,9 +1,9 @@
 // src/features/Guide/components/GuideTable.tsx
 
 import React from "react";
-import { ChevronLeft, ChevronRight, ArrowUp, ArrowDown, Eye, FileText } from "lucide-react";
-import CustomSelect from "../../../shared/components/CustomSelect";
+import { ArrowUp, ArrowDown, Eye, FileText } from "lucide-react";
 import type { Guide, SortOrder } from "../types/types";
+import TablePagination from "../../../shared/components/TablePagination";
 
 interface GuideTableProps {
   guides: Guide[];
@@ -26,11 +26,6 @@ interface GuideTableProps {
   onViewFile: (guide: Guide) => void;
 }
 
-const itemsPerPageOptions = [
-  { value: "10", label: "10" },
-  { value: "20", label: "20" },
-  { value: "30", label: "30" },
-];
 
 const GuideTable: React.FC<GuideTableProps> = ({
   guides,
@@ -46,10 +41,7 @@ const GuideTable: React.FC<GuideTableProps> = ({
   onSort,
   onViewFile,
 }) => {
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-  const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
-  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
-
+ 
   // Helper Component untuk Sortable Header
   const SortableHeader = ({ label, columnKey, className = "" }: { label: string; columnKey: string; className?: string }) => {
     const isActive = sortColumn === columnKey;
@@ -60,11 +52,11 @@ const GuideTable: React.FC<GuideTableProps> = ({
       >
         <div className="flex items-center gap-1">
           {label}
-          {/* {isActive && (
+          {isActive && (
             sortDirection === 'asc' 
               ? <ArrowUp className="w-3 h-3 text-blue-600" /> 
               : <ArrowDown className="w-3 h-3 text-blue-600" />
-          )} */}
+          )}
         </div>
       </th>
     );
@@ -77,17 +69,17 @@ const GuideTable: React.FC<GuideTableProps> = ({
           <thead className="text-[10px] text-gray-700 bg-gray-100 sticky top-0">
             <tr>
               {/* Backend guide/repository.go mendukung sort: created_at, title, updated_at */}
-              <SortableHeader label="Date Created" columnKey="created_at" />
-              <SortableHeader label="Title" columnKey="title" />
-              <th className="px-6 py-4">Description</th>
-              <th className="px-6 py-4 text-center sticky right-0 bg-gray-100 z-10">Action</th>
+              <SortableHeader label="Tanggal Dibuat" columnKey="created_at" />
+              <SortableHeader label="Judul" columnKey="title" />
+              <th className="px-6 py-4">Deskripsi</th>
+              <th className="px-6 py-4 text-center sticky right-0 bg-gray-100 z-10">Aksi</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
             {isLoading ? (
               <tr>
                 <td colSpan={4} className="text-center py-10">
-                  Loading data...
+                  memuat data...
                 </td>
               </tr>
             ) : isError ? (
@@ -117,7 +109,7 @@ const GuideTable: React.FC<GuideTableProps> = ({
                     <button
                       onClick={() => onViewFile(guide)}
                       className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-md transition-colors"
-                      title="View Document"
+                      title="Lihat Dokumen"
                     >
                       <Eye className="w-4 h-4" />
                     </button>
@@ -127,7 +119,7 @@ const GuideTable: React.FC<GuideTableProps> = ({
             ) : (
               <tr>
                 <td colSpan={4} className="text-center py-10 text-gray-500">
-                  No guides found.
+                  Tidak ada panduan ditemukan.
                 </td>
               </tr>
             )}
@@ -135,61 +127,13 @@ const GuideTable: React.FC<GuideTableProps> = ({
         </table>
       </div>
 
-      {/* Pagination */}
-      <nav
-        className="flex flex-col md:flex-row items-center justify-between pt-4 gap-4 md:gap-0"
-        aria-label="Table navigation"
-      >
-        <span className="text-xs font-normal text-gray-500">
-          Showing{" "}
-          <span className="font-semibold text-gray-900">
-            {startItem}-{endItem}
-          </span>{" "}
-          of <span className="font-semibold text-gray-900">{totalItems}</span>
-        </span>
-        <div className="flex items-center space-x-3">
-          <span className="text-xs font-normal text-gray-500">
-            Rows per page:
-          </span>
-          <CustomSelect
-            value={String(itemsPerPage)}
-            onChange={(value) => onItemsPerPageChange(Number(value))}
-            options={itemsPerPageOptions}
-            selectedType="pagerow"
-            direction="up"
-          />
-          <ul className="inline-flex -space-x-px text-xs">
-            <li>
-              <button
-                onClick={() => onPageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="flex items-center justify-center h-[30px] px-3 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50"
-              >
-                <span className="sr-only">Previous</span>
-                <ChevronLeft className="w-3 h-3" />
-              </button>
-            </li>
-            <li>
-              <span
-                aria-current="page"
-                className="flex items-center justify-center h-[30px] px-4 leading-tight text-gray-700 bg-white border border-gray-300"
-              >
-                Page {currentPage} of {totalPages > 0 ? totalPages : 1}
-              </span>
-            </li>
-            <li>
-              <button
-                onClick={() => onPageChange(currentPage + 1)}
-                disabled={currentPage === totalPages || totalPages === 0}
-                className="flex items-center justify-center h-[30px] px-3 leading-tight text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50"
-              >
-                <span className="sr-only">Next</span>
-                <ChevronRight className="w-3 h-3" />
-              </button>
-            </li>
-          </ul>
-        </div>
-      </nav>
+     <TablePagination
+        currentPage={currentPage}
+        itemsPerPage={itemsPerPage}
+        totalItems={totalItems}
+        onPageChange={onPageChange}
+        onItemsPerPageChange={onItemsPerPageChange}
+      />
     </div>
   );
 };

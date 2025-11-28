@@ -1,7 +1,146 @@
-// [GANTI: src/features/Dashboard/components/FilterCustom.tsx]
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import type { Period } from '../utils/types';
+import { Calendar } from 'lucide-react';
+import DatePicker from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
+
+
+interface DashboardRangePickerProps {
+  startDateStr: string;
+  endDateStr: string;
+  onChange: (start: string, end: string) => void;
+}
+
+const DashboardRangePicker: React.FC<DashboardRangePickerProps> = ({ 
+  startDateStr, 
+  endDateStr, 
+  onChange 
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const startDate = startDateStr ? new Date(startDateStr) : null;
+  const endDate = endDateStr ? new Date(endDateStr) : null;
+
+  const toggleCalendar = () => {
+    if (isOpen) {
+      setIsOpen(false);
+      setCoords(null);
+    } else if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const screenW = window.innerWidth;
+      
+      let left = rect.left + window.scrollX;
+      
+      if (left + 300 > screenW) {
+        left = Math.max(10, (rect.right + window.scrollX) - 300);
+      }
+
+      setCoords({
+        top: rect.bottom + window.scrollY + 4,
+        left: left
+      });
+      setIsOpen(true);
+    }
+  };
+
+  const handleDateChange = (dates: [Date | null, Date | null]) => {
+    const [start, end] = dates;
+    
+    const toDateStr = (d: Date) => {
+      const offset = d.getTimezoneOffset();
+      const adjusted = new Date(d.getTime() - (offset * 60 * 1000));
+      return adjusted.toISOString().split('T')[0];
+    };
+
+    
+    const newStartStr = start ? toDateStr(start) : "";
+    const newEndStr = end ? toDateStr(end) : "";
+
+    onChange(newStartStr, newEndStr);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      const portal = document.getElementById('dashboard-range-portal');
+      
+      if (
+        portal && !portal.contains(target) && 
+        containerRef.current && !containerRef.current.contains(target)
+      ) {
+        setIsOpen(false);
+      }
+    };
+    
+    if (isOpen) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
+
+  const renderDateBox = (label: string, value: string) => (
+    <div 
+      className="flex items-center justify-between bg-white py-2 px-3 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer w-full md:flex-1"
+      onClick={toggleCalendar}
+    >
+      <div className="flex items-center gap-2">
+         <span className="text-gray-500 text-xs font-medium min-w-[35px]">{label}:</span>
+         <span className="text-sm text-slate-800 font-medium truncate">
+           {value || "FIlter Tanggal"}
+         </span>
+      </div>
+      <Calendar className="w-4 h-4 text-gray-400" />
+    </div>
+  );
+
+  return (
+    <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto flex-1" ref={containerRef}>
+      {renderDateBox("From", startDateStr)}
+      {renderDateBox("To", endDateStr)}
+
+      {isOpen && coords && createPortal(
+        <div
+          id="dashboard-range-portal"
+          className="absolute z-[9999] bg-white border border-gray-200 rounded-lg shadow-xl p-3 animate-fade-in"
+          style={{ top: coords.top, left: coords.left }}
+        >
+          <DatePicker
+            selected={startDate}
+            onChange={handleDateChange}
+            startDate={startDate}
+            endDate={endDate}
+            selectsRange
+            inline
+            maxDate={new Date()} 
+            monthsShown={1} 
+          />
+          <style>{`
+            .react-datepicker { border: none; font-family: inherit; }
+            .react-datepicker__header { background-color: white; border-bottom: 1px solid #f3f4f6; }
+            .react-datepicker__day--selected, .react-datepicker__day--in-range { background-color: #2563eb !important; color: white !important; }
+            .react-datepicker__day--in-selecting-range { background-color: #dbeafe !important; color: #2563eb !important; }
+            .react-datepicker__day--disabled { color: #ccc !important; cursor: not-allowed; }
+            .react-datepicker__day:hover { background-color: #eff6ff; }
+            .react-datepicker__month-container { float: none; }
+          `}</style>
+
+          <div className="flex justify-end pt-2 border-t border-gray-100 mt-2">
+            <button 
+              onClick={() => onChange("", "")}
+              className="text-xs text-red-500 hover:text-red-700 font-medium"
+            >
+              Reset Range
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
+    </div>
+  );
+};
+
 
 interface DashboardHeaderProps {
   onPeriodChange: (period: Period) => void;
@@ -10,28 +149,25 @@ interface DashboardHeaderProps {
   defaultStartDate?: string;
   defaultEndDate?: string;
 }
-
-// Helper untuk mendapatkan tanggal YYYY-MM-DD
 const getTodayDateString = () => new Date().toISOString().split('T')[0];
 
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   onPeriodChange,
   onCustomDateApply,
-  // --- PERUBAHAN: Ubah default ke 'daily' ---
   defaultPeriod = 'daily',
   defaultStartDate = getTodayDateString(),
   defaultEndDate = getTodayDateString(),
 }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
-  // State internal untuk UI (dikontrol oleh props)
+  
   const [activePeriod, setActivePeriod] = useState<Period>(defaultPeriod);
-  const [isCustomDateVisible, setIsCustomDateVisible] = useState(
-    defaultPeriod === 'custom'
-  );
+  const [isCustomDateVisible, setIsCustomDateVisible] = useState(defaultPeriod === 'custom');
+  
+  // State String YYYY-MM-DD
   const [startDate, setStartDate] = useState(defaultStartDate);
   const [endDate, setEndDate] = useState(defaultEndDate);
 
-  // Efek untuk menyinkronkan state internal jika props default berubah (setelah load dari localStorage)
+  // Sync dengan props default
   useEffect(() => {
     setActivePeriod(defaultPeriod);
     setStartDate(defaultStartDate);
@@ -39,47 +175,46 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     setIsCustomDateVisible(defaultPeriod === 'custom');
   }, [defaultPeriod, defaultStartDate, defaultEndDate]);
 
+  // Jam Realtime
   useEffect(() => {
-    const timerId = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
+    const timerId = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timerId);
   }, []);
 
   const formattedTime = currentTime.toLocaleString('id-ID', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
+    year: 'numeric', month: 'long', day: 'numeric',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
   });
 
   const handlePeriodClick = (period: Period) => {
-    setActivePeriod(period); // Update state internal UI
-
+    setActivePeriod(period);
     if (period === 'custom') {
       setIsCustomDateVisible(true);
-      // Jangan panggil onPeriodChange, tunggu 'Apply'
     } else {
       setIsCustomDateVisible(false);
-      onPeriodChange(period); // Panggil parent (Dashboard.tsx)
+      onPeriodChange(period);
     }
   };
 
   const handleApplyClick = () => {
-    onCustomDateApply({ startDate, endDate });
-    onPeriodChange('custom'); // Panggil parent (Dashboard.tsx)
+    // Validasi sederhana: Pastikan start dan end terisi sebelum apply
+    if (startDate && endDate) {
+      onCustomDateApply({ startDate, endDate });
+      onPeriodChange('custom');
+    }
   };
 
-  const buttonBaseClasses =
-    'py-2 px-3 md:py-1.5 md:px-5 rounded font-medium transition-all duration-300 text-xs flex-1';
-  const buttonInactiveClasses =
-    'bg-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-200';
+  const handleRangeChange = (start: string, end: string) => {
+    setStartDate(start);
+    setEndDate(end);
+  };
+
+  const buttonBaseClasses = 'py-2 px-3 md:py-1.5 md:px-5 rounded font-medium transition-all duration-300 text-xs flex-1 whitespace-nowrap';
+  const buttonInactiveClasses = 'bg-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-200';
   const buttonActiveClasses = 'bg-blue-600 text-white shadow-md';
 
   return (
-    <div className="bg-white p-5 px-6 rounded-lg mb-5 border border-gray-200 shadow-sm flex flex-col md:flex-row md:justify-between md:items-center gap-4 flex-wrap">
+    <div className="bg-white p-5 px-6 rounded-lg mb-5 border border-gray-200 shadow-sm flex flex-col md:flex-row md:justify-between md:items-center gap-4 flex-wrap z-20 relative">
       <div className="flex-shrink-0">
         <h1 className="text-slate-800 text-lg font-semibold mb-1">
           🤖 AI Helpdesk Analytics Dashboard
@@ -95,94 +230,41 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         transition-[grid-template-rows] duration-300 ease-in-out
         ${isCustomDateVisible ? 'grid-rows-[auto_1fr]' : 'grid-rows-[auto_0fr]'}
       `}>
-        <div className="flex gap-2 bg-gray-50 p-1 rounded-md border border-gray-200 items-center w-full">
-          
-          {/* --- PERUBAHAN: 'Today' -> 'Daily' --- */}
-          <button
-            onClick={() => handlePeriodClick('daily')}
-            className={`${buttonBaseClasses} ${
-              activePeriod === 'daily'
-                ? buttonActiveClasses
-                : buttonInactiveClasses
-            }`}
-          >
-            Daily
-          </button>
-          {/* ------------------------------------- */}
 
-          <button
-            onClick={() => handlePeriodClick('monthly')}
-            className={`${buttonBaseClasses} ${
-              activePeriod === 'monthly'
-                ? buttonActiveClasses
-                : buttonInactiveClasses
-            }`}
-          >
-            Monthly
-          </button>
-          <button
-            onClick={() => handlePeriodClick('yearly')}
-            className={`${buttonBaseClasses} ${
-              activePeriod === 'yearly'
-                ? buttonActiveClasses
-                : buttonInactiveClasses
-            }`}
-          >
-            Yearly
-          </button>
-          <button
-            onClick={() => handlePeriodClick('custom')}
-            className={`${buttonBaseClasses} ${
-              activePeriod === 'custom'
-                ? buttonActiveClasses
-                : buttonInactiveClasses
-            }`}
-          >
-            Custom
-          </button>
+        <div className="flex gap-2 bg-gray-50 p-1 rounded-md border border-gray-200 items-center w-full mb-2 md:mb-0">
+          {(['daily', 'monthly', 'yearly', 'custom'] as const).map((period) => (
+             <button
+               key={period}
+               onClick={() => handlePeriodClick(period)}
+               className={`${buttonBaseClasses} ${
+                 activePeriod === period ? buttonActiveClasses : buttonInactiveClasses
+               }`}
+             >
+               {period.charAt(0).toUpperCase() + period.slice(1)}
+             </button>
+          ))}
         </div>
 
-        <div className="overflow-hidden">
+
+        <div className="overflow-visible"> 
+          
           <div className={`
             flex flex-col md:flex-row flex-wrap gap-2 items-center 
             transition-all duration-300 ease-in-out
-            ${isCustomDateVisible ? 'opacity-100 pt-4' : 'opacity-0 pt-0'}
+            ${isCustomDateVisible ? 'opacity-100 pt-2' : 'opacity-0 pt-0 h-0 pointer-events-none'}
           `}>
-            <div className="flex items-center gap-1.5 bg-white py-2 px-3 rounded-md border border-gray-200 w-full md:flex-1">
-              <label
-                htmlFor="startDate"
-                className="text-gray-500 text-xs font-medium"
-              >
-                From:
-              </label>
-              <input
-                type="date"
-                id="startDate"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="bg-transparent border-none text-slate-800 text-sm cursor-pointer p-0.5 focus:ring-0 focus:outline-none w-full"
-              />
-            </div>
+            
 
-            <div className="flex items-center gap-1.5 bg-white py-2 px-3 rounded-md border border-gray-200 w-full md:flex-1">
-              <label
-                htmlFor="endDate"
-                className="text-gray-500 text-xs font-medium"
-              >
-                To:
-              </label>
-              <input
-                type="date"
-                id="endDate"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="bg-transparent border-none text-slate-800 text-sm cursor-pointer p-0.5 focus:ring-0 focus:outline-none w-full"
-              />
-            </div>
+            <DashboardRangePicker 
+              startDateStr={startDate} 
+              endDateStr={endDate} 
+              onChange={handleRangeChange} 
+            />
 
             <button
               onClick={handleApplyClick}
-              className="bg-blue-600 text-white py-2.5 px-5 rounded-md text-sm font-medium transition-all duration-300 hover:bg-blue-700 hover:shadow-md w-full md:w-auto"
+              disabled={!startDate || !endDate}
+              className="bg-blue-600 text-white py-2 px-5 rounded-md text-sm font-medium transition-all duration-300 hover:bg-blue-700 hover:shadow-md w-full md:w-auto h-[38px] disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
               Apply
             </button>

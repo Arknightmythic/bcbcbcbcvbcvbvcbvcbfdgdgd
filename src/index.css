@@ -92,3 +92,11 @@
   scrollbar-width: thin; /* Membuat scrollbar Firefox tipis */
   scrollbar-color: rgba(0, 0, 0, 0.3) transparent; /* thumb / track */
 }
+
+.panel-menu__trigger {
+  display: none !important;
+}
+
+iframe body .panel-menu {
+  display: none !important;
+}

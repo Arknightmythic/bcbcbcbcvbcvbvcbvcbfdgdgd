@@ -2,10 +2,8 @@ import { useEffect, useRef, type RefObject} from 'react';
 
 type Callback = () => void;
 
-// --- PERBAIKAN: Ubah tipe return agar sesuai dengan useRef(null) ---
+
 export const useClickOutside = <T extends HTMLElement>(callback: Callback): RefObject<T | null> => {
-  
-  // --- PERBAIKAN: Biarkan TypeScript menyimpulkan tipe RefObject<T | null> ---
   const ref = useRef<T>(null);
 
   useEffect(() => {

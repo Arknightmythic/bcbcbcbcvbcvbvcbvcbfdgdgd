@@ -11,14 +11,14 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ isApprove }) => {
 
   if (isApprove === 'Approved') {
     badgeStyle = 'bg-green-100 text-green-800';
-    statusText = 'Approved';
+    statusText = 'Disetujui';
   } else if (isApprove === 'Rejected') {
     badgeStyle = 'bg-red-100 text-red-800';
-    statusText = 'Rejected';
+    statusText = 'Ditolak';
   } else {
     // isApprove === null
     badgeStyle = 'bg-yellow-100 text-yellow-800';
-    statusText = 'Pending';
+    statusText = 'Menunggu';
   }
   
   return (

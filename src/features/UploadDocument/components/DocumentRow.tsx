@@ -52,21 +52,21 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
     if (doc.status === "Approved") {
       return (
         <span className="inline-flex items-center px-2 py-1 text-[10px] font-semibold rounded-full bg-green-100 text-green-800">
-          <CheckCircle2 className="w-2 h-2 mr-1" /> Approved
+          <CheckCircle2 className="w-2 h-2 mr-1" /> Disetujui
         </span>
       );
     }
     if (isRejected) {
       return (
         <span className="inline-flex items-center px-2 py-1 text-[10px] font-semibold rounded-full bg-red-100 text-red-800">
-          <AlertCircle className="w-2 h-2 mr-1" /> Rejected
+          <AlertCircle className="w-2 h-2 mr-1" /> Ditolak
         </span>
       );
     }
     
     return (
       <span className="inline-flex items-center px-2 py-1 text-[10px] font-semibold rounded-full bg-yellow-100 text-yellow-800">
-        <Clock className="w-2 h-2 mr-1" /> Pending
+        <Clock className="w-2 h-2 mr-1" /> Menunggu
       </span>
     );
   };
@@ -121,11 +121,11 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
         <button
           onClick={() => { onViewFile(doc); setIsDropdownOpen(false); }}
           disabled={isRejected}
-          title={isRejected ? "Cannot view a rejected document" : "View Document"}
+          title={isRejected ? "Tidak dapat melihat dokumen yang ditolak" : "Lihat Dokumen"}
           className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:text-gray-400 disabled:bg-transparent"
         >
           <Eye className="w-4 h-4" />
-          <span>View Document</span>
+          <span>Lihat Dokumen</span>
         </button>
 
         <button
@@ -135,7 +135,7 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
           title={isPending ? "Cannot upload new version while pending" : isRejected ? "Cannot upload new version to a rejected document" : "Upload New Version"}
         >
           <UploadIcon className="w-4 h-4" />
-          <span>New Version</span>
+          <span>Versi Baru</span>
         </button>
 
         <button
@@ -145,7 +145,7 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
           title={isPending ? "Cannot view history while pending" : isRejected ? "Cannot view history of a rejected document" : "View Version History"}
         >
           <Info className="w-4 h-4" />
-          <span>View History</span>
+          <span>Lihat Histori</span>
         </button>
 
         <button
@@ -154,7 +154,7 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
           title="Delete Document"
         >
           <Trash2 className="w-4 h-4" />
-          <span>Delete</span>
+          <span>Hapus</span>
         </button>
       </div>
     </div>
@@ -177,7 +177,11 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
         {doc.document_name}
       </td>
       <td className="px-6 py-4">{doc.staff}</td>
-      <td className="px-6 py-4">{doc.data_type}</td>
+      <td className="px-6 py-4">
+         <span className="font-mono text-[10px] bg-gray-200 text-gray-700 px-2 py-1 rounded">
+          {doc.data_type}
+        </span>
+      </td>
       <td className="px-6 py-4 capitalize">{doc.category}</td>
       <td className="px-6 py-4 ">{doc.team}</td>
       <td className="px-6 py-4">{getStatusComponent()}</td>

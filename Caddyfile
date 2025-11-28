@@ -1,9 +1,11 @@
 dev-bkpm.cloud-ioh.com {
-    tls /etc/cert/cert.crt /etc/cert/private.key
+   # tls /etc/cert/cert.crt /etc/cert/private.key
 
+    # ---------------------------------------------------------
+    # 1. GRAFANA
+    # ---------------------------------------------------------
     handle /public-dashboards* {
         reverse_proxy http://10.184.0.13:3000 {
-            # WAJIB: Kasih tahu Grafana bahwa dia diakses via HTTPS dan Domain asli
             header_up Host {host}
             header_up X-Real-IP {remote_host}
             header_up X-Forwarded-For {remote_host}
@@ -11,15 +13,47 @@ dev-bkpm.cloud-ioh.com {
         }
     }
 
-    # Proxy API/Internal
-    reverse_proxy /api/* http://10.184.0.20:30800
-    reverse_proxy /auth/* http://10.184.0.20:30800 {
-        header_up Host {host}
-        header_up X-Real-IP {remote_host}
-        header_up X-Forwarded-For {remote_host}
-        header_up X-Forwarded-Proto {scheme}
+    # ---------------------------------------------------------
+    # 2. NEW SERVICE (Messaging, WA, IG, Health) -> Port 31205
+    # ---------------------------------------------------------
+    @messaging {
+        path /health*
+        path /whatsApp*
+        path /instagram*
+        path /intagram* # Handle typo sesuai input
+        path /api/send/* # Spesifik API send
+        path /api/messages* # Spesifik API messages
     }
 
-    # Proxy Frontend
-    reverse_proxy /* dokuprime-fe:5005
+    handle @messaging {
+        reverse_proxy http://10.184.0.20:31205 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
+    # ---------------------------------------------------------
+    # 3. EXISTING API / INTERNAL -> Port 30800
+    # ---------------------------------------------------------
+    handle /api/* {
+        reverse_proxy http://10.184.0.20:30800
+    }
+
+    handle /auth/* {
+        reverse_proxy http://10.184.0.20:30800 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
+    # ---------------------------------------------------------
+    # 4. FRONTEND (Fallback)
+    # ---------------------------------------------------------
+    handle {
+        reverse_proxy dokuprime-fe:5005
+    }
 }

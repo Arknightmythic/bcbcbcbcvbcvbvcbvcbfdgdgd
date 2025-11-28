@@ -2,7 +2,7 @@ import { TabCount } from "./TabButton";
 
 // Tipe untuk props
 type ChatListType = 'active' | 'queue' | 'history' | 'pending';
-type AgentStatus = 'online' | 'away' | 'offline';
+type AgentStatus = 'aktif' | 'keluar' | 'tidak_aktif';
 
 interface AgentSidebarSectionProps {
   activeList: ChatListType;
@@ -36,9 +36,9 @@ export const AgentSidebarSection = ({
 
   // Konfigurasi untuk styling status
   const statusConfig = {
-    online: { text: "Online", color: "bg-green-500", textColor: "text-green-600" },
-    away: { text: "Away", color: "bg-yellow-500", textColor: "text-yellow-600" },
-    offline: { text: "Offline", color: "bg-red-500", textColor: "text-red-600" },
+    aktif: { text: "aktif", color: "bg-green-500", textColor: "text-green-600" },
+    keluar: { text: "keluar", color: "bg-yellow-500", textColor: "text-yellow-600" },
+    tidak_aktif: { text: "tidak aktif", color: "bg-red-500", textColor: "text-red-600" },
   };
 
   const currentStatus = statusConfig[agentStatus] || { text: 'Unknown', color: 'bg-gray-400', textColor: 'text-gray-600' };

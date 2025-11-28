@@ -1,29 +1,12 @@
-import React, { useState, useMemo } from 'react'; 
+import React, { useState, useMemo, useEffect } from 'react'; 
 import { useNavigate, useParams } from 'react-router';
-import { MessageSquare, Clock, CheckCheck, type LucideIcon } from 'lucide-react';
+import { MessageSquare, Clock, CheckCheck, RefreshCw, type LucideIcon } from 'lucide-react';
 import type { ChatLists, HelpDeskChatListType, HelpDeskChat, ChatChannel } from '../utils/types';
 import { ChatList } from '../../../shared/components/sidebar/ChatList';
 import toast from 'react-hot-toast'; 
 import CustomSelect from '../../../shared/components/CustomSelect'; 
-
-
-
-const DUMMY_CHAT_LISTS: ChatLists = {
-  active: [
-    { id: 'active-1', user_name: 'User Aktif 1', last_message: '...', timestamp: new Date().toISOString(), channel: 'web' },
-  ],
-  queue: [
-    { id: 'queue-1', user_name: 'User Antrian 1', last_message: 'Menunggu...', timestamp: new Date().toISOString(), channel: 'whatsapp' },
-    { id: 'queue-2', user_name: 'User Antrian 2', last_message: 'Menunggu...', timestamp: new Date(Date.now() - 300000).toISOString(), channel: 'instagram' },
-  ],
-  pending: [
-     { id: 'pending-1', user_name: 'User Pending (15m+)', last_message: 'Menunggu lama...', timestamp: new Date(Date.now() - 900000).toISOString(), channel: 'email' },
-  ],
-  resolve: [
-    { id: 'resolve-1', user_name: 'User Selesai 1', last_message: 'Selesai', timestamp: new Date(Date.now() - 86400000).toISOString(), channel: 'web' },
-  ],
-};
-
+import { useGetAllHelpDesks, useAcceptHelpDesk } from '../hooks/useHelpDesk';
+import { useQueryClient } from '@tanstack/react-query';
 
 const channelFilterOptions = [
   { value: "", label: "All channel" },
@@ -50,12 +33,115 @@ const TabButton = ({ label, count, isActive, onClick }: { label: string, count: 
 
 const HelpDeskListPanel: React.FC = () => {
   const [activeList, setActiveList] = useState<HelpDeskChatListType>('queue');
-  const [chatLists, setChatLists] = useState<ChatLists>(DUMMY_CHAT_LISTS);
+  const [chatLists, setChatLists] = useState<ChatLists>({
+    active: [],
+    queue: [],
+    pending: [],
+    resolve: [],
+  });
   
   const [selectedChannel, setSelectedChannel] = useState<ChatChannel | ''>('');
   
   const navigate = useNavigate();
   const { sessionId } = useParams<{ sessionId: string }>();
+  const queryClient = useQueryClient();
+
+  // Fetch all helpdesks from API
+  const { data: helpdesks, isLoading, isError, refetch } = useGetAllHelpDesks();
+  const acceptMutation = useAcceptHelpDesk();
+
+  // Refetch data when component mounts or when returning to helpdesk page
+  useEffect(() => {
+    // Invalidate and refetch helpdesk data
+    queryClient.invalidateQueries({ queryKey: ['helpdesks'] });
+    refetch();
+  }, []); // Empty dependency array means this runs only on mount
+
+  // Auto-refresh when page becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        queryClient.invalidateQueries({ queryKey: ['helpdesks'] });
+        refetch();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [queryClient, refetch]);
+
+  // Transform API data to ChatLists format
+  useEffect(() => {
+    if (helpdesks) {
+      const transformedLists: ChatLists = {
+        active: [],
+        queue: [],
+        pending: [],
+        resolve: [],
+      };
+
+      const now = Date.now();
+      const PENDING_THRESHOLD = 15 * 60 * 1000; // 15 minutes
+
+      helpdesks.forEach((helpdesk) => {
+        const chat: HelpDeskChat = {
+          id: helpdesk.session_id,
+          user_name: helpdesk.platform_unique_id || `User ${helpdesk.id}`,
+          last_message: getLastMessageByStatus(helpdesk.status),
+          timestamp: helpdesk.created_at,
+          channel: helpdesk.platform,
+          status: helpdesk.status,
+          helpdesk_id: helpdesk.id,
+        };
+
+        const timeDiff = now - new Date(helpdesk.created_at).getTime();
+
+        switch (helpdesk.status) {
+          case 'in_progress':
+            transformedLists.active.push(chat);
+            break;
+          case 'open':
+            // Check if it should be in pending (15+ minutes old)
+            if (timeDiff > PENDING_THRESHOLD) {
+              transformedLists.pending.push(chat);
+            } else {
+              transformedLists.queue.push(chat);
+            }
+            break;
+          case 'pending':
+            transformedLists.pending.push(chat);
+            break;
+          case 'resolved':
+          case 'closed':
+            transformedLists.resolve.push(chat);
+            break;
+          default:
+            transformedLists.queue.push(chat);
+        }
+      });
+
+      setChatLists(transformedLists);
+    }
+  }, [helpdesks]);
+
+  const getLastMessageByStatus = (status: string): string => {
+    switch (status) {
+      case 'open':
+        return 'Menunggu...';
+      case 'in_progress':
+        return 'Sedang diproses...';
+      case 'pending':
+        return 'Menunggu lama...';
+      case 'resolved':
+      case 'closed':
+        return 'Selesai';
+      default:
+        return '...';
+    }
+  };
 
   const listConfig: Record<HelpDeskChatListType, { icon: LucideIcon; title: string; empty: string }> = {
     active: { icon: MessageSquare, title: "Active Chats", empty: "Tidak ada chat aktif." },
@@ -68,40 +154,38 @@ const HelpDeskListPanel: React.FC = () => {
     navigate(`/helpdesk/${chatId}`);
   };
 
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['helpdesks'] });
+    refetch();
+    toast.success('Refreshing helpdesk data...');
+  };
+
   const handleAcceptChat = (chatId: string) => {
-    let chatToMove: HelpDeskChat | undefined;
-
-    setChatLists(prev => {
-      const newQueue = prev.queue.filter(c => c.id !== chatId);
-      const newPending = prev.pending.filter(c => c.id !== chatId);
-      
-      if (newQueue.length < prev.queue.length) {
-        chatToMove = prev.queue.find(c => c.id === chatId);
-      } else {
-        chatToMove = prev.pending.find(c => c.id === chatId);
-      }
-
-      if (!chatToMove) return prev;
-
-      chatToMove.timestamp = new Date().toISOString(); 
-      const newActive = [chatToMove, ...prev.active];
-      
-      return {
-        ...prev,
-        active: newActive,
-        queue: newQueue,
-        pending: newPending,
-      };
-    });
+    // Find the helpdesk_id from the chat
+    const allChats = [...chatLists.queue, ...chatLists.pending];
+    const chat = allChats.find((c) => c.id === chatId);
     
-    toast.success(`Chat ${chatId} diterima!`);
-    setActiveList('active');
-    navigate(`/helpdesk/${chatId}`);
+    if (!chat || !chat.helpdesk_id) {
+      toast.error("Chat tidak ditemukan");
+      return;
+    }
+
+    // TODO: Get current user_id from auth context or store
+    const currentUserId = 1; // Replace with actual user ID
+
+    acceptMutation.mutate(
+      { id: chat.helpdesk_id, userId: currentUserId },
+      {
+        onSuccess: () => {
+          setActiveList('active');
+          navigate(`/helpdesk/${chatId}`);
+        },
+      }
+    );
   };
 
   const currentListConfig = listConfig[activeList];
 
-  
   const currentChats = useMemo(() => {
     const listByStatus = chatLists[activeList];
     if (!selectedChannel) {
@@ -111,13 +195,36 @@ const HelpDeskListPanel: React.FC = () => {
     return listByStatus.filter(chat => chat.channel === selectedChannel);
   }, [chatLists, activeList, selectedChannel]);
   
-  
   const itemActionType = (activeList === 'queue' || activeList === 'pending') ? 'accept' : undefined;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-gray-500">memuat data...</div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-red-500">gagal memuat data</div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-4 border-b border-gray-200 flex items-center justify-between">
         <h2 className="text-md font-bold text-gray-800">Help Desk</h2>
+        <button
+          onClick={handleRefresh}
+          disabled={isLoading}
+          className="p-1.5 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
+          title="Refresh data"
+        >
+          <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+        </button>
       </div>
 
       <div className="flex justify-between text-center bg-gray-200 rounded-lg p-1 space-x-1 m-4">
@@ -127,7 +234,6 @@ const HelpDeskListPanel: React.FC = () => {
         <TabButton label="Resolve" count={chatLists.resolve.length} isActive={activeList === 'resolve'} onClick={() => setActiveList('resolve')} />
       </div>
 
-      {/* --- PERUBAHAN DI SINI: Tambah Dropdown Filter --- */}
       <div className="px-4 pb-2 border-b border-gray-200">
         <CustomSelect
           selectedType="default"
@@ -136,8 +242,6 @@ const HelpDeskListPanel: React.FC = () => {
           options={channelFilterOptions}
         />
       </div>
-      {/* --- AKHIR PERUBAHAN --- */}
-
 
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         <ChatList

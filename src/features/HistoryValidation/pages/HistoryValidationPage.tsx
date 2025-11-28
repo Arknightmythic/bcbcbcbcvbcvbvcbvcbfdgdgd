@@ -18,7 +18,7 @@ import HistoryValidationTable from "../components/HistoryValidationTable";
 import ChatHistoryModal from "../components/ChatHistoryModal";
 import TableControls, {
   type FilterConfig,
-} from "../../../shared/components/TableControls";
+} from "../../../shared/components/tablecontrols/TableControls";
 import ConfirmationModal from "../../../shared/components/ConfirmationModal";
 import toast from "react-hot-toast";
 import TextExpandModal from "../../../shared/components/TextExpandModal";
@@ -48,9 +48,9 @@ const filterConfig: FilterConfig<HistoryPageFilters>[] = [
     type: "select",
     options: [
       { value: "", label: "All Status" },
-      { value: "Pending", label: "On Review (Pending)" },
-      { value: "Validated", label: "Approved" },
-      { value: "Rejected", label: "Rejected" },
+      { value: "Pending", label: "Ditinjau" },
+      { value: "Validated", label: "Disetujui" },
+      { value: "Rejected", label: "Ditolak" },
     ],
   },
   {
@@ -58,7 +58,7 @@ const filterConfig: FilterConfig<HistoryPageFilters>[] = [
     type: "date-range",
     startDateKey: "start_date",
     endDateKey: "end_date",
-    placeholder: "Select Date Range",
+    placeholder: "FIlter Tanggal",
   },
 ];
 
@@ -242,7 +242,7 @@ const HistoryValidationPage = () => {
         <div className="px-4 bg-gray-50 rounded-t-lg shadow-md">
           <TableControls
             searchTerm={searchInput}
-            searchPlaceholder="Search by user, session ID, or question...."
+            searchPlaceholder="Cari bedasarkan nama, id sesi...."
             filters={filters}
             onSearchChange={setSearchInput}
             onSearchSubmit={handleSearchSubmit}

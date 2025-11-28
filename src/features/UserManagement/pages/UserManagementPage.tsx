@@ -22,7 +22,7 @@ import {
   useGetRoles,
 } from '../hooks/useUserManagement';
 
-import TableControls from '../../../shared/components/TableControls';
+import TableControls from '../../../shared/components/tablecontrols/TableControls';
 import UserTable from '../components/UserTable';
 import ConfirmationModal from '../../../shared/components/ConfirmationModal';
 import UserManagementModal from '../components/UserManagementModal';
@@ -119,11 +119,14 @@ const UserManagementPage = () => {
   };
 
   const handleSaveUser = (modalData: UserModalData, id?: number) => {
-    
+    const currentAccountType = (id && selectedUser?.account_type) 
+      ? selectedUser.account_type 
+      : 'credential';
+
     const payload: CreateUserPayload | UpdateUserPayload = {
       name: modalData.name,
       email: modalData.email,
-      account_type: 'credential',
+      account_type: currentAccountType, 
       role_id: modalData.roleId ? Number(modalData.roleId) : null,
       phone: null,
     };
@@ -195,7 +198,7 @@ const UserManagementPage = () => {
                  <div className="flex-grow">
                     <TableControls
                         searchTerm={searchInput}
-                        searchPlaceholder="Search by name or email..."
+                        searchPlaceholder="Cari bedasarkan nama atau email..."
                         filters={filters}
                         onSearchChange={setSearchInput}
                         onSearchSubmit={handleSearchSubmit}
@@ -211,7 +214,7 @@ const UserManagementPage = () => {
                         className="bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 flex items-center justify-center w-full lg:w-auto"
                     >
                         <Plus className="w-3 h-3 mr-2" />
-                        Create User
+                        Buat Akun
                     </button>
                 </div>
             </div>

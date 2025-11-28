@@ -1,39 +1,30 @@
-
 import { useState, useEffect } from "react";
 import { Outlet } from "react-router";
 import Sidebar from "./sidebar/Sidebar";
 import Header from "./header/header";
+import { SIDEBAR_STATE_KEY } from "../utils/constant";
 
-// --- 1. Tentukan Kunci LocalStorage ---
-const SIDEBAR_STATE_KEY = "sidebar_is_collapsed";
+
 
 function Layout() {
-  
-  // --- 2. Baca state dari LocalStorage saat inisialisasi ---
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
     const savedState = localStorage.getItem(SIDEBAR_STATE_KEY);
-    // Jika ada state tersimpan, gunakan itu. Jika tidak, default ke false (expanded).
     return savedState ? JSON.parse(savedState) : false;
   });
-  
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isAgentPanelPopupOpen, setIsAgentPanelPopupOpen] = useState(false);
-  
   const [isDesktop, setIsDesktop] = useState(
-    window.matchMedia('(min-width: 1024px)').matches
+    window.matchMedia("(min-width: 1024px)").matches
   );
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia('(min-width: 1024px)');
+    const mediaQuery = window.matchMedia("(min-width: 1024px)");
     const handleChange = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
-    
-    mediaQuery.addEventListener('change', handleChange);
-    
+    mediaQuery.addEventListener("change", handleChange);
     if (!mediaQuery.matches) {
       setIsMobileSidebarOpen(false);
     }
-
-    return () => mediaQuery.removeEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
   }, []);
 
   useEffect(() => {
@@ -42,16 +33,13 @@ function Layout() {
     }
   }, [isDesktop]);
 
-  // --- 3. Tulis state ke LocalStorage saat di-toggle ---
   const toggleSidebar = () => {
     if (isDesktop) {
-      // Hitung state baru
       const newCollapsedState = !isSidebarCollapsed;
-      
-      // Simpan state baru ke LocalStorage
-      localStorage.setItem(SIDEBAR_STATE_KEY, JSON.stringify(newCollapsedState));
-      
-      // Terapkan state baru ke React
+      localStorage.setItem(
+        SIDEBAR_STATE_KEY,
+        JSON.stringify(newCollapsedState)
+      );
       setIsSidebarCollapsed(newCollapsedState);
     } else {
       setIsMobileSidebarOpen(!isMobileSidebarOpen);
@@ -65,10 +53,7 @@ function Layout() {
   const isContentBlurred = isMobileSidebarOpen && !isDesktop;
 
   return (
-    // --- PERUBAHAN 1: Ganti 'min-h-screen' menjadi 'h-screen' dan tambahkan 'overflow-hidden' ---
-    // Ini memaksa layout untuk tidak pernah lebih tinggi dari viewport browser.
     <div className="flex h-screen relative overflow-hidden">
-      
       {isContentBlurred && (
         <div
           className="fixed inset-0 z-[55] bg-black/20 backdrop-blur-sm"
@@ -77,11 +62,11 @@ function Layout() {
         />
       )}
 
-      <Sidebar 
-        isCollapsed={isDesktop ? isSidebarCollapsed : false} 
-        isMobileOpen={isMobileSidebarOpen} 
-        isDesktop={isDesktop} 
-        setOutletBlurred={setIsAgentPanelPopupOpen} 
+      <Sidebar
+        isCollapsed={isDesktop ? isSidebarCollapsed : false}
+        isMobileOpen={isMobileSidebarOpen}
+        isDesktop={isDesktop}
+        setOutletBlurred={setIsAgentPanelPopupOpen}
       />
       <div
         className={`flex flex-col flex-1 transition-all duration-300 ${
@@ -89,13 +74,11 @@ function Layout() {
         } w-0`}
       >
         <Header toggleSidebar={toggleSidebar} />
-
-        {/* --- PERUBAHAN 2: Ganti 'overflow-y-hidden' menjadi 'overflow-y-auto' --- */}
-        {/* Ini membuat area 'main' bisa scroll jika kontennya (seperti UserManagement) panjang, */}
-        {/* tapi tidak akan scroll jika kontennya (seperti ChatPage) me-manage scroll-nya sendiri. */}
-        <main className={`flex flex-col flex-1 p-5 bg-[#F9FAFB] overflow-y-auto custom-scrollbar relative ${
-          isAgentPanelPopupOpen ? 'blur-sm pointer-events-none' : '' 
-        } transition-all duration-300`}>
+        <main
+          className={`flex flex-col flex-1 p-5 bg-[#F9FAFB] overflow-y-auto custom-scrollbar relative ${
+            isAgentPanelPopupOpen ? "blur-sm pointer-events-none" : ""
+          } transition-all duration-300`}
+        >
           <Outlet />
         </main>
       </div>

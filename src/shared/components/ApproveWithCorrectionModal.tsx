@@ -1,4 +1,3 @@
-// [BUAT BARU: src/features/HistoryValidation/components/ApproveWithCorrectionModal.tsx]
 import React, { useState } from 'react';
 import { X, CheckCircle, Loader2 } from 'lucide-react';
 import type { ValidationHistoryItem } from '../../features/HistoryValidation/utils/types';
@@ -8,9 +7,6 @@ interface ApproveWithCorrectionModalProps {
   isOpen: boolean;
   onClose: () => void;
   history: ValidationHistoryItem | null;
-  /** * Dipanggil saat tombol Approve ditekan.
-   * Menerima item history dan string koreksi (bisa kosong).
-   */
   onConfirm: (history: ValidationHistoryItem, correction: string) => void;
   isConfirming: boolean;
 }
@@ -23,18 +19,15 @@ const ApproveWithCorrectionModal: React.FC<ApproveWithCorrectionModalProps> = ({
   isConfirming,
 }) => {
   const [correctionText, setCorrectionText] = useState('');
-
   if (!isOpen || !history) {
     return null;
   }
-  
   const handleConfirm = () => {
-    // Panggil onConfirm dengan item history dan teks koreksi
     onConfirm(history, correctionText);
   };
   
   const handleClose = () => {
-      setCorrectionText(''); // Reset state saat ditutup
+      setCorrectionText('');
       onClose();
   }
 
@@ -46,8 +39,6 @@ const ApproveWithCorrectionModal: React.FC<ApproveWithCorrectionModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-sm" onClick={handleClose}>
       <div className="relative w-full max-w-2xl p-6 mx-4 bg-white rounded-lg shadow-xl" onClick={(e) => e.stopPropagation()}>
-        
-        {/* Header */}
         <div className="flex items-start justify-between pb-4 border-b border-gray-200">
           <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
             <CheckCircle className="w-6 h-6 text-green-600" />
@@ -59,7 +50,6 @@ const ApproveWithCorrectionModal: React.FC<ApproveWithCorrectionModalProps> = ({
           </button>
         </div>
         
-        {/* Konten & Form */}
         <div className="py-5">
           <p className="text-base leading-relaxed text-gray-700 font-medium mb-4">
             Anda akan menyetujui Jawaban AI untuk pertanyaan berikut. Harap periksa kembali.
@@ -87,7 +77,6 @@ const ApproveWithCorrectionModal: React.FC<ApproveWithCorrectionModalProps> = ({
           />
         </div>
         
-        {/* Footer Actions */}
         <div className="flex items-center justify-end pt-4 space-x-3 border-t border-gray-200">
           <button 
             onClick={handleClose} 

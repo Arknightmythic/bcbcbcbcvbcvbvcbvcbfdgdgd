@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { DashboardHeader } from "../components/FilterCustom";
+
 import { useGenerateGrafanaUrl } from "../hooks/useGrafanaEmbed";
 import type {
   Period,
@@ -7,6 +7,7 @@ import type {
   GenerateEmbedRequest,
 } from "../utils/types";
 import { Loader2 } from "lucide-react";
+import { DashboardHeader } from "../components/DashboardHeader";
 
 const FILTER_STORAGE_KEY = "dashboard_filter_state";
 

@@ -1,0 +1,238 @@
+interface WebSocketMessage {
+  action: string;
+  channel: string;
+  data?: any;
+  messageId?: string;
+  lastMessageId?: string;
+}
+
+interface WebSocketResponse {
+  event?: string;
+  channel?: string;
+  streamId?: string;
+  data?: any;
+  status?: string;
+  message?: string;
+  error?: string;
+}
+
+type MessageHandler = (data: any) => void;
+
+class WebSocketService {
+  private ws: WebSocket | null = null;
+  private url: string;
+  private token: string;
+  private messageHandlers: Map<string, MessageHandler[]> = new Map();
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 5;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private isConnecting = false;
+  private subscribedChannels: Set<string> = new Set();
+
+  constructor(url: string, token: string) {
+    this.url = url;
+    this.token = token;
+  }
+
+  connect(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (this.ws?.readyState === WebSocket.OPEN) {
+        resolve();
+        return;
+      }
+
+      if (this.isConnecting) {
+        reject(new Error('Connection already in progress'));
+        return;
+      }
+
+      this.isConnecting = true;
+
+      try {
+        const wsUrl = `${this.url}?token=${this.token}`;
+        this.ws = new WebSocket(wsUrl);
+
+        this.ws.onopen = () => {
+          console.log('✅ Connected to WebSocket server');
+          this.reconnectAttempts = 0;
+          this.isConnecting = false;
+          
+          
+          this.subscribedChannels.forEach(channel => {
+            this.subscribe(channel, '$');
+          });
+          
+          resolve();
+        };
+
+        this.ws.onmessage = (event) => {
+          try {
+            const message: WebSocketResponse = JSON.parse(event.data);
+            this.handleMessage(message);
+          } catch (error) {
+            console.error('Failed to parse WebSocket message:', error);
+          }
+        };
+
+        this.ws.onerror = (error) => {
+          console.error('WebSocket error:', error);
+          this.isConnecting = false;
+          reject(error);
+        };
+
+        this.ws.onclose = () => {
+          console.log('WebSocket connection closed');
+          this.isConnecting = false;
+          this.ws = null;
+          this.reconnect();
+        };
+      } catch (error) {
+        this.isConnecting = false;
+        reject(error);
+      }
+    });
+  }
+
+  private reconnect(): void {
+    if (this.reconnectTimer) {
+      return;
+    }
+
+    if (this.reconnectAttempts < this.maxReconnectAttempts) {
+      this.reconnectAttempts++;
+      const delay = Math.min(1000 * this.reconnectAttempts, 5000);
+      
+      console.log(
+        `Reconnecting in ${delay}ms... (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`
+      );
+
+      this.reconnectTimer = setTimeout(() => {
+        this.reconnectTimer = null;
+        this.connect().catch((error) => {
+          console.error('Reconnection failed:', error);
+        });
+      }, delay);
+    } else {
+      console.error('Max reconnection attempts reached');
+    }
+  }
+
+  private handleMessage(message: WebSocketResponse): void {
+    const { event, channel, data } = message;
+
+    if (event === 'message' && channel) {
+      const handlers = this.messageHandlers.get(channel);
+      if (handlers) {
+        handlers.forEach((handler) => {
+          try {
+            handler(data);
+          } catch (error) {
+            console.error('Error in message handler:', error);
+          }
+        });
+      }
+    } else if (message.status) {
+      console.log(`WebSocket status: ${message.status} - ${message.message}`);
+    }
+  }
+
+  subscribe(conversationId: string, lastMessageId = '$'): void {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      console.error('WebSocket is not connected');
+      return;
+    }
+
+    const message: WebSocketMessage = {
+      action: 'subscribe',
+      channel: conversationId,
+      lastMessageId: lastMessageId,
+    };
+
+    this.ws.send(JSON.stringify(message));
+    this.subscribedChannels.add(conversationId);
+    console.log(`📡 Subscribed to conversation: ${conversationId}`);
+  }
+
+  publish(conversationId: string, data: any): void {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      console.error('WebSocket is not connected');
+      return;
+    }
+
+    const messageId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const message: WebSocketMessage = {
+      action: 'publish',
+      channel: conversationId,
+      data: data,
+      messageId: messageId,
+    };
+
+    this.ws.send(JSON.stringify(message));
+    console.log(`📤 Published to conversation: ${conversationId}`);
+  }
+
+  onMessage(conversationId: string, handler: MessageHandler): () => void {
+    if (!this.messageHandlers.has(conversationId)) {
+      this.messageHandlers.set(conversationId, []);
+    }
+
+    const handlers = this.messageHandlers.get(conversationId)!;
+    handlers.push(handler);
+
+    
+    return () => {
+      const index = handlers.indexOf(handler);
+      if (index > -1) {
+        handlers.splice(index, 1);
+      }
+      
+      
+      if (handlers.length === 0) {
+        this.messageHandlers.delete(conversationId);
+        this.subscribedChannels.delete(conversationId);
+      }
+    };
+  }
+
+  isConnected(): boolean {
+    return this.ws?.readyState === WebSocket.OPEN;
+  }
+
+  disconnect(): void {
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+
+    if (this.ws) {
+      this.ws.close();
+      this.ws = null;
+    }
+
+    this.messageHandlers.clear();
+    this.subscribedChannels.clear();
+    this.reconnectAttempts = 0;
+    this.isConnecting = false;
+  }
+}
+
+
+let wsServiceInstance: WebSocketService | null = null;
+
+export const getWebSocketService = (): WebSocketService => {
+  if (!wsServiceInstance) {
+    const wsUrl = import.meta.env.VITE_WEBSOCKET_URL || 'ws://localhost:8080';
+    const wsToken = import.meta.env.VITE_WEBSOCKET_SECRET_KEY || 'your-secret-key';
+    wsServiceInstance = new WebSocketService(wsUrl, wsToken);
+  }
+  return wsServiceInstance;
+};
+
+export const disconnectWebSocket = (): void => {
+  if (wsServiceInstance) {
+    wsServiceInstance.disconnect();
+    wsServiceInstance = null;
+  }
+};
+
+export default WebSocketService;

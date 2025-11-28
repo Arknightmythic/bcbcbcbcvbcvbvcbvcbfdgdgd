@@ -23,7 +23,6 @@ const UserProfile = () => {
         className="w-10 h-10 cursor-pointer rounded-full bg-gray-200 flex items-center justify-center"
         onClick={() => setIsMenuOpen((prev) => !prev)}
       >
-        {/* Menampilkan inisial nama jika ada user */}
         {user ? (
           <span className="font-bold text-gray-600">{user.name.charAt(0).toUpperCase()}</span>
         ) : (
@@ -48,7 +47,7 @@ const UserProfile = () => {
             className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50"
           >
             <LogOut className="h-5 w-5 text-gray-500" />
-            <span>{isPending ? 'Logging out...' : 'Logout'}</span>
+            <span>{isPending ? 'Keluar sekarang...' : 'Keluar'}</span>
           </button>
         </div>
       )}

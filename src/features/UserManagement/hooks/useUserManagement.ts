@@ -31,11 +31,11 @@ export const useCreateUser = () => {
   return useMutation({
     mutationFn: (data: CreateUserPayload) => createUser(data),
     onSuccess: () => {
-      toast.success("User created successfully!");
+      toast.success("Akun berhasil dibuat!");
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Failed to create user.");
+      toast.error(err.response?.data?.message || "Akun gagal dibuat.");
     },
   });
 };
@@ -47,11 +47,11 @@ export const useUpdateUser = () => {
     mutationFn: ({ id, data }: { id: number; data: UpdateUserPayload }) =>
       updateUser({ id, data }),
     onSuccess: () => {
-      toast.success("User updated successfully!");
+      toast.success("AKun berhasil diperbarui!");
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Failed to update user.");
+      toast.error(err.response?.data?.message || "Gagal memperbarui akun.");
     },
   });
 };
@@ -62,11 +62,11 @@ export const useDeleteUser = () => {
   return useMutation({
     mutationFn: (id: number) => deleteUser(id),
     onSuccess: () => {
-      toast.success("User deleted successfully!");
+      toast.success("Akun berhasil dihapus!");
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Failed to delete user.");
+      toast.error(err.response?.data?.message || "gagal menghapus akun.");
     },
   });
 };

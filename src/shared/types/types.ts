@@ -17,4 +17,12 @@ export interface Chat {
   channel: ChatChannel;
 }
 
-export type DocumentCategory = "panduan" | "uraian" | "peraturan";
+export type DocumentCategory = "panduan" | "qna" | "peraturan";
+
+export interface PdfViewModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  url: string | null;      
+  isLoading: boolean;  
+  title: string;
+}

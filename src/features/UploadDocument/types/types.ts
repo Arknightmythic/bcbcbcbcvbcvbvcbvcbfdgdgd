@@ -1,4 +1,4 @@
-export type DocumentCategory = 'panduan' | 'uraian' | 'peraturan';
+export type DocumentCategory = 'panduan' | 'qna' | 'peraturan';
 
 export type SortOrder = 'asc' | 'desc' | '';
 

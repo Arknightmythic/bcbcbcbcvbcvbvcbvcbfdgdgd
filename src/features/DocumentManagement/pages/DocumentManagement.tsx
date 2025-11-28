@@ -1,23 +1,21 @@
-// [UPDATE: src/features/DocumentManagement/pages/DocumentManagement.tsx]
-
 import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { Loader2 } from "lucide-react";
-import type { ActionType, Document, DocumentCategory, SortOrder } from "../types/types"; // Import SortOrder
+import type { ActionType, Document, DocumentCategory, SortOrder } from "../types/types"; 
 import { useGetDocuments, useApproveDocument, useRejectDocument, useDeleteDocument } from "../hooks/useDocument";
 import { generateViewUrl} from "../api/document";
 import DocumentTable from "../components/DocumentTable";
 import ConfirmationModal from "../../../shared/components/ConfirmationModal";
-import TableControls, { type FilterConfig } from "../../../shared/components/TableControls";
+import TableControls, { type FilterConfig } from "../../../shared/components/tablecontrols/TableControls";
 import PdfViewModal from "../../../shared/components/PDFViewModal";
 
-// Update Interface Filters
+
 export interface Filters extends Record<string, any> {
   type: string;
   category: DocumentCategory | "";
   status: string;
-  start_date: string; // Tambahan
-  end_date: string;   // Tambahan
+  start_date: string; 
+  end_date: string;   
 }
 
 const filterConfig: FilterConfig<Filters>[] = [
@@ -36,7 +34,7 @@ const filterConfig: FilterConfig<Filters>[] = [
         options: [
             { value: "", label: "All Categories" },
             { value: "panduan", label: "Panduan" },
-            { value: "uraian", label: "Uraian" },
+            { value: "qna", label: "Tanya Jawab" },
             { value: "peraturan", label: "Peraturan" },
         ],
     },
@@ -50,13 +48,13 @@ const filterConfig: FilterConfig<Filters>[] = [
             { value: "Rejected", label: "Rejected" },
         ],
     },
-    // --- TAMBAHAN: Config Date Range ---
+    
     {
         key: "date_range",
         type: "date-range",
         startDateKey: "start_date",
         endDateKey: "end_date",
-        placeholder: "Filter by Date",
+        placeholder: "Filter Tanggal",
     },
 ];
 
@@ -65,13 +63,13 @@ const DocumentManagementPage = () => {
   
   const [searchInput, setSearchInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  // State Filters default
+  
   const [filters, setFilters] = useState<Filters>({ type: "", category: "", status: "", start_date: "", end_date: "" });
   
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // --- TAMBAHAN: State Sorting ---
+  
   const [sortColumn, setSortColumn] = useState<string>("created_at");
   const [sortDirection, setSortDirection] = useState<SortOrder>("desc");
 
@@ -85,7 +83,7 @@ const DocumentManagementPage = () => {
     setCurrentPage(1);
   };
 
-  // --- UPDATE: Search Params Logic ---
+  
   const searchParams = useMemo(() => {
     const params = new URLSearchParams();
     params.set('limit', String(itemsPerPage));
@@ -96,11 +94,11 @@ const DocumentManagementPage = () => {
     if (filters.category) params.set('category', filters.category);
     if (filters.status) params.set('status', filters.status);
     
-    // Date Params
+    
     if (filters.start_date) params.set('start_date', filters.start_date);
     if (filters.end_date) params.set('end_date', filters.end_date);
 
-    // Sort Params
+    
     if (sortColumn) {
         params.set('sort_by', sortColumn);
         params.set('sort_direction', sortDirection);
@@ -119,7 +117,7 @@ const DocumentManagementPage = () => {
 
   const hasManagerAccess = true;
 
-  // Handler Filter
+  
   const handleFilterChange = (filterName: keyof Filters, value: any) => {
     setFilters((prev) => ({ ...prev, [filterName]: value }));
     setCurrentPage(1);
@@ -130,13 +128,13 @@ const DocumentManagementPage = () => {
     setCurrentPage(1);
   };
 
-  // --- TAMBAHAN: Handler Sort ---
+  
   const handleSort = (column: string) => {
     if (sortColumn === column) {
-      // Toggle asc/desc
+      
       setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
     } else {
-      // Kolom baru, default asc/desc
+      
       setSortColumn(column);
       setSortDirection('asc'); 
     }
@@ -158,22 +156,22 @@ const DocumentManagementPage = () => {
     if (action === "approve") {
         approve(document.id, {
             onSuccess: () => {
-              toast.success("Document approved successfully.");
+              toast.success("Dokumen disetujui.");
               handleCloseModal();
             },
             onError: (e: any) => {
-              toast.error(e.response?.data?.message || "Failed to approve.");
+              toast.error(e.response?.data?.message || "Gagal menyetujui.");
               handleCloseModal();
             },
         });
     } else if (action === "reject") {
         reject(document.id, {
             onSuccess: () => {
-              toast.success("Document rejected successfully.");
+              toast.success("Dokumen ditolak.");
               handleCloseModal();
             },
             onError: (e: any) => {
-              toast.error(e.response?.data?.message || "Failed to reject.");
+              toast.error(e.response?.data?.message || "Gagal menolak.");
               handleCloseModal();
             },
         });
@@ -191,11 +189,26 @@ const DocumentManagementPage = () => {
 
     switch (action) {
       case "approve":
-        return { title: "Confirm Approval", body: `Are you sure you want to approve "${document.document_name}"?`, confirmText: "Approve", confirmColor: "bg-green-600 hover:bg-green-700" };
+        return { 
+          title: "Konfirmasi Persetujuan", 
+          body: `Apakah Anda yakin ingin menyetujui "${document.document_name}"?`, 
+          confirmText: "Setujui", 
+          confirmColor: "bg-green-600 hover:bg-green-700" 
+        };
       case "reject":
-        return { title: "Confirm Rejection", body: `Are you sure you want to reject "${document.document_name}"?`, confirmText: "Reject", confirmColor: "bg-orange-600 hover:bg-orange-700" };
+        return { 
+          title: "Konfirmasi Penolakan", 
+          body: `Apakah Anda yakin ingin menolak "${document.document_name}"?`, 
+          confirmText: "Tolak", 
+          confirmColor: "bg-orange-600 hover:bg-orange-700" 
+        };
       case "delete":
-        return { title: "Confirm Deletion", body: `Are you sure you want to delete "${document.document_name}"? This action will delete the main document and ALL its versions.`, confirmText: "Delete", confirmColor: "bg-red-600 hover:bg-red-700" };
+        return { 
+          title: "Konfirmasi Penghapusan", 
+          body: `Apakah Anda yakin ingin menghapus "${document.document_name}"? Tindakan ini akan menghapus dokumen utama dan SEMUA versinya.`, 
+          confirmText: "Hapus", 
+          confirmColor: "bg-red-600 hover:bg-red-700" 
+        };
       default:
         return {};
     }
@@ -213,7 +226,7 @@ const DocumentManagementPage = () => {
       setViewableUrl(response.data.url);
     } catch (error) {
       console.error("Failed to get view URL:", error);
-      toast.error("Could not generate secure URL.");
+      toast.error("tidak dapat memuat pratinjau dokumen.");
       setIsViewModalOpen(false); 
     } finally {
       setIsGeneratingUrl(false);
@@ -245,7 +258,7 @@ const DocumentManagementPage = () => {
         <div className="px-4 bg-gray-50 rounded-t-lg shadow-md">
             <TableControls
                 searchTerm={searchInput}
-                searchPlaceholder="Search by name, staff, team..."
+                searchPlaceholder="Cari bedasarkan nama, staff, tim..."
                 filters={filters}
                 onSearchChange={setSearchInput}
                 onSearchSubmit={handleSearchSubmit} 
@@ -264,7 +277,6 @@ const DocumentManagementPage = () => {
           onPageChange={setCurrentPage}
           onItemsPerPageChange={handleItemsPerPageChange}
           onViewFile={handleOpenViewFile}
-          // --- Pass Props Sorting ---
           sortColumn={sortColumn}
           sortDirection={sortDirection}
           onSort={handleSort}

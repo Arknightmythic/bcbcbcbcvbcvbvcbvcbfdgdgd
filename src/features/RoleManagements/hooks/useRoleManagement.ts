@@ -31,11 +31,11 @@ export const useCreateRole = () => {
   return useMutation({
     mutationFn: (data: RolePayload) => createRole(data),
     onSuccess: () => {
-      toast.success("Role created successfully!");
+      toast.success("Peran berhasil dibuat!");
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Failed to create role.");
+      toast.error(err.response?.data?.message || "gagal membuat peran.");
     },
   });
 };
@@ -47,11 +47,11 @@ export const useUpdateRole = () => {
     mutationFn: ({ id, data }: { id: number; data: RolePayload }) =>
       updateRole({ id, data }),
     onSuccess: () => {
-      toast.success("Role updated successfully!");
+      toast.success("Peran berhasil diperbarui!");
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Failed to update role.");
+      toast.error(err.response?.data?.message || "gagal memperbarui peran.");
     },
   });
 };
@@ -62,11 +62,11 @@ export const useDeleteRole = () => {
   return useMutation({
     mutationFn: (id: number) => deleteRole(id),
     onSuccess: () => {
-      toast.success("Role deleted successfully!");
+      toast.success("Peran berhasil dihapus!");
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Failed to delete role.");
+      toast.error(err.response?.data?.message || "Gagal menghapus peran.");
     },
   });
 };

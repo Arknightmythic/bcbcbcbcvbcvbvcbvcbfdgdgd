@@ -24,7 +24,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
   options, 
   value, 
   onChange, 
-  placeholder = "Select...", 
+  placeholder = "Pilih...", 
   selectedType,
   direction = 'down',
   disabled = false 
@@ -42,9 +42,6 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
     }
   };
 
-  // PERBAIKAN 1: Menggunakan useLayoutEffect
-  // Ini berjalan secara sinkron setelah semua mutasi DOM tetapi SEBELUM browser 'melukis' (paint) layar.
-  // Ini mencegah user melihat dropdown di posisi yang salah (0,0) sebelum pindah.
   useLayoutEffect(() => {
     if (isOpen) {
       updateCoords();
@@ -59,17 +56,14 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
     }
   }, [isOpen]);
 
-  // Handle click outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      // Cek apakah tombol yang diklik
       if (buttonRef.current && buttonRef.current.contains(event.target as Node)) {
         return;
       }
 
       if (isOpen) {
         const dropdownElement = document.getElementById('custom-select-dropdown');
-        // Jika klik di luar dropdown, tutup
         if (dropdownElement && !dropdownElement.contains(event.target as Node)) {
           setIsOpen(false);
         }
@@ -129,8 +123,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
         <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
-      {/* PERBAIKAN 2: Menambahkan pengecekan `&& buttonRect` */}
-      {/* Portal tidak akan dirender sama sekali sampai koordinat (buttonRect) tersedia */}
+     
       {isOpen && !disabled && buttonRect && createPortal(
         <div 
           id="custom-select-dropdown"

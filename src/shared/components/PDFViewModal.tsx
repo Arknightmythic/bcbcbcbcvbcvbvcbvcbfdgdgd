@@ -1,13 +1,8 @@
 import React from 'react';
 import { X, Loader2 } from 'lucide-react';
+import type { PdfViewModalProps } from '../types/types';
 
-interface PdfViewModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  url: string | null;      
-  isLoading: boolean;  
-  title: string;
-}
+
 
 const PdfViewModal: React.FC<PdfViewModalProps> = ({ isOpen, onClose, url, isLoading, title }) => {
   if (!isOpen) return null;
@@ -37,7 +32,7 @@ const PdfViewModal: React.FC<PdfViewModalProps> = ({ isOpen, onClose, url, isLoa
           {isLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
               <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-              <span className="ml-3 text-gray-600">Generating secure URL...</span>
+              <span className="ml-3 text-gray-600">Sedang membuka...</span>
             </div>
           )}
 
@@ -52,7 +47,7 @@ const PdfViewModal: React.FC<PdfViewModalProps> = ({ isOpen, onClose, url, isLoa
 
           {(!isLoading && !url) && (
              <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
-                <p className="text-red-500">Could not load document.</p>
+                <p className="text-red-500">file tidak bisa dibuka!</p>
              </div>
           )}
         </div>

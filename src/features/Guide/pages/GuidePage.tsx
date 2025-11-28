@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import toast from "react-hot-toast";
-import TableControls from "../../../shared/components/TableControls"; // Pastikan path ini sesuai
+import TableControls from "../../../shared/components/tablecontrols/TableControls"; // Pastikan path ini sesuai
 import PdfViewModal from "../../../shared/components/PDFViewModal"; // Pastikan path ini sesuai
 import GuideTable from "../components/GuideTable";
 import { useGetGuides } from "../hooks/useGuide";
@@ -73,7 +73,7 @@ const GuidePage: React.FC = () => {
       setViewableUrl(response.data.url);
     } catch (error) {
       console.error("Failed to get view URL:", error);
-      toast.error("Could not generate secure URL.");
+      toast.error("tidak dapat memuat pratinjau panduan.");
       setIsViewModalOpen(false); 
     } finally {
       setIsGeneratingUrl(false);
@@ -99,7 +99,7 @@ const GuidePage: React.FC = () => {
         <div className="px-4 bg-gray-50 rounded-t-lg shadow-md">
           <TableControls
             searchTerm={searchInput}
-            searchPlaceholder="Search guides..."
+            searchPlaceholder="Cari Panduan"
             filters={filters as any}
             onSearchChange={setSearchInput}
             onSearchSubmit={handleSearchSubmit}
