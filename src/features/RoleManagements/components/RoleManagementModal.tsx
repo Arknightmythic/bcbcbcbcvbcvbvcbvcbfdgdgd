@@ -104,15 +104,15 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // --- VALIDASI BARU: Cegah nama "default" ---
+    
     if (name.trim().toLowerCase() === 'default') {
-        toast.error("Cannot use restricted name 'Default'.");
+        toast.error("tidak dapat menggunakan nama 'default' untuk peran.");
         return;
     }
-    // -------------------------------------------
+    
 
     if (!teamId) {
-        toast.error("Please select a team."); 
+        toast.error("silakan pilih tim untuk peran ini."); 
         return;
     }
 
@@ -139,7 +139,7 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
       <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl animate-fade-in-up max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
         
         <div className="flex justify-between items-center pb-4 border-b flex-shrink-0">
-            <h2 className="text-2xl font-bold">{isEditMode ? 'Edit Role' : 'Create New Role'}</h2>
+            <h2 className="text-2xl font-bold">{isEditMode ? 'Ubah Peran' : 'Buat Peran Baru'}</h2>
             <button onClick={onClose} className="text-gray-500 hover:text-gray-800 transition-colors">
               <X className="w-6 h-6" />
             </button>
@@ -149,7 +149,7 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
           <form id="role-form" onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 gap-4 mb-6">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Role Name</label>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Nama Role</label>
                 <input
                   type="text"
                   id="name"
@@ -162,42 +162,42 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Assign Team</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Daftakan ke tim</label>
                 <div className="w-full"> 
                   <CustomSelect
                     options={teams.map(t => ({ value: String(t.id), label: t.name }))}
                     value={teamId}
                     onChange={setTeamId}
-                    placeholder="Select a Team"
+                    placeholder="Pilih Tim"
                     disabled={isEditMode}
                     selectedType='default'
                   />
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  Permissions are automatically filtered based on the selected team's Access Rights.
+                  Izin secara otomatis difilter berdasarkan Hak Akses Tim yang dipilih.
                 </p>
               </div>
             </div>
 
             <div className="mb-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Permissions 
+                Izin
                 {teamId && (
                     <span className="ml-2 text-xs font-normal text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
-                        Filtered by Team
+                        Difilter berdasarkan Tim
                     </span>
                 )}
               </label>
               
               {!teamId ? (
                 <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-200 rounded-lg bg-gray-50 text-gray-400">
-                   <p>Please select a Team first to view available permissions.</p>
+                   <p>Silakan pilih Tim terlebih dahulu untuk melihat izin yang tersedia</p>
                 </div>
               ) : Object.keys(groupedPermissions).length === 0 ? (
                 <div className="p-4 bg-yellow-50 text-yellow-700 rounded-md text-sm">
-                  No permissions found matching this team's Access Rights.
+                  Tidak ada izin yang ditemukan yang cocok dengan Hak Akses tim ini.
                   <br/>
-                  <span className="text-xs opacity-75">Check if the team has 'Access Rights' assigned in Team Management.</span>
+                  <span className="text-xs opacity-75">Periksa apakah tim memiliki 'Hak Akses' yang ditetapkan di Manajemen Tim.</span>
                 </div>
               ) : (
                 <div className="space-y-6">
@@ -268,7 +268,7 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
                 onClick={onClose} 
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
-                Cancel
+                Batal
             </button>
             <button 
                 type="submit" 
@@ -277,7 +277,7 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-colors shadow-sm"
             >
               {isLoading && <Loader2 className="animate-spin w-4 h-4 mr-2" />}
-              {isEditMode ? 'Save Changes' : 'Create Role'}
+              {isEditMode ? 'Simpan Perubahan' : 'Buat Role'}
             </button>
         </div>
       </div>

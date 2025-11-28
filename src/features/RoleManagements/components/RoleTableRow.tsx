@@ -68,28 +68,28 @@ const RoleTableRow: React.FC<RoleTableRowProps> = ({ role, onAction }) => {
         <button
           onClick={() => { onAction('view', role); setIsDropdownOpen(false); }}
           className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-          title="View Details"
+          title="Lihat Detail"
         >
           <Eye className="w-4 h-4" />
-          <span>View Details</span>
+          <span>Lihat Detail</span>
         </button>
         <button
           onClick={() => { onAction('edit', role); setIsDropdownOpen(false); }}
           disabled={isDefault}
           className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:text-gray-400 disabled:bg-white disabled:cursor-not-allowed"
-          title={isDefault ? "Cannot edit default role" : "Edit Role"}
+          title={isDefault ? "Tidak dapat mengedit peran default" : "Ubah Peran"}
         >
           <Edit className="w-4 h-4" />
-          <span>Edit Role</span>
+          <span>Ubah Peran</span>
         </button>
         <button
           onClick={() => { onAction('delete', role); setIsDropdownOpen(false); }}
           disabled={isDefault}
           className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 disabled:text-gray-400 disabled:bg-white disabled:cursor-not-allowed"
-          title={isDefault ? "Cannot delete default role" : "Delete Role"}
+          title={isDefault ? "Tidak dapat menghapus peran default" : "Hapus Peran"}
         >
           <Trash2 className="w-4 h-4" />
-          <span>Delete Role</span>
+          <span>Hapus Peran</span>
         </button>
       </div>
     </div>
@@ -126,14 +126,14 @@ const RoleTableRow: React.FC<RoleTableRowProps> = ({ role, onAction }) => {
       <td className="px-4 py-3 text-center sticky right-0 bg-white group-hover:bg-gray-50 z-10 border-l border-gray-200">
         
         <div className="hidden md:flex items-center justify-center gap-x-3">
-          <button onClick={() => onAction('view', role)} className="text-green-600 hover:text-green-800" title="View Details">
+          <button onClick={() => onAction('view', role)} className="text-green-600 hover:text-green-800" title="Lihat Detail">
             <Eye className="w-4 h-4" />
           </button>
           <button 
             onClick={() => onAction('edit', role)} 
             disabled={isDefault}
             className={`hover:text-blue-800 ${isDefault ? 'text-gray-300 cursor-not-allowed' : 'text-blue-600'}`}
-            title={isDefault ? "Cannot edit default role" : "Edit"}
+            title={isDefault ? "Tidak dapat mengedit peran default" : "Ubah"}
           >
             <Edit className="w-4 h-4" />
           </button>
@@ -141,7 +141,7 @@ const RoleTableRow: React.FC<RoleTableRowProps> = ({ role, onAction }) => {
             onClick={() => onAction('delete', role)} 
             disabled={isDefault}
             className={`hover:text-red-800 ${isDefault ? 'text-gray-300 cursor-not-allowed' : 'text-red-600'}`}
-            title={isDefault ? "Cannot delete default role" : "Delete"}
+            title={isDefault ? "Tidak dapat menghapus peran default" : "Hapus"}
           >
             <Trash2 className="w-4 h-4" />
           </button>

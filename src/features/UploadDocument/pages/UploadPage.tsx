@@ -64,9 +64,9 @@ const filterConfig: FilterConfig<Filters>[] = [
     type: "select",
     options: [
       { value: "", label: "Semua status" },
-      { value: "Approved", label: "Approved" },
-      { value: "Pending", label: "Pending" },
-      { value: "Rejected", label: "Rejected" },
+      { value: "Approved", label: "Disetujui" },
+      { value: "Pending", label: "Menunggu" },
+      { value: "Rejected", label: "Ditolak" },
     ],
   },
   {
@@ -214,14 +214,14 @@ const UploadPage: React.FC = () => {
       uploadFiles(formData, {
         onSuccess: () => {
           toast.success(
-            `Successfully uploaded ${filesToUpload.length} file(s).`
+            `Berhasil Upload ${filesToUpload.length} dokumen.`
           );
           setFilesToUpload([]);
           setSelectedCategory("");
           handleCloseModal();
         },
         onError: (err: any) => {
-          toast.error(err.response?.data?.message || "Upload failed.");
+          toast.error(err.response?.data?.message || "Gagal mengunggah dokumen.");
           handleCloseModal();
         },
       });
@@ -256,7 +256,7 @@ const UploadPage: React.FC = () => {
         },
         onError: (err: any) => {
           toast.error(
-            err.response?.data?.message || "Failed to batch delete documents."
+            err.response?.data?.message || "Gagal menghapus dokumen."
           );
           handleCloseModal();
         },
@@ -309,7 +309,7 @@ const UploadPage: React.FC = () => {
       setViewableUrl(response.data.url);
     } catch (error) {
       console.error("Failed to get view URL:", error);
-      toast.error("Could not generate secure URL.");
+      toast.error("Gagal memuat pratinjau dokumen.");
       setIsViewModalOpen(false);
     } finally {
       setIsGeneratingUrl(false);
@@ -342,9 +342,9 @@ const UploadPage: React.FC = () => {
 
     if (invalidFiles.length > 0) {
       toast.error(
-        `File type not supported for: ${invalidFiles.join(
+        `Tipe file tidak cooc: ${invalidFiles.join(
           ", "
-        )}. Only PDF and TXT are allowed.`
+        )}. Hanya PDF dan txt.`
       );
     }
 
@@ -407,13 +407,13 @@ const UploadPage: React.FC = () => {
     replaceDocument(formData, {
       onSuccess: () => {
         toast.success(
-          `New version for "${currentDocument.document_name}" has been uploaded.`
+          `versi terbaru "${currentDocument.document_name}" telah diupload.`
         );
         handleCloseModals();
       },
       onError: (err: any) => {
         toast.error(
-          err.response?.data?.message || "Failed to upload new version."
+          err.response?.data?.message || "Gagal mengunggah versi terbaru."
         );
       },
     });

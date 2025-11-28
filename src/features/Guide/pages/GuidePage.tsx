@@ -73,7 +73,7 @@ const GuidePage: React.FC = () => {
       setViewableUrl(response.data.url);
     } catch (error) {
       console.error("Failed to get view URL:", error);
-      toast.error("Could not generate secure URL.");
+      toast.error("tidak dapat memuat pratinjau panduan.");
       setIsViewModalOpen(false); 
     } finally {
       setIsGeneratingUrl(false);
@@ -99,7 +99,7 @@ const GuidePage: React.FC = () => {
         <div className="px-4 bg-gray-50 rounded-t-lg shadow-md">
           <TableControls
             searchTerm={searchInput}
-            searchPlaceholder="Search guides..."
+            searchPlaceholder="Cari Panduan"
             filters={filters as any}
             onSearchChange={setSearchInput}
             onSearchSubmit={handleSearchSubmit}

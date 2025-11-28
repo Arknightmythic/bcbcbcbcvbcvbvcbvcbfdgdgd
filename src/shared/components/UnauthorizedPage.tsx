@@ -32,8 +32,8 @@ const UnauthorizedPage: React.FC = () => {
 
         <h1 className="text-2xl font-bold text-gray-800 mb-2">Akses Ditolak</h1>
         <p className="text-gray-600 mb-6">
-          Akun Anda belum memiliki <strong>Role Akses</strong> atau{" "}
-          <strong>Tim Akses</strong> yang didaftarkan.
+          Akun Anda belum memiliki <strong> Akses Peran</strong> atau{" "}
+          <strong>Tim</strong> yang didaftarkan.
         </p>
 
         <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 mb-6">
@@ -49,7 +49,7 @@ const UnauthorizedPage: React.FC = () => {
           className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
         >
           <LogOut className="w-4 h-4" />
-          Logout Sekarang
+          Keluar Sekarang
         </button>
       </div>
     </div>

@@ -70,7 +70,7 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
       (!isEditMode || formData.password.length > 0) &&
       formData.password.length < 8
     ) {
-      toast.error("Password must be at least 8 characters long.");
+      toast.error("Password minimal harus 8 karakter.");
       return;
     }
 
@@ -256,7 +256,7 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
                     {
                       value: "",
                       label: formData.teamId
-                        ? "Pilih role"
+                        ? "Pilih Peran"
                         : "Pilih tim terdahulu",
                     },
                     ...roleOptions,

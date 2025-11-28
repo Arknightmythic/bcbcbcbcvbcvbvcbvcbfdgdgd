@@ -40,11 +40,11 @@ const RoleTable: React.FC<RoleTableProps> = ({
         <table className="min-w-full min-w-[768px]"> {/* Tambah min-w */}
           <thead className="bg-gray-100 sticky top-0 "> {/* Tambah sticky & z-index */}
             <tr className="text-left text-[10px] font-semibold text-gray-600">
-              <th className="px-4 py-3 sticky top-0 bg-gray-100">Role Name</th>
-              <th className="px-4 py-3 sticky top-0 bg-gray-100">Team</th>
-              <th className="px-4 py-3 sticky top-0 bg-gray-100">Permissions</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100">Nama Role</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100">Tim</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100">Izin</th>
               {/* --- PERUBAHAN DI SINI: Buat header Action sticky --- */}
-              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center right-0 z-10">Actions</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center right-0 z-10">Aksi</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -55,7 +55,7 @@ const RoleTable: React.FC<RoleTableProps> = ({
             ) : (
               <tr>
                 <td colSpan={4} className="text-center py-10 text-gray-500">
-                  <p>No roles found matching your criteria.</p>
+                  <p>Tidak ada peran yang ditemukan sesuai kriteria Anda.</p>
                 </td>
               </tr>
             )}

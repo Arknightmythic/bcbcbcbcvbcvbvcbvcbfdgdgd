@@ -141,7 +141,7 @@ const RoleManagementPage = () => {
                 <div className="flex-grow">
                     <TableControls
                         searchTerm={searchInput}
-                        searchPlaceholder="Search by role or team name..."
+                        searchPlaceholder="Cari berdasarkan peran dan tim"
                         filters={filters}
                         onSearchChange={setSearchInput}
                         onSearchSubmit={handleSearchSubmit} 
@@ -154,7 +154,7 @@ const RoleManagementPage = () => {
                         className="bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 flex items-center justify-center w-full lg:w-auto"
                     >
                         <Plus className="w-4 h-4 mr-2" />
-                        Add New Role
+                        Buat Peran
                     </button>
                 </div>
             </div>

@@ -37,7 +37,7 @@ const Sidebar = ({
   const showAgentSection = userPermissions.some(
     (p: any) => p.name === "helpdesk:read"
   );
-  const agentStatus = "online";
+  const agentStatus = "aktif";
 
   return (
     <nav

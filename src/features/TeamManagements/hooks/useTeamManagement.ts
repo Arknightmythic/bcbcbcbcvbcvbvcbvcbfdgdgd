@@ -27,11 +27,11 @@ export const useCreateTeam = () => {
   return useMutation({
     mutationFn: (data: TeamPayload) => createTeam(data),
     onSuccess: () => {
-      toast.success("Team created successfully!");
+      toast.success("tim berhasil dibuat!");
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Failed to create team.");
+      toast.error(err.response?.data?.message || "Gagal membuat tim.");
     },
   });
 };
@@ -43,11 +43,11 @@ export const useUpdateTeam = () => {
     mutationFn: ({ id, data }: { id: number; data: TeamPayload }) =>
       updateTeam({ id, data }),
     onSuccess: () => {
-      toast.success("Team updated successfully!");
+      toast.success("Tim berhasil diperbarui!");
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Failed to update team.");
+      toast.error(err.response?.data?.message || "Gagal memperbarui tim.");
     },
   });
 };
@@ -58,11 +58,11 @@ export const useDeleteTeam = () => {
   return useMutation({
     mutationFn: (id: number) => deleteTeam(id),
     onSuccess: () => {
-      toast.success("Team deleted successfully!");
+      toast.success("Tim berhasil dihapus!");
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Failed to delete team.");
+      toast.error(err.response?.data?.message || "Gagal menghapus tim.");
     },
   });
 };

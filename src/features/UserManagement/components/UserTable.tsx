@@ -40,13 +40,12 @@ const UserTable: React.FC<UserTableProps> = ({
         <table className="min-w-full"> {/* Tambah min-w */}
           <thead className="bg-gray-100 sticky top-0 "> {/* Tambah sticky & z-index */}
             <tr className="text-left text-[10px] font-semibold text-gray-600">
-              <th className="px-4 py-3 sticky top-0 bg-gray-100">Name</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100">Nama</th>
               <th className="px-4 py-3 sticky top-0 bg-gray-100">Email</th>
-              <th className="px-4 py-3 sticky top-0 bg-gray-100">Account Type</th>
-              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">Team</th>
-              <th className="px-4 py-3 sticky top-0 bg-gray-100">Role</th>
-              {/* --- PERUBAHAN DI SINI: Buat header Action sticky --- */}
-              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center right-0 z-10">Actions</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100">Tipe Akun</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">Tim</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100">Peran</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center right-0 z-10">Aksi</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">

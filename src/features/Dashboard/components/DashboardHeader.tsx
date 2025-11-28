@@ -1,5 +1,3 @@
-// components/DashboardHeader/DashboardHeader.tsx
-
 import React from 'react';
 
 import { useDashboardHeaderLogic } from './useDashboardHeaderLogic'; // Import hook

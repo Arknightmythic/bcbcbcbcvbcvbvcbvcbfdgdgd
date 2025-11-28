@@ -51,12 +51,12 @@ export const useDeleteDocument = () => {
     
     mutationFn: (id: number) => deleteDocument(id),
     onSuccess: () => {
-      toast.success("Document deleted successfully!");
+      toast.success("Dokumen berhasil dihapus!");
       
       queryClient.invalidateQueries({ queryKey: ['documents'] });
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Failed to delete document.");
+      toast.error(err.response?.data?.message || "Gagal menghapus dokumen.");
     },
   });
 };

@@ -137,7 +137,7 @@ const HistoryValidationTable: React.FC<HistoryValidationTableProps> = ({
                   colSpan={8}
                   className="px-4 py-10 text-center text-sm text-gray-500"
                 >
-                  <p>No validation history found.</p>
+                  <p>Tidak ada riwayat validasi ditemukan.</p>
                 </td>
               </tr>
             )}

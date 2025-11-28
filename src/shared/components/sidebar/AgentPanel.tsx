@@ -15,7 +15,7 @@ import Tooltip from "../Tooltip";
 import type { LucideIcon } from "lucide-react";
 
 type ChatListType = "active" | "queue" | "history" | "pending";
-type AgentStatus = "online" | "away" | "offline";
+type AgentStatus = "aktif" | "keluar" | "tidak_aktif";
 
 interface AgentPanelProps {
   agentName: string;
@@ -120,9 +120,9 @@ export const AgentPanel = ({
       .toUpperCase() || "A";
 
   const statusConfig = {
-    online: { color: "bg-green-500" },
-    away: { color: "bg-yellow-500" },
-    offline: { color: "bg-red-500" },
+    aktif: { color: "bg-green-500" },
+    keluar: { color: "bg-yellow-500" },
+    tidak_aktif: { color: "bg-red-500" },
   };
 
   const currentStatus = statusConfig[agentStatus] || { color: "bg-gray-400" };

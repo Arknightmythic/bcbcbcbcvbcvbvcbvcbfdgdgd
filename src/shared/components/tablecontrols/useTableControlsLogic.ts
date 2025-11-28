@@ -238,7 +238,7 @@ export const useTableControlsLogic = <T extends Record<string, any>>({
     const end = filters[dateRangeConfig.endDateKey as string];
     if (start && end) return `${start} - ${end}`;
     if (start) return `${start} - ...`;
-    return dateRangeConfig.placeholder || "Select Date Range";
+    return dateRangeConfig.placeholder || "FIlter Tanggal";
   }, [filters, dateRangeConfig]);
 
   return {

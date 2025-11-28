@@ -82,10 +82,10 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
           className={`flex items-center gap-3 w-full px-4 py-2 text-left text-sm ${
             isRejected ? "text-gray-400" : "text-gray-700 hover:bg-gray-100"
           } disabled:bg-transparent`}
-          title={isRejected ? "Cannot view a rejected document" : "View"}
+          title={isRejected ? "Tidak dapat melihat dokumen yang ditolak" : "Lihat"}
         >
           <Eye className="w-4 h-4" />
-          <span>View</span>
+          <span>Lihat</span>
         </button>
 
         {hasManagerAccess && (
@@ -96,10 +96,10 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
               className={`flex items-center gap-3 w-full px-4 py-2 text-left text-sm ${
                 isPending ? "text-green-600 hover:bg-green-50" : "text-gray-400"
               } disabled:bg-transparent`}
-              title="Approve"
+              title="Setujui"
             >
               <CheckCircle className="w-4 h-4" />
-              <span>Approve</span>
+              <span>Setujui</span>
             </button>
             <button
               onClick={() => { onAction("reject", doc); setIsDropdownOpen(false); }}
@@ -107,10 +107,10 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
               className={`flex items-center gap-3 w-full px-4 py-2 text-left text-sm ${
                 isPending ? "text-red-600 hover:bg-red-50" : "text-gray-400"
               } disabled:bg-transparent`}
-              title="Reject"
+              title="Tolak"
             >
               <XCircle className="w-4 h-4" />
-              <span>Reject</span>
+              <span>Tolak</span>
             </button>
           </>
         )}
@@ -128,7 +128,7 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
           className={`p-1 rounded-md transition-colors ${
             isRejected ? "text-gray-400 cursor-not-allowed" : "text-blue-600 hover:bg-blue-50"
           }`}
-          title={isRejected ? "Cannot view a rejected document" : "View"}
+          title={isRejected ? "Tidak dapat melihat dokumen yang ditolak" : "Lihat"}
         >
           <Eye className="w-4 h-4" />
         </button>
@@ -141,7 +141,7 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
               className={`p-1 rounded-md transition-colors ${
                 isPending ? "text-green-600 hover:bg-green-50" : "text-gray-400 cursor-not-allowed"
               }`}
-              title="Approve"
+              title="Setujui"
             >
               <CheckCircle className="w-4 h-4" />
             </button>
@@ -151,7 +151,7 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
               className={`p-1 rounded-md transition-colors ${
                 isPending ? "text-red-600 hover:bg-red-50" : "text-gray-400 cursor-not-allowed"
               }`}
-              title="Reject"
+              title="Tolak"
             >
               <XCircle className="w-4 h-4" />
             </button>

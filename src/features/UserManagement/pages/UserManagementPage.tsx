@@ -214,7 +214,7 @@ const UserManagementPage = () => {
                         className="bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 flex items-center justify-center w-full lg:w-auto"
                     >
                         <Plus className="w-3 h-3 mr-2" />
-                        Create User
+                        Buat Akun
                     </button>
                 </div>
             </div>

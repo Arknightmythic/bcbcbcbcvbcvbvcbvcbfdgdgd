@@ -36,14 +36,14 @@ function MicrosoftCallback() {
 
       if (logout === 'logout') {
         isProcessed.current = true; 
-        toast.success('Logged out successfully');
+        toast.success('Berhasil keluar');
         navigate('/login', { replace: true });
         return;
       }
 
       if (status === 'login-failed' || error) {
         isProcessed.current = true; 
-        toast.error(error || 'Microsoft login failed. Please try again.');
+        toast.error(error || 'SSO Microsot Gagal. silahkan coba lagi.');
         navigate('/login', { replace: true });
         return;
       }
@@ -56,7 +56,7 @@ function MicrosoftCallback() {
         
         if (result.isError || !result.data) {
           console.error('Failed to fetch user data');
-          toast.error('Failed to fetch user data. Please try again.');
+          toast.error('gagal mengambil data pengguna. Silakan masuk lagi.');
           navigate('/login', { replace: true });
           return;
         }
@@ -72,7 +72,7 @@ function MicrosoftCallback() {
           refresh_token: 'refresh_from_cookie',
         });
 
-        toast.success('Login successful!');
+        toast.success('Berhasil Masuk!');
 
         
         if (!result.data.role || !result.data.role.team) {

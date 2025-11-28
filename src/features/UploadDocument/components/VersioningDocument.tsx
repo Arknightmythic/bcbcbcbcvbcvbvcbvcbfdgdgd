@@ -44,7 +44,7 @@ const VersioningDocumentModal: React.FC<VersioningDocumentModalProps> = ({
     if (allowedTypes.includes(selectedFile.type)) {
       setFile(selectedFile);
     } else {
-      toast.error("File type not supported. Only PDF & TXT are allowed.");
+      toast.error("tipe file tidak valid. Hanya PDF atau TXT yang diizinkan.");
     }
   };
 
@@ -63,7 +63,7 @@ const VersioningDocumentModal: React.FC<VersioningDocumentModalProps> = ({
 
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       if (e.dataTransfer.files.length > 1) {
-        toast.error("Only one file can be uploaded for versioning.");
+        toast.error("hanya satu file yang diizinkan.");
       }
 
       handleFileSelect(e.dataTransfer.files[0]);
@@ -81,7 +81,7 @@ const VersioningDocumentModal: React.FC<VersioningDocumentModalProps> = ({
     if (file) {
       onVersioning(file);
     } else {
-      toast.error("Please select a versioning file first.");
+      toast.error("silahkan pilih file terlebih dahulu.");
     }
   };
 

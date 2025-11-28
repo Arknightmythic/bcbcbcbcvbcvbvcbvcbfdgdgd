@@ -24,7 +24,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
   options, 
   value, 
   onChange, 
-  placeholder = "Select...", 
+  placeholder = "Pilih...", 
   selectedType,
   direction = 'down',
   disabled = false 

@@ -48,9 +48,9 @@ const filterConfig: FilterConfig<HistoryPageFilters>[] = [
     type: "select",
     options: [
       { value: "", label: "All Status" },
-      { value: "Pending", label: "On Review (Pending)" },
-      { value: "Validated", label: "Approved" },
-      { value: "Rejected", label: "Rejected" },
+      { value: "Pending", label: "Ditinjau" },
+      { value: "Validated", label: "Disetujui" },
+      { value: "Rejected", label: "Ditolak" },
     ],
   },
   {
@@ -58,7 +58,7 @@ const filterConfig: FilterConfig<HistoryPageFilters>[] = [
     type: "date-range",
     startDateKey: "start_date",
     endDateKey: "end_date",
-    placeholder: "Select Date Range",
+    placeholder: "FIlter Tanggal",
   },
 ];
 

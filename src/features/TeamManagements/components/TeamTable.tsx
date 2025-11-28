@@ -40,12 +40,12 @@ const TeamTable: React.FC<TeamTableProps> = ({
         <table className="min-w-full min-w-[768px]"> {/* Tambah min-w */}
           <thead className="bg-gray-100 sticky top-0 "> {/* Tambah sticky & z-index */}
             <tr className="text-left text-[10px] font-semibold text-gray-600">
-              <th className="px-4 py-3 sticky top-0 bg-gray-100">Team Name</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100">Nama Tim</th>
               {/* HAPUS HEADER 'USERS' */}
               {/* <th className="px-4 py-3 sticky top-0 bg-gray-100">Users</th> */}
-              <th className="px-4 py-3 sticky top-0 bg-gray-100">Access Rights</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100">Hak Akses</th>
               {/* --- PERUBAHAN DI SINI: Buat header Action sticky --- */}
-              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center right-0 z-10">Actions</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center right-0 z-10">Aksi</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -57,7 +57,7 @@ const TeamTable: React.FC<TeamTableProps> = ({
               <tr>
                 {/* Ubah colSpan dari 4 menjadi 3 */}
                 <td colSpan={3} className="text-center py-10 text-gray-500">
-                  <p>No teams found matching your criteria.</p>
+                  <p>Tidak ada tim yang ditemukan sesuai kriteria Anda.</p>
                 </td>
               </tr>
             )}

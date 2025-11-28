@@ -88,7 +88,7 @@ const DashboardRangePicker: React.FC<DashboardRangePickerProps> = ({
       <div className="flex items-center gap-2">
          <span className="text-gray-500 text-xs font-medium min-w-[35px]">{label}:</span>
          <span className="text-sm text-slate-800 font-medium truncate">
-           {value || "Select Date"}
+           {value || "FIlter Tanggal"}
          </span>
       </div>
       <Calendar className="w-4 h-4 text-gray-400" />

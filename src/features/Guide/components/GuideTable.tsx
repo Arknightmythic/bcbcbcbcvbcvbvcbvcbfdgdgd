@@ -77,17 +77,17 @@ const GuideTable: React.FC<GuideTableProps> = ({
           <thead className="text-[10px] text-gray-700 bg-gray-100 sticky top-0">
             <tr>
               {/* Backend guide/repository.go mendukung sort: created_at, title, updated_at */}
-              <SortableHeader label="Date Created" columnKey="created_at" />
-              <SortableHeader label="Title" columnKey="title" />
-              <th className="px-6 py-4">Description</th>
-              <th className="px-6 py-4 text-center sticky right-0 bg-gray-100 z-10">Action</th>
+              <SortableHeader label="Tanggal Dibuat" columnKey="created_at" />
+              <SortableHeader label="Judul" columnKey="title" />
+              <th className="px-6 py-4">Deskripsi</th>
+              <th className="px-6 py-4 text-center sticky right-0 bg-gray-100 z-10">Aksi</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
             {isLoading ? (
               <tr>
                 <td colSpan={4} className="text-center py-10">
-                  Loading data...
+                  memuat data...
                 </td>
               </tr>
             ) : isError ? (
@@ -117,7 +117,7 @@ const GuideTable: React.FC<GuideTableProps> = ({
                     <button
                       onClick={() => onViewFile(guide)}
                       className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-md transition-colors"
-                      title="View Document"
+                      title="Lihat Dokumen"
                     >
                       <Eye className="w-4 h-4" />
                     </button>
@@ -127,7 +127,7 @@ const GuideTable: React.FC<GuideTableProps> = ({
             ) : (
               <tr>
                 <td colSpan={4} className="text-center py-10 text-gray-500">
-                  No guides found.
+                  Tidak ada panduan ditemukan.
                 </td>
               </tr>
             )}
