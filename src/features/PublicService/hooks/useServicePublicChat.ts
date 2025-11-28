@@ -124,6 +124,7 @@ export const useServicePublicChat = () => {
   const hasLoadedHistoryRef = useRef(false);
   const wsEnabledRef = useRef(false);
 
+  
   const {
     data: historyData,
     isLoading: isLoadingHistory,
@@ -412,6 +413,8 @@ export const useServicePublicChat = () => {
     }
   };
 
+  // useServicePublicChat.ts - Enhanced mutation handling
+
   const { mutate: performAsk, isPending: isBotLoading } = useMutation({
     mutationFn: askQuestion,
     onMutate: () => {
@@ -421,15 +424,35 @@ export const useServicePublicChat = () => {
       hideLoadingToast();
       console.log('📬 API Response received:', data);
       
+      // ===== ENHANCED: Handle helpdesk mode =====
+      // If helpdesk mode and answer is empty, don't add bot message
+      // Just wait for WebSocket messages from agent
+      if (data.is_helpdesk && !data.answer) {
+        console.log('🔔 Helpdesk mode - waiting for agent via WebSocket');
+        
+        // Navigate to conversation if new session
+        if (sessionId === "new") {
+          console.log('🔄 Navigating to new helpdesk session:', data.conversation_id);
+          wsEnabledRef.current = true;
+          navigate(`/public-service/${data.conversation_id}`, { replace: true });
+        } else {
+          // Enable WebSocket to receive agent messages
+          wsEnabledRef.current = true;
+          console.log('✅ WebSocket enabled for helpdesk messages');
+        }
+
+        queryClient.invalidateQueries({ queryKey: ["conversations"] });
+        return; // Don't add any bot message
+      }
+      // ===== END ENHANCEMENT =====
       
+      // Regular bot response handling
       const cleanedAnswer = cleanText(data.answer);
       
       if (!cleanedAnswer) {
         console.log('⚠️ Empty answer from API');
         return;
       }
-      
-      
       
       const botMessageId = `agent-api-${Date.now()}`;
       
@@ -455,14 +478,11 @@ export const useServicePublicChat = () => {
       
       setCitations((prev) => [...prev, ...mapAskResponseToCitations(data, botMessageId)]);
 
-      
       if (sessionId === "new") {
         console.log('🔄 Navigating to new session:', data.conversation_id);
-        
         wsEnabledRef.current = true;
         navigate(`/public-service/${data.conversation_id}`, { replace: true });
       } else {
-        
         wsEnabledRef.current = true;
         console.log('✅ WebSocket enabled after API response');
       }
