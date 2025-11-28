@@ -60,7 +60,7 @@ interface MessageBubbleProps {
 }
 
 // --- MessageBubble (Disederhanakan) ---
-const MessageBubble: React.FC<MessageBubbleProps> = ({
+const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
   message,
   previousMessage,
   citations,
@@ -99,18 +99,11 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
       return;
     }
 
-    // --- AWAL BLOK PERBAIKAN ---
-    // Logika streaming line-by-line (revealLine) dihapus
-    // karena tidak kompatibel dengan ReactMarkdown.
-
-    // 1. Reset state untuk animasi pesan baru
     setDisplayedLines([]);
     setIsTextComplete(false);
     setIsCitationVisible(false);
     setIsActionVisible(false);
 
-    // 2. Gunakan timer sederhana untuk menampilkan seluruh teks sekaligus.
-    // Ini memberi ReactMarkdown string yang lengkap untuk di-parse.
     const timeouts: ReturnType<typeof setTimeout>[] = [];
 
     timeouts.push(
@@ -118,14 +111,12 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         setDisplayedLines(textToDisplay.split("\n"));
         setIsTextComplete(true);
       }, 100)
-    ); // Tampilkan seluruh teks setelah 100ms
+    );
 
-    // 3. Pastikan semua timeout dibersihkan saat unmount
     return () => {
       timeouts.forEach(clearTimeout);
     };
-    // --- AKHIR BLOK PERBAIKAN ---
-  }, [message.id, message.text, message.sender, isLastMessage]); // <-- 4. TAMBAHKAN 'isLastMessage' di sini
+  }, [message.id, message.text, message.sender, isLastMessage]);
 
   useEffect(() => {
     if (isTextComplete) {
@@ -150,7 +141,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
 
   if (message.sender === "system") {
     return (
-      <div key={message.id} className="mb-4 flex justify-center">
+      <div className="mb-4 flex justify-center">
         <div className="p-3 rounded-lg bg-gray-100 text-gray-600 text-xs text-center mx-auto">
           <p className="whitespace-pre-wrap m-0 text-sm">{message.text}</p>
         </div>
@@ -160,7 +151,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
 
   return (
     <div
-      key={message.id}
       className={`relative group mb-4 flex gap-3 ${
         message.sender === "user" ? "flex-row-reverse" : ""
       }`}
@@ -181,19 +171,14 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
               : "bg-gray-100 text-gray-800 rounded-br-none"
           }`}
         >
-          {/* --- AWAL PERUBAHAN DI SINI --- */}
-          {/* Ganti <div className="whitespace-pre-wrap..."> dengan logika if/else */}
           <div className="m-0 text-sm">
             {message.sender === "agent" ? (
-              // JIKA DARI AI: Gunakan ReactMarkdown
               <div className="prose prose-sm max-w-none prose-ol:list-decimal prose-ol:list-inside prose-ol:pl-4 prose-li:before:hidden hover:prose-a:text-blue-700 hover:prose-a:underline prose-p:my-1 prose-ol:my-1 prose-li:my-0.5 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {/* Gabungkan kembali baris-baris untuk di-parse oleh Markdown */}
                   {normalizeMarkdown(displayedLines.join("\n"))}
                 </ReactMarkdown>
               </div>
             ) : (
-              // JIKA DARI USER: Gunakan <p> biasa (karena tidak ada markdown)
               <div className="whitespace-pre-wrap">
                 {displayedLines.map((line, index) => (
                   <p
@@ -206,7 +191,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
               </div>
             )}
           </div>
-          {/* --- AKHIR PERUBAHAN DI SINI --- */}
 
           <div
             className={`transition-opacity duration-300 ${
@@ -280,7 +264,21 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
       </div>
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison to prevent unnecessary re-renders
+  return (
+    prevProps.message.id === nextProps.message.id &&
+    prevProps.message.text === nextProps.message.text &&
+    prevProps.message.feedback === nextProps.message.feedback &&
+    prevProps.isLastMessage === nextProps.isLastMessage &&
+    prevProps.isOpen === nextProps.isOpen &&
+    prevProps.citations.length === nextProps.citations.length &&
+    prevProps.previousMessage?.id === nextProps.previousMessage?.id
+  );
+});
+
+// Add display name for debugging
+MessageBubble.displayName = 'MessageBubble';
 // --- AKHIR MessageBubble ---
 
 const PublicServiceChatPage: React.FC = () => {
@@ -432,7 +430,7 @@ const PublicServiceChatPage: React.FC = () => {
 
           return (
             <MessageBubble
-              key={msg.id}
+              key={msg.id} // Use msg.id as key, not index
               message={msg}
               previousMessage={previousMsg}
               isLastMessage={isLastMessage}

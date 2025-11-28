@@ -18,37 +18,77 @@ import {
   askQuestion,
   getConversationById,
 } from "../api/chatApi";
+import { getWebSocketService } from "../../../shared/utils/WebsocketService";
 
+// Helper to clean text - remove "None" and trim
+const cleanText = (text: string): string => {
+  if (!text) return "";
+  // Remove "None" at start of text (case insensitive)
+  let cleaned = text.replace(/^None\s*/i, "");
+  return cleaned.trim();
+};
 
 const mapBackendHistoryToFrontend = (
   history: BackendChatHistory[] 
 ): ChatMessage[] => {
-  
-  return (history || []).map((msg: any) => ({
-    id: msg.id.toString(),
-  
-    sender: msg.message.type === "human" ? "user" : "agent",
-    text: msg.message.data.content,
-    timestamp: msg.created_at,
-        
-    feedback: msg.feedback === true ? "like" : msg.feedback === false ? "dislike" : null,
+  const messages = (history || [])
+    .map((msg: any) => {
+      let sender: "user" | "agent" | "system" = "agent";
+      let text = "";
+      
+      // Extract content from various possible structures
+      if (msg.message.data?.content) {
+        text = msg.message.data.content;
+      } else if (msg.message.content) {
+        text = msg.message.content;
+      }
+      
+      // Clean and validate text
+      text = cleanText(text);
+      
+      // Skip messages with no content after cleaning
+      if (!text) {
+        return null;
+      }
+      
+      // Determine sender type
+      if (msg.message.type === "human" || msg.message.data?.type === "human") {
+        sender = "user";
+      } else if (msg.message.type === "ai" || msg.message.data?.type === "ai") {
+        sender = "agent";
+      } else if (msg.message.role === "user") {
+        sender = "user";
+      } else if (msg.message.role === "assistant") {
+        sender = "agent";
+      }
+      
+      // Create consistent message ID using backend ID
+      const messageId = `${sender}-${msg.id}`;
+      
+      const chatMessage: ChatMessage = {
+        id: messageId,
+        sender: sender,
+        text: text,
+        timestamp: msg.created_at,
+        feedback: msg.feedback === true ? "like" : msg.feedback === false ? "dislike" : null,
+        is_answered: msg.is_cannot_answer === null ? null : !msg.is_cannot_answer,
+      };
+      
+      return chatMessage;
+    })
+    .filter((msg) => msg !== null) as ChatMessage[];
     
-    is_answered: msg.is_cannot_answer === null ? null : !msg.is_cannot_answer,
-  }));
-  
+  return messages;
 };
-/**
- * Helper function untuk memetakan respons API 'ask'
- * ke tipe Citation yang digunakan oleh UI.
- */
+
 const mapAskResponseToCitations = (
-  data: AskResponse,
+  data: AskResponse | any, 
   botMessageId: string
 ): Citation[] => {
   if (!data.citations || data.citations.length === 0) {
     return [];
   }
-  return data.citations.map((docName) => ({
+  return data.citations.map((docName: string) => ({
     messageId: botMessageId,
     documentName: docName,
     content: `Konten placeholder untuk: "${docName}".`,
@@ -61,24 +101,29 @@ export const useServicePublicChat = () => {
   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
 
-  
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState<string>("");
   const [chatMode, setChatMode] = useState<ChatMode>("bot");
   const [citations, setCitations] = useState<Citation[]>([]);
   const [isHistoryLoaded, setIsHistoryLoaded] = useState(false);
 
-  
   const [openCitations, setOpenCitations] = useState<OpenCitationsState>({});
-  const [selectedCitation, setSelectedCitation] = useState<Citation | null>(
-    null
-  );
+  const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const processedMessageIdsRef = useRef<Set<string>>(new Set());
 
   const loadingToastRef = useRef<string | null>(null);
   const loadingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
+  const wsService = useRef(getWebSocketService());
+  const unsubscribeRef = useRef<(() => void) | null>(null);
+  const currentConversationIdRef = useRef<string | null>(null);
+
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const hasLoadedHistoryRef = useRef(false);
+  const wsEnabledRef = useRef(false);
+
   const {
     data: historyData,
     isLoading: isLoadingHistory,
@@ -91,51 +136,257 @@ export const useServicePublicChat = () => {
     retry: false,
   });
 
-  
+  // WebSocket connection initialization
   useEffect(() => {
-    if (historyData) {
+    const initWebSocket = async () => {
+      try {
+        await wsService.current.connect();
+        console.log('🔌 WebSocket connected');
+      } catch (error) {
+        console.error('❌ WebSocket connection failed:', error);
+      }
+    };
+
+    initWebSocket();
+
+    return () => {
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+        unsubscribeRef.current = null;
+      }
+    };
+  }, []);
+
+  // Reset for new session
+  useEffect(() => {
+    if (sessionId === "new") {
+      hasLoadedHistoryRef.current = false;
+      setIsInitialLoad(true);
+      wsEnabledRef.current = false;
+    }
+  }, [sessionId]);
+  
+  // WebSocket subscription - ONLY ENABLED AFTER FIRST API RESPONSE
+  useEffect(() => {
+    // Don't subscribe until WebSocket is explicitly enabled
+    if (!wsEnabledRef.current || !sessionId || sessionId === "new") {
+      console.log('⏸️ WebSocket subscription paused');
+      return;
+    }
+
+    // Unsubscribe from previous session
+    if (unsubscribeRef.current) {
+      unsubscribeRef.current();
+      unsubscribeRef.current = null;
+    }
+
+    if (!wsService.current.isConnected()) {
+      console.log('❌ WebSocket not connected');
+      return;
+    }
+
+    currentConversationIdRef.current = sessionId;
+    
+    const unsubscribe = wsService.current.onMessage(sessionId, (data) => {
+      console.log('📨 WebSocket message received:', data);
+      
+      // Handle bot responses from WebSocket
+      if (data.answer && data.chat_history_id) {
+        const botMessageId = `agent-${data.chat_history_id}`;
+        
+        // Skip if already exists from API
+        if (processedMessageIdsRef.current.has(botMessageId)) {
+          console.log('⏭️ Skip WebSocket - already have this message from API:', botMessageId);
+          return;
+        }
+        
+        processedMessageIdsRef.current.add(botMessageId);
+        
+        const cleanedAnswer = cleanText(data.answer);
+        
+        if (!cleanedAnswer) {
+          console.log('⏭️ Skip - empty answer after cleaning');
+          return;
+        }
+        
+        const botMessage: ChatMessage = {
+          id: botMessageId,
+          sender: "agent",
+          text: cleanedAnswer,
+          timestamp: new Date().toISOString(),
+          feedback: null,
+          is_answered: data.is_answered,
+        };
+        
+        setMessages((prev) => {
+          if (prev.some(m => m.id === botMessageId)) {
+            console.log('⏭️ Skip in setState - already exists:', botMessageId);
+            return prev;
+          }
+          
+          console.log('✅ Adding WebSocket message:', botMessageId);
+          const updated = [...prev, botMessage];
+          return updated.sort((a, b) => 
+            new Date(a.timestamp || 0).getTime() - new Date(b.timestamp || 0).getTime()
+          );
+        });
+
+        setCitations((prev) => [...prev, ...mapAskResponseToCitations(data, botMessageId)]);
+      }
+      // Handle helpdesk agent messages
+      else if (data.user_type === 'agent' && data.message) {
+        const agentMessageId = data.chat_history_id 
+          ? `agent-${data.chat_history_id}` 
+          : `agent-ws-${Date.now()}`;
+        
+        if (processedMessageIdsRef.current.has(agentMessageId)) {
+          console.log('⏭️ Skip - already exists:', agentMessageId);
+          return;
+        }
+        
+        processedMessageIdsRef.current.add(agentMessageId);
+        
+        const cleanedMessage = cleanText(data.message);
+        
+        if (!cleanedMessage) {
+          console.log('⏭️ Skip - empty message after cleaning');
+          return;
+        }
+        
+        const agentMessage: ChatMessage = {
+          id: agentMessageId,
+          sender: "agent",
+          text: cleanedMessage,
+          timestamp: data.timestamp 
+            ? new Date(data.timestamp * 1000).toISOString() 
+            : new Date().toISOString(),
+          feedback: null,
+        };
+        
+        setMessages((prev) => {
+          if (prev.some(m => m.id === agentMessageId)) {
+            console.log('⏭️ Skip in setState - already exists:', agentMessageId);
+            return prev;
+          }
+          
+          console.log('✅ Adding agent message:', agentMessageId);
+          const updated = [...prev, agentMessage];
+          return updated.sort((a, b) => 
+            new Date(a.timestamp || 0).getTime() - new Date(b.timestamp || 0).getTime()
+          );
+        });
+      }
+    });
+
+    unsubscribeRef.current = unsubscribe;
+    wsService.current.subscribe(sessionId, '$');
+    console.log(`✅ WebSocket subscribed to: ${sessionId}`);
+
+    return () => {
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+        unsubscribeRef.current = null;
+      }
+    };
+  }, [sessionId, wsEnabledRef.current]);
+
+  // Load history data
+  useEffect(() => {
+    if (historyData && !hasLoadedHistoryRef.current && sessionId !== "new") {
+      console.log('📦 Loading history from API');
+      
+      // Clear tracking
+      processedMessageIdsRef.current.clear();
+      
       const mappedHistory = mapBackendHistoryToFrontend(
         historyData.chat_history || []
       );
-      setMessages(mappedHistory);
       
-      setCitations([]); 
+      // Remove duplicates by ID
+      const uniqueMessages = Array.from(
+        new Map(mappedHistory.map(msg => [msg.id, msg])).values()
+      );
+      
+      // Sort by timestamp from backend
+      const sortedMessages = uniqueMessages.sort((a, b) => {
+        const timeA = new Date(a.timestamp || 0).getTime();
+        const timeB = new Date(b.timestamp || 0).getTime();
+        return timeA - timeB;
+      });
+      
+      // Track all loaded message IDs
+      sortedMessages.forEach(msg => {
+        processedMessageIdsRef.current.add(msg.id);
+      });
+      
+      console.log(`✅ History loaded: ${sortedMessages.length} messages`);
+      console.log('Message IDs:', sortedMessages.map(m => ({ id: m.id, text: m.text.substring(0, 30) })));
+      
+      // Set state
+      setMessages(sortedMessages);
+      setCitations([]);
       setIsHistoryLoaded(true);
+      hasLoadedHistoryRef.current = true;
+      
+      // Enable WebSocket after history is loaded
+      setTimeout(() => {
+        setIsInitialLoad(false);
+        wsEnabledRef.current = true;
+        console.log('✅ WebSocket enabled for future messages');
+      }, 500);
     }
-  }, [historyData]);
+  }, [historyData, sessionId]);
 
-  
+  // Reset for new session
+  useEffect(() => {
+    if (sessionId === "new") {
+      console.log('🆕 Resetting for new session');
+      processedMessageIdsRef.current.clear();
+      hasLoadedHistoryRef.current = false;
+      setIsInitialLoad(true);
+      setIsHistoryLoaded(false);
+      setMessages([]);
+      setCitations([]);
+      wsEnabledRef.current = false;
+    }
+  }, [sessionId]);
+
+  // Handle history errors
   useEffect(() => {
     if (isHistoryError && historyError) {
       toast.error(`Gagal memuat riwayat: ${(historyError as Error).message}`);
       setIsHistoryLoaded(true);
+      wsEnabledRef.current = true;
     }
   }, [isHistoryError, historyError]);
 
-  
+  // Initialize new session with welcome message
   useEffect(() => {
     if (sessionId === "new" && !isHistoryLoaded) {
+      const initialMessageId = "msg-initial";
+      processedMessageIdsRef.current.add(initialMessageId);
+      
       setMessages([
         {
-          id: "msg-initial",
+          id: initialMessageId,
           sender: "system",
           text: "Halo! Selamat Datang di layanan pelanggan Dokuprime. Ada yang bisa saya bantu?",
+          timestamp: new Date().toISOString(),
         },
       ]);
       setIsHistoryLoaded(true);
       setCitations([]);
       setInput("");
+      console.log('✅ New session initialized');
     }
   }, [sessionId, isHistoryLoaded]);
 
-   // --- TAMBAHAN BARU: Fungsi untuk show/hide toast loading ---
   const showLoadingToast = () => {
-    // Set timer untuk menampilkan toast setelah 30 detik
     loadingTimerRef.current = setTimeout(() => {
       loadingToastRef.current = toast.loading(
         "AI sedang memproses, mohon tunggu beberapa saat lagi...",
         {
-          duration: Infinity, // Toast tidak hilang otomatis
+          duration: Infinity,
           style: {
             background: '#3B82F6',
             color: '#fff',
@@ -150,55 +401,77 @@ export const useServicePublicChat = () => {
   };
 
   const hideLoadingToast = () => {
-    // Clear timer jika belum 30 detik
     if (loadingTimerRef.current) {
       clearTimeout(loadingTimerRef.current);
       loadingTimerRef.current = null;
     }
     
-    // Dismiss toast jika sudah muncul
     if (loadingToastRef.current) {
       toast.dismiss(loadingToastRef.current);
       loadingToastRef.current = null;
     }
   };
 
-  
   const { mutate: performAsk, isPending: isBotLoading } = useMutation({
     mutationFn: askQuestion,
     onMutate: () => {
       showLoadingToast();
     },
-    onSuccess: (data: AskResponse) => {
+    onSuccess: async (data: AskResponse) => {
       hideLoadingToast();
-      const botMessageId = `bot-${Date.now()}`;
+      console.log('📬 API Response received:', data);
+      
+      // Clean the answer text
+      const cleanedAnswer = cleanText(data.answer);
+      
+      if (!cleanedAnswer) {
+        console.log('⚠️ Empty answer from API');
+        return;
+      }
+      
+      // ALWAYS use API response as the source of truth for first render
+      // Generate temporary ID since we don't have chat_history_id yet
+      const botMessageId = `agent-api-${Date.now()}`;
+      
+      console.log('➕ Adding API response message:', botMessageId);
+      
+      processedMessageIdsRef.current.add(botMessageId);
+      
       const botMessage: ChatMessage = {
         id: botMessageId,
         sender: "agent",
-        text: data.answer,
+        text: cleanedAnswer,
         timestamp: new Date().toISOString(),
         feedback: null,
-        
         is_answered: data.is_answered,
-        
       };
-      setMessages((prev) => [...prev, botMessage]);
+      
+      setMessages((prev) => {
+        const updated = [...prev, botMessage];
+        return updated.sort((a, b) => 
+          new Date(a.timestamp || 0).getTime() - new Date(b.timestamp || 0).getTime()
+        );
+      });
+      
+      setCitations((prev) => [...prev, ...mapAskResponseToCitations(data, botMessageId)]);
 
-      const newCitations = mapAskResponseToCitations(data, botMessageId);
-      setCitations((prev) => [...prev, ...newCitations]);
-
+      // Navigate if new session
       if (sessionId === "new") {
+        console.log('🔄 Navigating to new session:', data.conversation_id);
+        // Enable WebSocket for the new session
+        wsEnabledRef.current = true;
         navigate(`/public-service/${data.conversation_id}`, { replace: true });
+      } else {
+        // Enable WebSocket after first API response
+        wsEnabledRef.current = true;
+        console.log('✅ WebSocket enabled after API response');
       }
 
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
     onError: (err: any) => {
       hideLoadingToast();
-      const errorMsg =
-        err.response?.data?.message ||
-        "Gagal mengirim pesan. Silakan coba lagi.";
-      toast.error(errorMsg);
+      toast.error(err.response?.data?.message || "Gagal mengirim pesan.");
       setMessages((prev) => prev.slice(0, -1));
     },
   });
@@ -209,32 +482,42 @@ export const useServicePublicChat = () => {
     };
   }, []);
 
-  
   const handleSendMessage = useCallback(() => {
     if (input.trim() === "" || isBotLoading) return;
 
+    const timestamp = Date.now();
+    const userMessageId = `user-${timestamp}`;
+    
+    processedMessageIdsRef.current.add(userMessageId);
+    
     const userMessage: ChatMessage = {
-      id: `user-${Date.now()}`,
+      id: userMessageId,
       sender: "user",
       text: input,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date(timestamp).toISOString(),
     };
-    setMessages((prev) => [...prev, userMessage]);
+    
+    console.log('📤 Sending user message:', userMessageId);
+    
+    setMessages((prev) => {
+      const updated = [...prev, userMessage];
+      return updated.sort((a, b) => 
+        new Date(a.timestamp || 0).getTime() - new Date(b.timestamp || 0).getTime()
+      );
+    });
 
-    const payload: AskPayload = {
+    performAsk({
       query: input,
       platform: "web",
       platform_unique_id: user?.email || "anonymous_user",
       conversation_id: (sessionId === "new" ? "" : sessionId) || "",
-    };
-
-    performAsk(payload);
+    });
 
     setInput("");
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
     }
-  }, [input, isBotLoading, user, sessionId, performAsk, navigate, queryClient]);
+  }, [input, isBotLoading, user, sessionId, performAsk]);
 
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -251,37 +534,37 @@ export const useServicePublicChat = () => {
   );
 
   const handleFeedbackUpdate = useCallback((messageId: string, feedback: 'like' | 'dislike' | null) => {
-    
     setMessages(prevMessages => 
       prevMessages.map(msg => 
         msg.id === messageId ? { ...msg, feedback: feedback } : msg
       )
     );
     
-    
     if (feedback === 'like') {
       toast.success("Terima kasih atas masukan Anda! (Suka)");
     } else if (feedback === 'dislike') {
       toast.success("Terima kasih atas masukan Anda! (Tidak Suka)");
     } else {
-      
-     toast.success("Feedback dibatalkan");
+      toast.success("Feedback dibatalkan");
     }
-    
-    
-    
   }, []); 
 
   const handleSelectSession = useCallback(
     (session: ChatSession) => {
+      console.log('🔄 Selecting session:', session.id);
       setIsHistoryLoaded(false);
+      hasLoadedHistoryRef.current = false;
+      wsEnabledRef.current = false;
       navigate(`/public-service/${session.id}`);
     },
     [navigate]
   );
 
   const handleCreateNewSession = useCallback(() => {
+    console.log('🆕 Creating new session');
     setIsHistoryLoaded(false);
+    hasLoadedHistoryRef.current = false;
+    wsEnabledRef.current = false;
     setMessages([]);
     navigate("/public-service/new");
   }, [navigate]);
@@ -290,13 +573,14 @@ export const useServicePublicChat = () => {
     navigate("/public-service");
   }, [navigate]);
 
-  
   const toggleCitations = useCallback((messageId: string) => {
     setOpenCitations((prev) => ({ ...prev, [messageId]: !prev[messageId] }));
   }, []);
+
   const handleOpenModal = useCallback((citation: Citation) => {
     setSelectedCitation(citation);
   }, []);
+
   const handleCloseModal = useCallback(() => {
     setSelectedCitation(null);
   }, []);
