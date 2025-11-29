@@ -119,7 +119,7 @@ const RoleTableRow: React.FC<RoleTableRowProps> = ({ role, onAction }) => {
           )}
           
           {visiblePermissions.length === 0 && (
-             <span className="text-xs text-gray-400">No specific access</span>
+             <span className="text-xs text-gray-400">Tidak ada akses</span>
           )}
         </div>
       </td>

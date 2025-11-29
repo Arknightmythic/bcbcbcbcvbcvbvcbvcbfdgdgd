@@ -23,7 +23,7 @@ const filterConfig: FilterConfig<Filters>[] = [
         key: "type",
         type: "select",
         options: [
-            { value: "", label: "All Types" },
+            { value: "", label: "Semua Tipe" },
             { value: "pdf", label: "PDF" },
             { value: "txt", label: "TXT" },
         ],
@@ -32,7 +32,7 @@ const filterConfig: FilterConfig<Filters>[] = [
         key: "category",
         type: "select",
         options: [
-            { value: "", label: "All Categories" },
+            { value: "", label: "Semua Kategori" },
             { value: "panduan", label: "Panduan" },
             { value: "qna", label: "Tanya Jawab" },
             { value: "peraturan", label: "Peraturan" },
@@ -42,10 +42,10 @@ const filterConfig: FilterConfig<Filters>[] = [
         key: "status",
         type: "select",
         options: [
-            { value: "", label: "All Status" },
-            { value: "Approved", label: "Approved" },
-            { value: "Pending", label: "Pending" },
-            { value: "Rejected", label: "Rejected" },
+            { value: "", label: "Semua Status" },
+            { value: "Approved", label: "Disetujui" },
+            { value: "Pending", label: "Menunggu" },
+            { value: "Rejected", label: "Ditolak" },
         ],
     },
     
@@ -258,7 +258,7 @@ const DocumentManagementPage = () => {
         <div className="px-4 bg-gray-50 rounded-t-lg shadow-md">
             <TableControls
                 searchTerm={searchInput}
-                searchPlaceholder="Cari bedasarkan nama, staff, tim..."
+                searchPlaceholder="Cari berdasarkan nama, staff, tim..."
                 filters={filters}
                 onSearchChange={setSearchInput}
                 onSearchSubmit={handleSearchSubmit} 

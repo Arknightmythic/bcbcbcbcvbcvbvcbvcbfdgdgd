@@ -58,7 +58,7 @@ const ViewPermissionsModal: React.FC<ViewPermissionsModalProps> = ({ isOpen, onC
                 ))}
               </ul>
             ) : (
-              <p className="text-gray-500 text-center py-4">No specific access rights assigned.</p>
+              <p className="text-gray-500 text-center py-4">Tidak ada hak akses yang didaftarkan</p>
             )}
           </div>
         </div>

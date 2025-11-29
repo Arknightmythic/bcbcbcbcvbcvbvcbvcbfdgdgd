@@ -6,7 +6,7 @@ interface AccessRightsProps {
 
 const AccessRights: React.FC<AccessRightsProps> = ({ rights }) => {
   if (!rights || rights.length === 0) {
-    return <span className="text-gray-400">No access rights</span>;
+    return <span className="text-gray-400">Tidak memiliki Hak Akses</span>;
   }
 
   return (

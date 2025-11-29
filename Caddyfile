@@ -56,4 +56,17 @@ dev-bkpm.cloud-ioh.com {
     handle {
         reverse_proxy dokuprime-fe:5005
     }
+
+    # ---------------------------------------------------------
+    # 5. WEBSOCKET SERVICE (Go) -> 10.184.0.17:30808
+    # ---------------------------------------------------------
+    # Kita gunakan handle /ws* agar tidak bentrok dengan frontend.
+    handle /ws* {
+        reverse_proxy http://10.184.0.17:30808 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
 }

@@ -117,7 +117,7 @@ const RoleManagementPage = () => {
     };
     
     const filterTeamOptions = useMemo(() => [
-        { value: '', label: 'All Teams' },
+        { value: '', label: 'Semua Tim' },
         ...teams.map(t => ({ value: t.id.toString(), label: t.name })) 
     ], [teams]);
 
@@ -200,7 +200,7 @@ const RoleManagementPage = () => {
             confirmColor="bg-red-600 hover:bg-red-700"
             isConfirming={isDeleting} 
         >
-          <p>Are you sure you want to delete the role "{roleToDelete?.name}"? This action cannot be undone.</p>
+          <p> Apakah Anda yakin akan menghapus role "{roleToDelete?.name}"? Aksi ini tidak dapat dibatalkan</p>
         </ConfirmationModal>
       </>
     );

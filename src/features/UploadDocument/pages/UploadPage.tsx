@@ -439,7 +439,7 @@ const UploadPage: React.FC = () => {
         <div className="px-4 bg-gray-50 rounded-t-lg shadow-md">
           <TableControls
             searchTerm={searchInput}
-            searchPlaceholder="Cari bedasarkan Nama, staff, tipe"
+            searchPlaceholder="Cari berdasarkan Nama, staff, tipe"
             filters={filters}
             onSearchChange={setSearchInput}
             onSearchSubmit={handleSearchSubmit}

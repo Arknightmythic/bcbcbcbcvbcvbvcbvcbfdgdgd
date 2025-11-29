@@ -95,7 +95,7 @@ const TeamManagementPage = () => {
             <div className="flex-grow">
               <TableControls
                 searchTerm={searchInput}
-                searchPlaceholder="Cari bedasarkan nama tim..."
+                searchPlaceholder="Cari berdasarkan nama tim..."
                 filters={{}}
                 onSearchChange={setSearchInput}
                 onSearchSubmit={handleSearchSubmit}
@@ -155,8 +155,7 @@ const TeamManagementPage = () => {
         isConfirming={isDeleting}
       >
         <p>
-          Are you sure you want to delete the team "{teamToDelete?.name}"? This
-          action cannot be undone.
+          Apakah Anda yakin akan menghapus tim "{teamToDelete?.name}"? Aksi ini tidak dapat dibatalkan
         </p>
       </ConfirmationModal>
     </>

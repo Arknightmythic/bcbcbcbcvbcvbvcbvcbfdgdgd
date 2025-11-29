@@ -144,7 +144,7 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
                   Email
                   {isEditMode && (
                     <span className="text-xs text-gray-400 font-normal ml-1">
-                      (Cannot be changed)
+                      (tidak dapat diubah)
                     </span>
                   )}
                 </label>
@@ -218,7 +218,7 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
                 {/* Info text */}
                 {isMicrosoftAccount ? (
                   <p className="text-xs text-orange-500 mt-1">
-                    Password cannot be changed manually for Microsoft accounts.
+                    Tidak bisa diganti
                   </p>
                 ) : (
                   <p className="text-xs text-gray-500 mt-1">
@@ -228,7 +228,7 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  TIm
+                  Tim
                 </label>
                 <CustomSelect
                   selectedType="default"
@@ -244,7 +244,7 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Role
+                  Peran
                 </label>
                 <CustomSelect
                   selectedType="default"

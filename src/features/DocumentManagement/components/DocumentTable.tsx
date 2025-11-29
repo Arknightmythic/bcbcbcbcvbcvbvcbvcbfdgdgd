@@ -68,7 +68,7 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
             <tr className="text-left text-[10px] font-semibold text-gray-600">
               <SortableHeader label="Tanggal Unggah" columnKey="created_at" />
               <SortableHeader label="Nama Dokumen" columnKey="document_name" className="text-left !justify-start" />
-              <SortableHeader label="staff" columnKey="staff" />
+              <SortableHeader label="Staff" columnKey="staff" />
               
               <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">Tipe</th>
               <th className="px-4 py-3 sticky top-0 bg-gray-100">Kategori</th>

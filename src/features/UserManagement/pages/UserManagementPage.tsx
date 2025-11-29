@@ -159,18 +159,18 @@ const UserManagementPage = () => {
 
   // --- PERUBAHAN 7: Update opsi filter ---
   const accountTypeOptions = [
-    { value: '', label: 'All Types' },
+    { value: '', label: 'Semua Tipe Akun' },
     { value: 'credential', label: 'Credential' },
     { value: 'microsoft', label: 'Microsoft' },
   ];
 
    const filterTeamOptions = useMemo(() => [
-     { value: '', label: 'All Teams' },
+     { value: '', label: 'Semua Tim' },
      ...teams.map(t => ({ value: t.id.toString(), label: t.name })) // Gunakan ID
    ], [teams]);
   
    const filterRoleOptions = useMemo(() => [
-     { value: '', label: 'All Roles' },
+     { value: '', label: 'Semua Peran' },
      ...roles.map(r => ({ value: r.id.toString(), label: r.name })) // Gunakan ID
    ], [roles]);
 
@@ -198,7 +198,7 @@ const UserManagementPage = () => {
                  <div className="flex-grow">
                     <TableControls
                         searchTerm={searchInput}
-                        searchPlaceholder="Cari bedasarkan nama atau email..."
+                        searchPlaceholder="Cari berdasarkan nama atau email..."
                         filters={filters}
                         onSearchChange={setSearchInput}
                         onSearchSubmit={handleSearchSubmit}
@@ -251,7 +251,7 @@ const UserManagementPage = () => {
         confirmColor="bg-red-600 hover:bg-red-700"
         isConfirming={isDeleting}
       >
-        <p>Are you sure you want to delete the user "{userToDelete?.name}"? This action cannot be undone.</p>
+        <p>Apakah anda yakin ingin menghapus akun "{userToDelete?.name}"? Aksi ini tidak bisa dibatalkan.</p>
       </ConfirmationModal>
     </>
   );

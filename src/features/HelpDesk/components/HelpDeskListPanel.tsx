@@ -9,7 +9,7 @@ import { useGetAllHelpDesks, useAcceptHelpDesk } from '../hooks/useHelpDesk';
 import { useQueryClient } from '@tanstack/react-query';
 
 const channelFilterOptions = [
-  { value: "", label: "All channel" },
+  { value: "", label: "Semua Channel" },
   { value: "web", label: "Web" },
   { value: "whatsapp", label: "WhatsApp" },
   { value: "instagram", label: "Instagram" },
@@ -46,18 +46,18 @@ const HelpDeskListPanel: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
   const queryClient = useQueryClient();
 
-  // Fetch all helpdesks from API
+  
   const { data: helpdesks, isLoading, isError, refetch } = useGetAllHelpDesks();
   const acceptMutation = useAcceptHelpDesk();
 
-  // Refetch data when component mounts or when returning to helpdesk page
+  
   useEffect(() => {
-    // Invalidate and refetch helpdesk data
+    
     queryClient.invalidateQueries({ queryKey: ['helpdesks'] });
     refetch();
-  }, []); // Empty dependency array means this runs only on mount
+  }, []); 
 
-  // Auto-refresh when page becomes visible
+  
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
@@ -73,7 +73,7 @@ const HelpDeskListPanel: React.FC = () => {
     };
   }, [queryClient, refetch]);
 
-  // Transform API data to ChatLists format
+  
   useEffect(() => {
     if (helpdesks) {
       const transformedLists: ChatLists = {
@@ -84,7 +84,7 @@ const HelpDeskListPanel: React.FC = () => {
       };
 
       const now = Date.now();
-      const PENDING_THRESHOLD = 15 * 60 * 1000; // 15 minutes
+      const PENDING_THRESHOLD = 15 * 60 * 1000; 
 
       helpdesks.forEach((helpdesk) => {
         const chat: HelpDeskChat = {
@@ -104,7 +104,7 @@ const HelpDeskListPanel: React.FC = () => {
             transformedLists.active.push(chat);
             break;
           case 'open':
-            // Check if it should be in pending (15+ minutes old)
+            
             if (timeDiff > PENDING_THRESHOLD) {
               transformedLists.pending.push(chat);
             } else {
@@ -144,10 +144,10 @@ const HelpDeskListPanel: React.FC = () => {
   };
 
   const listConfig: Record<HelpDeskChatListType, { icon: LucideIcon; title: string; empty: string }> = {
-    active: { icon: MessageSquare, title: "Active Chats", empty: "Tidak ada chat aktif." },
-    queue: { icon: Clock, title: "Queue", empty: "Antrian kosong." },
-    pending: { icon: Clock, title: "Pending", empty: "Tidak ada chat pending." },
-    resolve: { icon: CheckCheck, title: "Resolve (History)", empty: "Tidak ada riwayat chat." },
+    active: { icon: MessageSquare, title: "Chat Aktif", empty: "Tidak ada chat aktif." },
+    queue: { icon: Clock, title: "Antrian", empty: "Antrian kosong." },
+    pending: { icon: Clock, title: "Tertahan", empty: "Tidak ada chat pending." },
+    resolve: { icon: CheckCheck, title: "Terselesaikan", empty: "Tidak ada riwayat chat." },
   };
 
   const handleSelectChat = (chatId: string) => {
@@ -161,7 +161,7 @@ const HelpDeskListPanel: React.FC = () => {
   };
 
   const handleAcceptChat = (chatId: string) => {
-    // Find the helpdesk_id from the chat
+    
     const allChats = [...chatLists.queue, ...chatLists.pending];
     const chat = allChats.find((c) => c.id === chatId);
     
@@ -170,8 +170,8 @@ const HelpDeskListPanel: React.FC = () => {
       return;
     }
 
-    // TODO: Get current user_id from auth context or store
-    const currentUserId = 1; // Replace with actual user ID
+    
+    const currentUserId = 1; 
 
     acceptMutation.mutate(
       { id: chat.helpdesk_id, userId: currentUserId },
@@ -228,10 +228,10 @@ const HelpDeskListPanel: React.FC = () => {
       </div>
 
       <div className="flex justify-between text-center bg-gray-200 rounded-lg p-1 space-x-1 m-4">
-        <TabButton label="Active" count={chatLists.active.length} isActive={activeList === 'active'} onClick={() => setActiveList('active')} />
-        <TabButton label="Queue" count={chatLists.queue.length} isActive={activeList === 'queue'} onClick={() => setActiveList('queue')} />
-        <TabButton label="Pending" count={chatLists.pending.length} isActive={activeList === 'pending'} onClick={() => setActiveList('pending')} />
-        <TabButton label="Resolve" count={chatLists.resolve.length} isActive={activeList === 'resolve'} onClick={() => setActiveList('resolve')} />
+        <TabButton label="Aktif" count={chatLists.active.length} isActive={activeList === 'active'} onClick={() => setActiveList('active')} />
+        <TabButton label="Antrian" count={chatLists.queue.length} isActive={activeList === 'queue'} onClick={() => setActiveList('queue')} />
+        <TabButton label="Tertahan" count={chatLists.pending.length} isActive={activeList === 'pending'} onClick={() => setActiveList('pending')} />
+        <TabButton label="Selesai" count={chatLists.resolve.length} isActive={activeList === 'resolve'} onClick={() => setActiveList('resolve')} />
       </div>
 
       <div className="px-4 pb-2 border-b border-gray-200">

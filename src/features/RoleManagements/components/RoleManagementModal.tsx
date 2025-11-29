@@ -217,11 +217,11 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
                           >
                             {allSelected ? (
                                 <>
-                                    <CheckSquare className="w-3 h-3" /> Unselect All
+                                    <CheckSquare className="w-3 h-3" /> Batal Pilih Semua
                                 </>
                             ) : (
                                 <>
-                                    <Square className="w-3 h-3" /> Select All
+                                    <Square className="w-3 h-3" /> Pilih Semua
                                 </>
                             )}
                           </button>
