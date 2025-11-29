@@ -182,6 +182,7 @@ export const getChatHistoryBySession = async (
       params: {
         page,
         page_size: pageSize,
+        sort_direction: 'DESC',
       },
     }
   );
@@ -197,4 +198,14 @@ export const sendHelpdeskMessage = async (data: {
   user_type: "user" | "agent";
 }): Promise<void> => {
   await instanceApiToken.post<ApiResponse<void>>("/api/helpdesk/ask", data);
+};
+
+export const solveHelpDeskSession = async (
+  sessionId: string, 
+  clientTimestamp: string // Parameter baru
+): Promise<void> => {
+  await instanceApiToken.post<ApiResponse<void>>(
+    `/api/helpdesk/solved/${sessionId}`,
+    { resolved_at: clientTimestamp } // Kirim sebagai payload
+  );
 };

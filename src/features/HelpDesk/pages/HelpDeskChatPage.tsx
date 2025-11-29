@@ -32,7 +32,7 @@ const HelpDeskChatPage: React.FC = () => {
   const previousScrollHeight = useRef<number>(0);
   const wsService = useRef(getWebSocketService());
 
-  // Fetch chat history with infinite scroll
+  
   const {
     data: chatHistory,
     fetchNextPage,
@@ -43,7 +43,7 @@ const HelpDeskChatPage: React.FC = () => {
     refetch: refetchChatHistory,
   } = useGetChatHistory(sessionId || '', 50, !!sessionId);
 
-  // Fetch helpdesk info to check status
+  
   const { data: helpdeskInfo } = useGetHelpDeskBySessionId(sessionId || '', !!sessionId);
   
   const resolveMutation = useResolveHelpDesk();
@@ -51,34 +51,34 @@ const HelpDeskChatPage: React.FC = () => {
 
   const isResolved = helpdeskInfo?.status === 'resolved' || helpdeskInfo?.status === 'closed';
 
-  // WebSocket setup for real-time messages
+  
   useEffect(() => {
   if (!sessionId) return;
 
   const ws = wsService.current;
   
-  // Connect to WebSocket if not connected
+  
   if (!ws.isConnected()) {
     ws.connect().catch((error) => {
       console.error('Failed to connect to WebSocket:', error);
     });
   }
 
-  // Subscribe to agent channel to receive user messages
+  
   const agentChannel = `${sessionId}-agent`;
   
   const unsubscribe = ws.onMessage(agentChannel, (data: any) => {
     console.log('📨 Received WebSocket message:', data);
     
-    // Immediately invalidate and refetch to get the latest messages
+    
     refetchChatHistory();
   });
 
-  // Subscribe to the agent channel
+  
   ws.subscribe(agentChannel, '$');
   console.log(`✅ Subscribed to channel: ${agentChannel}`);
 
-  // Cleanup
+  
   return () => {
     console.log(`🔌 Unsubscribing from channel: ${agentChannel}`);
     unsubscribe();
@@ -86,7 +86,7 @@ const HelpDeskChatPage: React.FC = () => {
 }, [sessionId, refetchChatHistory]);
 
 
-  // Transform chat history to messages
+  
   const messages: HelpDeskMessage[] = React.useMemo(() => {
     if (!chatHistory) return [];
 
@@ -107,7 +107,7 @@ const HelpDeskChatPage: React.FC = () => {
     ? helpdeskInfo?.platform_unique_id || `Session ${sessionId.substring(0, 8)}...`
     : 'Sesi Chatbot';
 
-  // Intersection Observer for infinite scroll
+  
   useEffect(() => {
     if (!observerTarget.current || !hasNextPage || isFetchingNextPage) return;
 
@@ -128,7 +128,7 @@ const HelpDeskChatPage: React.FC = () => {
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  // Maintain scroll position after loading more messages
+  
   useEffect(() => {
     if (chatContainerRef.current && previousScrollHeight.current > 0) {
       const newScrollHeight = chatContainerRef.current.scrollHeight;
@@ -138,7 +138,7 @@ const HelpDeskChatPage: React.FC = () => {
     }
   }, [messages.length]);
 
-  // Auto scroll to bottom on initial load
+  
   useEffect(() => {
     if (shouldScrollToBottom && chatContainerRef.current && messages.length > 0) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
@@ -158,7 +158,7 @@ const HelpDeskChatPage: React.FC = () => {
     if (!input.trim() || !sessionId) return;
 
     const sendTime = new Date();
-    // Format timestamp menjadi string: "YYYY-MM-DD HH:mm:ss.sss"
+    
     const startTimestampString = sendTime.toISOString().replace('T', ' ').replace('Z', '').slice(0, 23);
     
     const messageText = input.trim();
@@ -169,7 +169,7 @@ const HelpDeskChatPage: React.FC = () => {
     }
 
     try {
-      // Send message to backend
+      
       await sendMessageMutation.mutateAsync({
         session_id: sessionId,
         message: messageText,
@@ -177,7 +177,7 @@ const HelpDeskChatPage: React.FC = () => {
         start_timestamp: startTimestampString,
       });
       
-      // Scroll to bottom after sending
+      
       setTimeout(() => {
         if (chatContainerRef.current) {
           chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
@@ -185,7 +185,7 @@ const HelpDeskChatPage: React.FC = () => {
       }, 100);
     } catch (error) {
       console.error('Failed to send message:', error);
-      // Restore input if failed
+      
       setInput(messageText);
     }
   };
@@ -202,16 +202,22 @@ const HelpDeskChatPage: React.FC = () => {
   };
 
   const handleResolveChat = () => {
-    if (!helpdeskInfo?.id) {
-      toast.error("Helpdesk info not found");
+    if (!sessionId) {
+      toast.error("Session ID tidak ditemukan");
       return;
     }
-
-    resolveMutation.mutate(helpdeskInfo.id, {
-      onSuccess: () => {
-        navigate('/helpdesk');
-      },
-    });
+    const userAgentTime = new Date().toISOString();
+    resolveMutation.mutate(
+      { 
+        sessionId, 
+        timestamp: userAgentTime 
+      }, 
+      {
+        onSuccess: () => {
+          navigate('/helpdesk');
+        },
+      }
+    );
   };
 
   const handleGoBack = () => {
@@ -295,7 +301,7 @@ const HelpDeskChatPage: React.FC = () => {
 
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full">
-            <p className="text-gray-400 mb-2">No messages in this conversation yet</p>
+            <p className="text-gray-400 mb-2">belum ada percakapan</p>
             <p className="text-sm text-gray-300">Start by sending a message below</p>
           </div>
         ) : (
@@ -324,9 +330,9 @@ const HelpDeskChatPage: React.FC = () => {
       {!isResolved && (
         <div className="p-4 border-t border-gray-200 bg-gray-50 space-y-3">
           <div className="flex gap-2">
-            <QuickResponseButton text="Greeting" onClick={() => handleQuickResponse('Greeting')} />
-            <QuickResponseButton text="Checking" onClick={() => handleQuickResponse('Checking')} />
-            <QuickResponseButton text="Followup" onClick={() => handleQuickResponse('Followup')} />
+            <QuickResponseButton text="Salam" onClick={() => handleQuickResponse('Greeting')} />
+            <QuickResponseButton text="Cek" onClick={() => handleQuickResponse('Checking')} />
+            <QuickResponseButton text="Bertanya" onClick={() => handleQuickResponse('Followup')} />
           </div>
           <div className="flex gap-3 items-end"> 
             <textarea

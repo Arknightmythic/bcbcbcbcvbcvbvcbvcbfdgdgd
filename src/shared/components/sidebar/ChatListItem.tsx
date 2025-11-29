@@ -12,11 +12,11 @@ interface ChatListItemProps {
 }
 
 const typeMessages = {
-  active: "on live chat...",
-  queue: "waiting queue...",
-  history: "conversation closed..",
-  pending: "waiting agent actions...",
-  resolve: "conversation closed.",
+  active: "Dalam sesi aktif...",
+  queue: "menunggu antrian...",
+  history: "Percakapan ditutup..",
+  pending: "Menunggu Agen...",
+  resolve: "Percakapan terselesaikan.",
 };
 
 // --- PERUBAHAN DI SINI: Komponen Ikon Kanal Dimodifikasi ---
@@ -99,7 +99,7 @@ export const ChatListItem = ({ chat, isActive, onClick, type, actionType, onActi
           onClick={handleAction}
           className="mt-2 text-xs font-semibold bg-green-100 text-green-700 px-3 py-1 rounded-full hover:bg-green-200 self-start"
         >
-          Accept Chat
+          Hubungkan
         </button>
       )}
     </div>

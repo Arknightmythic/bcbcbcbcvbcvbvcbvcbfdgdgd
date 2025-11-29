@@ -24,7 +24,7 @@ const TeamBadge: React.FC<TeamBadgeProps> = ({ teamName }) => {
 
   return (
     <span className={`px-2 py-1 text-[10px] font-semibold rounded-full capitalize ${badgeStyle}`}>
-      {teamName || 'No Team'}
+      {teamName || 'Tidak ada team'}
     </span>
   );
 };

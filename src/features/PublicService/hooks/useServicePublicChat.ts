@@ -1,3 +1,5 @@
+// [MODIFIKASI: src/features/PublicService/hooks/useServicePublicChat.ts]
+
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -10,7 +12,6 @@ import type {
   OpenCitationsState,
   ChatMode,
   BackendChatHistory,
-  AskPayload,
   AskResponse,
   ChatSession,
 } from "../utils/types";
@@ -20,10 +21,8 @@ import {
 } from "../api/chatApi";
 import { getWebSocketService } from "../../../shared/utils/WebsocketService";
 
-
 const cleanText = (text: string): string => {
   if (!text) return "";
-  
   let cleaned = text.replace(/^None\s*/i, "");
   return cleaned.trim();
 };
@@ -36,21 +35,17 @@ const mapBackendHistoryToFrontend = (
       let sender: "user" | "agent" | "system" = "agent";
       let text = "";
       
-      
       if (msg.message.data?.content) {
         text = msg.message.data.content;
       } else if (msg.message.content) {
         text = msg.message.content;
       }
       
-      
       text = cleanText(text);
-      
       
       if (!text) {
         return null;
       }
-      
       
       if (msg.message.type === "human" || msg.message.data?.type === "human") {
         sender = "user";
@@ -61,7 +56,6 @@ const mapBackendHistoryToFrontend = (
       } else if (msg.message.role === "assistant") {
         sender = "agent";
       }
-      
       
       const messageId = `${sender}-${msg.id}`;
       
@@ -95,6 +89,45 @@ const mapAskResponseToCitations = (
   }));
 };
 
+// --- HELPER BARU: Menambahkan pesan dengan urutan waktu yang aman ---
+// Fungsi ini memastikan pesan baru minimal 1ms setelah pesan terakhir
+const addMessageOrdered = (prevMessages: ChatMessage[], newMessage: ChatMessage): ChatMessage[] => {
+  // Cek jika pesan sudah ada (duplikasi)
+  if (prevMessages.some((m) => m.id === newMessage.id)) {
+    console.log("⏭️ Skip duplicate message:", newMessage.id);
+    return prevMessages;
+  }
+
+  let finalTimestamp = new Date(newMessage.timestamp || new Date()).getTime();
+
+  if (prevMessages.length > 0) {
+    const lastMsg = prevMessages[prevMessages.length - 1];
+    const lastTime = new Date(lastMsg.timestamp || 0).getTime();
+
+    // LOGIKA INTI:
+    // Jika timestamp pesan baru LEBIH KECIL atau SAMA DENGAN pesan terakhir,
+    // kita "dorong" waktunya jadi lastTime + 1ms.
+    // Ini memperbaiki masalah jam server yang lambat atau presisi detik vs milidetik.
+    if (finalTimestamp <= lastTime) {
+      console.log(`⚠️ Adjusting timestamp for ${newMessage.id}. Original: ${finalTimestamp}, Adjusted: ${lastTime + 1}`);
+      finalTimestamp = lastTime + 1;
+    }
+  }
+
+  const adjustedMessage = {
+    ...newMessage,
+    timestamp: new Date(finalTimestamp).toISOString(),
+  };
+
+  const updated = [...prevMessages, adjustedMessage];
+  
+  // Sort lagi untuk keamanan ganda
+  return updated.sort((a, b) => 
+    new Date(a.timestamp || 0).getTime() - new Date(b.timestamp || 0).getTime()
+  );
+};
+// -------------------------------------------------------------------
+
 export const useServicePublicChat = () => {
   const navigate = useNavigate();
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -124,7 +157,6 @@ export const useServicePublicChat = () => {
   const hasLoadedHistoryRef = useRef(false);
   const wsEnabledRef = useRef(false);
 
-  
   const {
     data: historyData,
     isLoading: isLoadingHistory,
@@ -137,7 +169,6 @@ export const useServicePublicChat = () => {
     retry: false,
   });
 
-  
   useEffect(() => {
     const initWebSocket = async () => {
       try {
@@ -147,9 +178,7 @@ export const useServicePublicChat = () => {
         console.error('❌ WebSocket connection failed:', error);
       }
     };
-
     initWebSocket();
-
     return () => {
       if (unsubscribeRef.current) {
         unsubscribeRef.current();
@@ -158,7 +187,6 @@ export const useServicePublicChat = () => {
     };
   }, []);
 
-  
   useEffect(() => {
     if (sessionId === "new") {
       hasLoadedHistoryRef.current = false;
@@ -167,15 +195,12 @@ export const useServicePublicChat = () => {
     }
   }, [sessionId]);
   
-  
   useEffect(() => {
-    
     if (!wsEnabledRef.current || !sessionId || sessionId === "new") {
       console.log('⏸️ WebSocket subscription paused');
       return;
     }
 
-    
     if (unsubscribeRef.current) {
       unsubscribeRef.current();
       unsubscribeRef.current = null;
@@ -191,10 +216,9 @@ export const useServicePublicChat = () => {
     const unsubscribe = wsService.current.onMessage(sessionId, (data) => {
       console.log('📨 WebSocket message received:', data);
       
-      
+      // CASE 1: Jawaban AI via WebSocket
       if (data.answer && data.chat_history_id) {
         const botMessageId = `agent-${data.chat_history_id}`;
-        
         
         if (processedMessageIdsRef.current.has(botMessageId)) {
           console.log('⏭️ Skip WebSocket - already have this message from API:', botMessageId);
@@ -214,27 +238,20 @@ export const useServicePublicChat = () => {
           id: botMessageId,
           sender: "agent",
           text: cleanedAnswer,
-          timestamp: new Date().toISOString(),
+          // Gunakan timestamp saat ini jika dari server tidak valid/missing
+          timestamp: new Date().toISOString(), 
           feedback: null,
           is_answered: data.is_answered,
         };
         
-        setMessages((prev) => {
-          if (prev.some(m => m.id === botMessageId)) {
-            console.log('⏭️ Skip in setState - already exists:', botMessageId);
-            return prev;
-          }
-          
-          console.log('✅ Adding WebSocket message:', botMessageId);
-          const updated = [...prev, botMessage];
-          return updated.sort((a, b) => 
-            new Date(a.timestamp || 0).getTime() - new Date(b.timestamp || 0).getTime()
-          );
-        });
+        // --- GUNAKAN HELPER addMessageOrdered ---
+        setMessages((prev) => addMessageOrdered(prev, botMessage));
+        // ----------------------------------------
 
         setCitations((prev) => [...prev, ...mapAskResponseToCitations(data, botMessageId)]);
       }
       
+      // CASE 2: Pesan Agent Manusia via WebSocket
       else if (data.user_type === 'agent' && data.message) {
         const agentMessageId = data.chat_history_id 
           ? `agent-${data.chat_history_id}` 
@@ -258,24 +275,16 @@ export const useServicePublicChat = () => {
           id: agentMessageId,
           sender: "agent",
           text: cleanedMessage,
+          // Handle timestamp dari server (biasanya detik) vs client (milidetik)
           timestamp: data.timestamp 
             ? new Date(data.timestamp * 1000).toISOString() 
             : new Date().toISOString(),
           feedback: null,
         };
         
-        setMessages((prev) => {
-          if (prev.some(m => m.id === agentMessageId)) {
-            console.log('⏭️ Skip in setState - already exists:', agentMessageId);
-            return prev;
-          }
-          
-          console.log('✅ Adding agent message:', agentMessageId);
-          const updated = [...prev, agentMessage];
-          return updated.sort((a, b) => 
-            new Date(a.timestamp || 0).getTime() - new Date(b.timestamp || 0).getTime()
-          );
-        });
+        // --- GUNAKAN HELPER addMessageOrdered ---
+        setMessages((prev) => addMessageOrdered(prev, agentMessage));
+        // ----------------------------------------
       }
     });
 
@@ -291,11 +300,9 @@ export const useServicePublicChat = () => {
     };
   }, [sessionId, wsEnabledRef.current]);
 
-  
   useEffect(() => {
     if (historyData && !hasLoadedHistoryRef.current && sessionId !== "new") {
       console.log('📦 Loading history from API');
-      
       
       processedMessageIdsRef.current.clear();
       
@@ -303,11 +310,9 @@ export const useServicePublicChat = () => {
         historyData.chat_history || []
       );
       
-      
       const uniqueMessages = Array.from(
         new Map(mappedHistory.map(msg => [msg.id, msg])).values()
       );
-      
       
       const sortedMessages = uniqueMessages.sort((a, b) => {
         const timeA = new Date(a.timestamp || 0).getTime();
@@ -315,20 +320,16 @@ export const useServicePublicChat = () => {
         return timeA - timeB;
       });
       
-      
       sortedMessages.forEach(msg => {
         processedMessageIdsRef.current.add(msg.id);
       });
       
       console.log(`✅ History loaded: ${sortedMessages.length} messages`);
-      console.log('Message IDs:', sortedMessages.map(m => ({ id: m.id, text: m.text.substring(0, 30) })));
-      
       
       setMessages(sortedMessages);
       setCitations([]);
       setIsHistoryLoaded(true);
       hasLoadedHistoryRef.current = true;
-      
       
       setTimeout(() => {
         setIsInitialLoad(false);
@@ -338,7 +339,6 @@ export const useServicePublicChat = () => {
     }
   }, [historyData, sessionId]);
 
-  
   useEffect(() => {
     if (sessionId === "new") {
       console.log('🆕 Resetting for new session');
@@ -352,7 +352,6 @@ export const useServicePublicChat = () => {
     }
   }, [sessionId]);
 
-  
   useEffect(() => {
     if (isHistoryError && historyError) {
       toast.error(`Gagal memuat riwayat: ${(historyError as Error).message}`);
@@ -361,7 +360,6 @@ export const useServicePublicChat = () => {
     }
   }, [isHistoryError, historyError]);
 
-  
   useEffect(() => {
     if (sessionId === "new" && !isHistoryLoaded) {
       const initialMessageId = "msg-initial";
@@ -388,14 +386,8 @@ export const useServicePublicChat = () => {
         "AI sedang memproses, mohon tunggu beberapa saat lagi...",
         {
           duration: Infinity,
-          style: {
-            background: '#3B82F6',
-            color: '#fff',
-          },
-          iconTheme: {
-            primary: '#fff',
-            secondary: '#3B82F6',
-          },
+          style: { background: '#3B82F6', color: '#fff' },
+          iconTheme: { primary: '#fff', secondary: '#3B82F6' },
         }
       );
     }, 5000);
@@ -413,8 +405,6 @@ export const useServicePublicChat = () => {
     }
   };
 
-  // useServicePublicChat.ts - Enhanced mutation handling
-
   const { mutate: performAsk, isPending: isBotLoading } = useMutation({
     mutationFn: askQuestion,
     onMutate: () => {
@@ -424,29 +414,20 @@ export const useServicePublicChat = () => {
       hideLoadingToast();
       console.log('📬 API Response received:', data);
       
-      // ===== ENHANCED: Handle helpdesk mode =====
-      // If helpdesk mode and answer is empty, don't add bot message
-      // Just wait for WebSocket messages from agent
       if (data.is_helpdesk && !data.answer) {
         console.log('🔔 Helpdesk mode - waiting for agent via WebSocket');
-        
-        // Navigate to conversation if new session
         if (sessionId === "new") {
           console.log('🔄 Navigating to new helpdesk session:', data.conversation_id);
           wsEnabledRef.current = true;
           navigate(`/public-service/${data.conversation_id}`, { replace: true });
         } else {
-          // Enable WebSocket to receive agent messages
           wsEnabledRef.current = true;
           console.log('✅ WebSocket enabled for helpdesk messages');
         }
-
         queryClient.invalidateQueries({ queryKey: ["conversations"] });
-        return; // Don't add any bot message
+        return;
       }
-      // ===== END ENHANCEMENT =====
       
-      // Regular bot response handling
       const cleanedAnswer = cleanText(data.answer);
       
       if (!cleanedAnswer) {
@@ -469,12 +450,9 @@ export const useServicePublicChat = () => {
         is_answered: data.is_answered,
       };
       
-      setMessages((prev) => {
-        const updated = [...prev, botMessage];
-        return updated.sort((a, b) => 
-          new Date(a.timestamp || 0).getTime() - new Date(b.timestamp || 0).getTime()
-        );
-      });
+      // --- GUNAKAN HELPER addMessageOrdered ---
+      setMessages((prev) => addMessageOrdered(prev, botMessage));
+      // ----------------------------------------
       
       setCitations((prev) => [...prev, ...mapAskResponseToCitations(data, botMessageId)]);
 
@@ -492,6 +470,7 @@ export const useServicePublicChat = () => {
     onError: (err: any) => {
       hideLoadingToast();
       toast.error(err.response?.data?.message || "Gagal mengirim pesan.");
+      // Hapus pesan user terakhir jika gagal
       setMessages((prev) => prev.slice(0, -1));
     },
   });
@@ -505,15 +484,10 @@ export const useServicePublicChat = () => {
   const handleSendMessage = useCallback(() => {
     if (input.trim() === "" || isBotLoading) return;
 
-    
     const sendTime = new Date();
-    
-    
-    
     const startTimestampString = sendTime.toISOString().replace('T', ' ').replace('Z', '').slice(0, 23); 
     
     const userMessageId = `user-${sendTime.getTime()}`;
-    
     
     processedMessageIdsRef.current.add(userMessageId);
     
@@ -526,12 +500,10 @@ export const useServicePublicChat = () => {
     
     console.log('📤 Sending user message:', userMessageId);
     
-    setMessages((prev) => {
-      const updated = [...prev, userMessage];
-      return updated.sort((a, b) => 
-        new Date(a.timestamp || 0).getTime() - new Date(b.timestamp || 0).getTime()
-      );
-    });
+    // --- GUNAKAN HELPER addMessageOrdered JUGA ---
+    // (Meskipun biasanya pesan user adalah 'master', ini menjaga konsistensi jika ada glitch)
+    setMessages((prev) => addMessageOrdered(prev, userMessage));
+    // ---------------------------------------------
 
     performAsk({
       query: input,
@@ -539,7 +511,6 @@ export const useServicePublicChat = () => {
       platform_unique_id: user?.email || "anonymous_user",
       conversation_id: (sessionId === "new" ? "" : sessionId) || "",
       start_timestamp: startTimestampString,
-      
     });
 
     setInput("");
@@ -548,19 +519,14 @@ export const useServicePublicChat = () => {
     }
   }, [input, isBotLoading, user, sessionId, performAsk]);
 
-  const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setInput(e.target.value);
-      const textarea = e.target;
-      textarea.style.height = "auto";
-      const maxHeight = 120;
-      textarea.style.height = `${Math.min(
-        textarea.scrollHeight,
-        maxHeight
-      )}px`;
-    },
-    []
-  );
+  // ... (Sisa fungsi handleInputChange, handleFeedbackUpdate, dll tetap sama)
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+    const textarea = e.target;
+    textarea.style.height = "auto";
+    const maxHeight = 120;
+    textarea.style.height = `${Math.min(textarea.scrollHeight, maxHeight)}px`;
+  }, []);
 
   const handleFeedbackUpdate = useCallback((messageId: string, feedback: 'like' | 'dislike' | null) => {
     setMessages(prevMessages => 
@@ -568,7 +534,6 @@ export const useServicePublicChat = () => {
         msg.id === messageId ? { ...msg, feedback: feedback } : msg
       )
     );
-    
     if (feedback === 'like') {
       toast.success("Terima kasih atas masukan Anda! (Suka)");
     } else if (feedback === 'dislike') {
@@ -578,16 +543,13 @@ export const useServicePublicChat = () => {
     }
   }, []); 
 
-  const handleSelectSession = useCallback(
-    (session: ChatSession) => {
-      console.log('🔄 Selecting session:', session.id);
-      setIsHistoryLoaded(false);
-      hasLoadedHistoryRef.current = false;
-      wsEnabledRef.current = false;
-      navigate(`/public-service/${session.id}`);
-    },
-    [navigate]
-  );
+  const handleSelectSession = useCallback((session: ChatSession) => {
+    console.log('🔄 Selecting session:', session.id);
+    setIsHistoryLoaded(false);
+    hasLoadedHistoryRef.current = false;
+    wsEnabledRef.current = false;
+    navigate(`/public-service/${session.id}`);
+  }, [navigate]);
 
   const handleCreateNewSession = useCallback(() => {
     console.log('🆕 Creating new session');

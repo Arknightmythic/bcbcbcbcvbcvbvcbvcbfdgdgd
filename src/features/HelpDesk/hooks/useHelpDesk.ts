@@ -11,6 +11,7 @@ import {
   getHelpDesksByStatus,
   getChatHistoryBySession,
   sendHelpdeskMessage,
+  solveHelpDeskSession,
 } from "../api/helpDeskApi";
 import type { HelpDeskPayload, SendHelpdeskMessagePayload } from "../utils/types";
 import toast from "react-hot-toast";
@@ -181,19 +182,21 @@ export const useAcceptHelpDesk = () => {
  */
 export const useResolveHelpDesk = () => {
   const queryClient = useQueryClient();
+  
+  // Ubah tipe parameter mutationFn
   return useMutation({
-    mutationFn: (id: number) =>
-      updateHelpDeskStatus({ id, status: "resolved" }),
+    mutationFn: ({ sessionId, timestamp }: { sessionId: string; timestamp: string }) => 
+      solveHelpDeskSession(sessionId, timestamp),
+    
     onSuccess: () => {
-      toast.success("Helpdesk resolved!");
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+      toast.success("Percakapan telah diselesaikan!");
+      queryClient.invalidateQueries({ queryKey: ["helpdesks"] });
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Failed to resolve helpdesk.");
+      toast.error(err.response?.data?.message || "Gagal menyelesaikan percakapan.");
     },
   });
 };
-
 /**
  * Hook to get chat history with infinite scroll
  * Fetches older messages as user scrolls up
@@ -242,3 +245,4 @@ export const useSendHelpdeskMessage = () => {
     },
   });
 };
+

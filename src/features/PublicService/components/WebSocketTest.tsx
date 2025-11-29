@@ -114,7 +114,7 @@ export const WebSocketTest: React.FC = () => {
       }}>
         <strong>Messages ({messages.length}):</strong>
         {messages.length === 0 && (
-          <div style={{ color: '#666', marginTop: 8 }}>No messages yet...</div>
+          <div style={{ color: '#666', marginTop: 8 }}>Belum ada pesan...</div>
         )}
         {messages.map((msg, i) => (
           <div key={i} style={{ marginTop: 8, borderBottom: '1px solid #ddd', paddingBottom: 8 }}>

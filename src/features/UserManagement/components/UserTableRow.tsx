@@ -24,7 +24,7 @@ const UserTableRow: React.FC<UserTableRowProps> = ({ user, onAction }) => {
         <TeamBadge teamName={teamName} />
       </td>
       <td className="px-4 py-3 capitalize">
-        {roleName || <span className="text-gray-400">No Role</span>}
+        {roleName || <span className="text-gray-400">Tidak ada peran</span>}
       </td>
       <td className="px-4 py-3 text-center sticky right-0 bg-white group-hover:bg-gray-50 z-10 border-l border-gray-200">
         {/* --- PERUBAHAN DI SINI: Menambahkan div wrapper --- */}
