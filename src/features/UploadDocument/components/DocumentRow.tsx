@@ -1,5 +1,7 @@
+// [UPDATE: src/features/KnowledgeBase/components/DocumentRow.tsx]
+
 import React, { useState, useRef } from 'react';
-import { createPortal } from 'react-dom'; // 1. Impor createPortal
+import { createPortal } from 'react-dom';
 import {
   Eye,
   Trash2,
@@ -8,10 +10,12 @@ import {
   Clock,
   Info,
   UploadIcon,
-  MoreVertical, // Ikon MoreVertical
+  XCircle,
+  MoreVertical,
+  Activity,
 } from "lucide-react";
 import type { UploadedDocument } from "../types/types";
-import { useClickOutside } from "../../../shared/hooks/useClickOutside"; // Impor hook
+import { useClickOutside } from "../../../shared/hooks/useClickOutside";
 
 interface DocumentRowProps {
   document: UploadedDocument;
@@ -34,21 +38,28 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
 }) => {
   
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  
-  // 2. State & Ref untuk Posisi Portal
   const [position, setPosition] = useState<{ top?: number, bottom?: number, right?: number }>({});
-  const moreButtonRef = useRef<HTMLButtonElement>(null); // Ref untuk tombol '...'
+  const moreButtonRef = useRef<HTMLButtonElement>(null);
   
-  // 3. Hook click outside sekarang akan merujuk ke menu dropdown
-  // (Pastikan useClickOutside.tsx Anda sudah diperbaiki untuk menerima 1 argumen)
   const dropdownRef = useClickOutside<HTMLDivElement>(() => {
     setIsDropdownOpen(false);
   });
   
+  // --- DEFINISI STATUS ---
   const isPending = doc.status === "Pending";
   const isRejected = doc.status === "Rejected";
+  const isIngestFailed = doc.ingest_status === "failed";
+  const isProcessing = doc.ingest_status === "processing"; // [BARU]
 
-  const getStatusComponent = () => {
+  // Logic Action Disabled (View, Versioning, Info)
+  // Ditambah isProcessing agar tombol-tombol ini mati saat sedang diproses
+  const isActionDisabled = isPending || isRejected || isIngestFailed || isProcessing;
+
+  // Logic Delete Disabled
+  // Hapus HANYA mati jika sedang Processing. (Failed/Rejected/Pending boleh dihapus)
+  const isDeleteDisabled = isProcessing;
+
+  const getApprovalStatusComponent = () => {
     if (doc.status === "Approved") {
       return (
         <span className="inline-flex items-center px-2 py-1 text-[10px] font-semibold rounded-full bg-green-100 text-green-800">
@@ -63,7 +74,6 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
         </span>
       );
     }
-    
     return (
       <span className="inline-flex items-center px-2 py-1 text-[10px] font-semibold rounded-full bg-yellow-100 text-yellow-800">
         <Clock className="w-2 h-2 mr-1" /> Menunggu
@@ -71,41 +81,60 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
     );
   };
 
-  // 4. Handler untuk menghitung posisi & membuka dropdown
+  const getIngestStatusComponent = () => {
+    const status = doc.ingest_status;
+
+    if (status === "finished") {
+      return (
+        <span className="inline-flex items-center px-2 py-1 text-[10px] font-semibold rounded-full bg-blue-100 text-blue-800">
+          <CheckCircle2 className="w-2 h-2 mr-1" /> Selesai
+        </span>
+      );
+    }
+    if (status === "processing") {
+      return (
+        <span className="inline-flex items-center px-2 py-1 text-[10px] font-semibold rounded-full bg-purple-100 text-purple-800 animate-pulse">
+          <Activity className="w-2 h-2 mr-1 animate-spin" /> Memproses
+        </span>
+      );
+    }
+    if (status === "failed") {
+      return (
+        <span className="inline-flex items-center px-2 py-1 text-[10px] font-semibold rounded-full bg-red-100 text-red-800">
+          <XCircle className="w-2 h-2 mr-1" /> Gagal
+        </span>
+      );
+    }
+    if (status === "unprocessed") {
+        return (
+          <span className="inline-flex items-center px-2 py-1 text-[10px] font-semibold rounded-full bg-gray-200 text-gray-600">
+            <XCircle className="w-2 h-2 mr-1" /> Tidak Diproses
+          </span>
+        );
+      }
+    
+    return (
+      <span className="inline-flex items-center px-2 py-1 text-[10px] font-semibold rounded-full bg-gray-100 text-gray-500">
+        <Clock className="w-2 h-2 mr-1" /> Menunggu
+      </span>
+    );
+  };
+
   const handleDropdownToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isDropdownOpen) {
-      setIsDropdownOpen(false);
-      return;
-    }
-
+    if (isDropdownOpen) { setIsDropdownOpen(false); return; }
     if (moreButtonRef.current) {
-      const rect = moreButtonRef.current.getBoundingClientRect();
-      const dropdownHeight = 176; // Perkiraan tinggi: 4 item * 44px
-      const spaceBelow = window.innerHeight - rect.bottom;
-      const spaceAbove = rect.top;
-
-      let newPos: { top?: number, bottom?: number, right?: number } = {
-        // Posisikan 8px dari kanan tombol '...'
-        right: window.innerWidth - rect.right + 8,
-      };
-
-      // Jika tidak muat di bawah DAN muat di atas
-      if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
-        // Buka ke atas: Posisikan 'bottom' dari dropdown
-        newPos.bottom = window.innerHeight - rect.top;
-      } else {
-        // Buka ke bawah (default): Posisikan 'top' dari dropdown
-        newPos.top = rect.bottom;
-      }
-      
-      setPosition(newPos);
-      setIsDropdownOpen(true);
+        const rect = moreButtonRef.current.getBoundingClientRect();
+        const dropdownHeight = 176;
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const spaceAbove = rect.top;
+        let newPos: { top?: number, bottom?: number, right?: number } = { right: window.innerWidth - rect.right + 8 };
+        if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) { newPos.bottom = window.innerHeight - rect.top; } else { newPos.top = rect.bottom; }
+        setPosition(newPos);
+        setIsDropdownOpen(true);
     }
   };
 
-
-  // 5. Konten Dropdown (dibuat terpisah agar rapi)
   const DropdownContent = () => (
     <div
       ref={dropdownRef}
@@ -120,8 +149,8 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
       <div className="flex flex-col py-1">
         <button
           onClick={() => { onViewFile(doc); setIsDropdownOpen(false); }}
-          disabled={isRejected}
-          title={isRejected ? "Tidak dapat melihat dokumen yang ditolak" : "Lihat Dokumen"}
+          disabled={isActionDisabled}
+          title={isProcessing ? "Dokumen sedang diproses" : isIngestFailed ? "Dokumen gagal diproses" : isRejected ? "Dokumen ditolak" : "Lihat Dokumen"}
           className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:text-gray-400 disabled:bg-transparent"
         >
           <Eye className="w-4 h-4" />
@@ -130,9 +159,9 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
 
         <button
           onClick={() => { onNewVersion(doc); setIsDropdownOpen(false); }}
-          disabled={isPending || isRejected}
+          disabled={isActionDisabled}
           className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:text-gray-400 disabled:bg-transparent"
-          title={isPending ? "Cannot upload new version while pending" : isRejected ? "Cannot upload new version to a rejected document" : "Upload New Version"}
+          title={isProcessing ? "Tunggu proses selesai" : isIngestFailed ? "Proses gagal, harap hapus dokumen" : "Upload Versi Baru"}
         >
           <UploadIcon className="w-4 h-4" />
           <span>Versi Baru</span>
@@ -140,9 +169,9 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
 
         <button
           onClick={() => { onViewVersions(doc); setIsDropdownOpen(false); }}
-          disabled={isPending || isRejected}
+          disabled={isActionDisabled}
           className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:text-gray-400 disabled:bg-transparent"
-          title={isPending ? "Cannot view history while pending" : isRejected ? "Cannot view history of a rejected document" : "View Version History"}
+          title={isProcessing ? "Tunggu proses selesai" : "Lihat Histori"}
         >
           <Info className="w-4 h-4" />
           <span>Lihat Histori</span>
@@ -150,8 +179,9 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
 
         <button
           onClick={() => { onDelete(doc); setIsDropdownOpen(false); }}
-          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
-          title="Delete Document"
+          disabled={isDeleteDisabled} // [UPDATE] Tambah disabled
+          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 disabled:text-gray-400 disabled:bg-transparent"
+          title={isDeleteDisabled ? "Sedang diproses, tidak dapat dihapus" : "Hapus Dokumen"}
         >
           <Trash2 className="w-4 h-4" />
           <span>Hapus</span>
@@ -167,7 +197,8 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
           type="checkbox"
           onChange={(e) => onSelect(e, doc.id)}
           checked={isSelected}
-          className="w-3 h-3 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+          disabled={isDeleteDisabled} // Checkbox juga sebaiknya disable jika tidak boleh dihapus
+          className="w-3 h-3 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 disabled:bg-gray-200 disabled:cursor-not-allowed"
         />
       </td>
       <td className="px-6 py-4">
@@ -182,59 +213,64 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
           {doc.data_type}
         </span>
       </td>
-      <td className="px-6 py-4 capitalize">{doc.category}</td>
+      <td className="px-6 py-4 capitalize">{`${doc.category==='qna'?"Tanya Jawab":doc.category}`}</td>
       <td className="px-6 py-4 ">{doc.team}</td>
-      <td className="px-6 py-4">{getStatusComponent()}</td>
+      
+      <td className="px-6 py-4">{getIngestStatusComponent()}</td>
+      <td className="px-6 py-4">{getApprovalStatusComponent()}</td>
       
       <td className="px-6 py-4 text-center sticky right-0 bg-white group-hover:bg-gray-50 z-10 border-l border-gray-200">
         
-        {/* Layout Desktop: Ikon sejajar */}
+        {/* Layout Desktop */}
         <div className="hidden md:flex justify-center gap-3">
           <button
             onClick={() => onViewFile(doc)} 
-            disabled={isRejected}
-            title={isRejected ? "Cannot view a rejected document" : "View Document"}
-            className={`font-medium ${isRejected ? "text-gray-400 cursor-not-allowed" : "text-blue-600 hover:underline disabled:text-gray-400"}`}
+            disabled={isActionDisabled}
+            title={isProcessing ? "Dokumen sedang diproses" : isIngestFailed ? "Gagal diproses AI" : "Lihat Dokumen"}
+            className={`font-medium ${isActionDisabled ? "text-gray-400 cursor-not-allowed" : "text-blue-600 hover:underline"}`}
           >
             <Eye className="w-4 h-4" />
           </button>
           <button
             onClick={() => onNewVersion(doc)}
-            disabled={isPending || isRejected}
-            className={`font-medium cursor-pointer ${isPending || isRejected ? "text-gray-400 cursor-not-allowed" : "text-yellow-600 hover:underline"}`}
-            title={isPending ? "Cannot upload new version while pending" : isRejected ? "Cannot upload new version to a rejected document" : "Upload New Version"}
+            disabled={isActionDisabled}
+            className={`font-medium cursor-pointer ${isActionDisabled ? "text-gray-400 cursor-not-allowed" : "text-yellow-600 hover:underline"}`}
+            title={isProcessing ? "Tunggu proses selesai" : "Versi Baru"}
           >
             <UploadIcon className="w-4 h-4" />
           </button>
+          
+          {/* [UPDATE] Tombol Hapus sekarang bisa disabled */}
           <button
             onClick={() => onDelete(doc)} 
-            className="font-medium text-red-600 hover:underline cursor-pointer"
-            title="Delete Document"
+            disabled={isDeleteDisabled}
+            className={`font-medium cursor-pointer ${isDeleteDisabled ? "text-gray-400 cursor-not-allowed" : "text-red-600 hover:underline"}`}
+            title={isDeleteDisabled ? "Sedang diproses, tidak dapat dihapus" : "Hapus Dokumen"}
           >
             <Trash2 className="w-4 h-4" />
           </button>
+          
           <button
             onClick={() => onViewVersions(doc)}
-            disabled={isPending || isRejected}
-            className={`font-medium cursor-pointer ${isPending || isRejected ? "text-gray-400 cursor-not-allowed" : "text-blue-600 hover:underline"}`}
-            title={isPending ? "Cannot view history while pending" : isRejected ? "Cannot view history of a rejected document" : "View Version History"}
+            disabled={isActionDisabled}
+            className={`font-medium cursor-pointer ${isActionDisabled ? "text-gray-400 cursor-not-allowed" : "text-blue-600 hover:underline"}`}
+            title={isProcessing ? "Tunggu proses selesai" : "Lihat Histori"}
           >
             <Info className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Layout Mobile: Tombol Ellipsis */}
+        {/* Layout Mobile */}
         <div className="md:hidden">
           <button
-            ref={moreButtonRef} // 6. Terapkan ref
-            onClick={handleDropdownToggle} // 7. Terapkan handler
+            ref={moreButtonRef}
+            onClick={handleDropdownToggle}
             className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-full"
           >
             <MoreVertical className="w-4 h-4" />
           </button>
         </div>
 
-        {/* 8. Panggil Portal */}
         {isDropdownOpen && createPortal(<DropdownContent />, document.body)}
       </td>
     </tr>

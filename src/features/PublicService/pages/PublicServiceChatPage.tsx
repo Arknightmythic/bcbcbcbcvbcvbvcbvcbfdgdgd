@@ -160,7 +160,10 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
           message.sender === "user" ? "bg-bOss-blue" : "bg-bOss-red"
         }`}
       >
-        {message.sender === "user" ? userInitial : "AI"}
+        {message.sender === "user" 
+          ? userInitial 
+          : (message.isHumanAgent ? "A" : "AI")
+        }
       </div>
 
       <div className="flex flex-col max-w-[75%] items-start">
@@ -263,7 +266,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
             isActionVisible ? "opacity-100" : "opacity-0"
           }`}
         >
-          {message.sender === "agent" && (
+          {message.sender === "agent" && !message.isHumanAgent && (
             <div className="mt-2 w-full">
               <MessageActions message={message} onFeedback={onFeedback} />
             </div>

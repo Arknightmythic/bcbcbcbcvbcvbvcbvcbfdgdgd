@@ -13,6 +13,7 @@ export interface UploadedDocument {
   filename: string; 
   category: DocumentCategory;
   is_approve: boolean | null;
+  ingest_status: string | null;
 }
 
 export interface DocumentVersion {

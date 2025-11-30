@@ -280,6 +280,7 @@ export const useServicePublicChat = () => {
             ? new Date(data.timestamp * 1000).toISOString() 
             : new Date().toISOString(),
           feedback: null,
+          isHumanAgent: true,
         };
         
         // --- GUNAKAN HELPER addMessageOrdered ---
@@ -502,7 +503,13 @@ export const useServicePublicChat = () => {
     
     // --- GUNAKAN HELPER addMessageOrdered JUGA ---
     // (Meskipun biasanya pesan user adalah 'master', ini menjaga konsistensi jika ada glitch)
-    setMessages((prev) => addMessageOrdered(prev, userMessage));
+    setMessages((prev) => {
+      // 1. Hapus pesan 'system' (Bubble Sambutan) dari daftar pesan sebelumnya
+      const messagesWithoutSystem = prev.filter((msg) => msg.sender !== "system");
+      
+      // 2. Tambahkan pesan user baru ke daftar yang sudah bersih
+      return addMessageOrdered(messagesWithoutSystem, userMessage);
+    });
     // ---------------------------------------------
 
     performAsk({

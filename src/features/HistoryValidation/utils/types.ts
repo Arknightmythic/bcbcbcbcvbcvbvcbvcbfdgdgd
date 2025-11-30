@@ -31,6 +31,7 @@ export interface ChatPair {
   question_content: string;
   question_time: string;
   answer_id: number;
+  platform_unique_id?: string;
   answer_content: string;
   answer_time: string;
   category: string | null;

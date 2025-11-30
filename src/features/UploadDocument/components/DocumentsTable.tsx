@@ -135,7 +135,8 @@ const DocumentsTable: React.FC<DocumentsTableProps> = (props) => {
               <th className="px-6 py-4">Tipe</th>
               <th className="px-6 py-4">Kategori</th>
               <th className="px-6 py-4">Tim</th>
-              <th className="px-6 py-4">Status</th>
+              <th className="px-6 py-4">Status Proses</th>
+              <th className="px-6 py-4">Status Izin</th>
               
               <th className="px-6 py-4 text-center sticky right-0 bg-gray-100 z-10">Aksi</th>
             </tr>

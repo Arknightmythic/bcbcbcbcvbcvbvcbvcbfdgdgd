@@ -11,6 +11,7 @@ export interface ChatMessage {
   // --- TAMBAHAN BARU ---
   is_answered?: boolean | null;
   // ---------------------
+  isHumanAgent?: boolean;
 }
 
 export interface Citation {

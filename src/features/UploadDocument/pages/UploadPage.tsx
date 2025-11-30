@@ -35,6 +35,7 @@ export interface Filters extends Record<string, any> {
   type: string;
   category: DocumentCategory | "";
   status: string;
+  ingest_status: string;
   start_date: string;
   end_date: string;
 }
@@ -70,6 +71,18 @@ const filterConfig: FilterConfig<Filters>[] = [
     ],
   },
   {
+    key: "ingest_status",
+    type: "select",
+    options: [
+      { value: "", label: "Semua Proses" },
+      { value: "null", label: "Menunggu" }, // Backend handle string "null" sebagai IS NULL
+      { value: "processing", label: "Sedang Diproses" },
+      { value: "finished", label: "Selesai" },
+      { value: "failed", label: "Gagal" },
+      { value: "unprocessed", label: "Tidak Diproses" },
+    ],
+  },
+  {
     key: "date_range",
     type: "date-range",
     startDateKey: "start_date",
@@ -92,6 +105,7 @@ const UploadPage: React.FC = () => {
     type: "",
     category: "",
     status: "",
+    ingest_status: "",
     start_date: "",
     end_date: "",
   });
@@ -135,7 +149,7 @@ const UploadPage: React.FC = () => {
     if (filters.type) params.set("data_type", filters.type);
     if (filters.category) params.set("category", filters.category);
     if (filters.status) params.set("status", filters.status);
-
+    if (filters.ingest_status) params.set("ingest_status", filters.ingest_status);
     if (filters.start_date) params.set("start_date", filters.start_date);
     if (filters.end_date) params.set("end_date", filters.end_date);
 

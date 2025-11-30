@@ -77,7 +77,7 @@ const mapChatPairToValidationItem = (
     id: pair.question_id,
     answerId: pair.answer_id,
     tanggal: pair.created_at, 
-    user: "User", 
+    user: pair.platform_unique_id || "Anonymous User",
     session_id: pair.session_id,
     pertanyaan: pair.question_content,
     jawaban_ai: pair.answer_content,
@@ -242,7 +242,7 @@ const HistoryValidationPage = () => {
         <div className="px-4 bg-gray-50 rounded-t-lg shadow-md">
           <TableControls
             searchTerm={searchInput}
-            searchPlaceholder="Cari berdasarkan nama, id sesi...."
+            searchPlaceholder="Cari berdasarkan nama, nomor, email...."
             filters={filters}
             onSearchChange={setSearchInput}
             onSearchSubmit={handleSearchSubmit}

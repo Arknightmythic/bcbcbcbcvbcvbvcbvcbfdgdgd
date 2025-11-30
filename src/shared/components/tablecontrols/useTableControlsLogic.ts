@@ -207,8 +207,35 @@ export const useTableControlsLogic = <T extends Record<string, any>>({
   const handleApplyDate = useCallback(() => {
     if (!dateRangeConfig) return;
     const [start, end] = tempDateRange;
-    onFilterChange(dateRangeConfig.startDateKey as keyof T, formatDate(start));
-    onFilterChange(dateRangeConfig.endDateKey as keyof T, formatDate(end));
+
+    // 1. Handle Start Date
+    if (start) {
+      // React-datepicker memberikan object Date yang sudah diset ke 00:00:00 waktu lokal (Local Time)
+      // Kita langsung convert ke ISO String (UTC)
+      // Contoh: User pilih 30 Nov (WIB/GMT+7) -> Date object: 30 Nov 00:00 WIB
+      // toISOString() -> "2025-11-29T17:00:00.000Z" (Benar, mundur 7 jam)
+      onFilterChange(dateRangeConfig.startDateKey as keyof T, start.toISOString());
+    } else {
+      onFilterChange(dateRangeConfig.startDateKey as keyof T, "");
+    }
+
+    // 2. Handle End Date
+    if (end) {
+      // End date dari picker biasanya juga 00:00:00 waktu lokal.
+      // Kita harus mengubahnya menjadi AKHIR hari tersebut (23:59:59) agar range-nya mencakup seluruh hari.
+      
+      // Clone tanggal agar tidak memutasi state tempDateRange secara langsung
+      const endOfDay = new Date(end);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      // Convert ke ISO String (UTC)
+      // Contoh: User pilih 30 Nov (WIB) -> Date object: 30 Nov 23:59 WIB
+      // toISOString() -> "2025-11-30T16:59:59.999Z" (Benar, mundur 7 jam)
+      onFilterChange(dateRangeConfig.endDateKey as keyof T, endOfDay.toISOString());
+    } else {
+      onFilterChange(dateRangeConfig.endDateKey as keyof T, "");
+    }
+
     setActiveDropdown(null);
     setCoords(null);
   }, [dateRangeConfig, tempDateRange, onFilterChange]);
@@ -234,12 +261,38 @@ export const useTableControlsLogic = <T extends Record<string, any>>({
 
   const getDateButtonLabel = useCallback(() => {
     if (!dateRangeConfig) return "";
-    const start = filters[dateRangeConfig.startDateKey as string];
-    const end = filters[dateRangeConfig.endDateKey as string];
-    if (start && end) return `${start} - ${end}`;
-    if (start) return `${start} - ...`;
-    return dateRangeConfig.placeholder || "FIlter Tanggal";
+    
+    const startVal = filters[dateRangeConfig.startDateKey as string];
+    const endVal = filters[dateRangeConfig.endDateKey as string];
+
+    // Helper untuk format tampilan ke user (Local Time)
+    // Input: "2025-11-29T17:00:00.000Z" (UTC) -> Output: "30 Nov 2025" (WIB)
+    const formatDisplayDate = (isoString: string) => {
+      if (!isoString) return "";
+      const date = new Date(isoString);
+      
+      // Validasi jika string bukan tanggal valid
+      if (isNaN(date.getTime())) return isoString; 
+
+      // Format ke lokal Indonesia (id-ID) atau sesuai kebutuhan
+      return date.toLocaleDateString("id-ID", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+    };
+
+    if (startVal && endVal) {
+      return `${formatDisplayDate(startVal)} - ${formatDisplayDate(endVal)}`;
+    }
+    
+    if (startVal) {
+      return `${formatDisplayDate(startVal)} - ...`;
+    }
+
+    return dateRangeConfig.placeholder || "Filter Tanggal";
   }, [filters, dateRangeConfig]);
+
 
   return {
     activeDropdown,
