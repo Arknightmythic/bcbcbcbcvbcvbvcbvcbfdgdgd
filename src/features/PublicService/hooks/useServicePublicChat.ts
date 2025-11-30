@@ -1,4 +1,4 @@
-// [MODIFIKASI: src/features/PublicService/hooks/useServicePublicChat.ts]
+// src/features/PublicService/hooks/useServicePublicChat.ts
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
@@ -18,8 +18,12 @@ import type {
 import {
   askQuestion,
   getConversationById,
+  sendFeedback,     // Import API Feedback
+  generateViewUrl,  // Import API Generate URL PDF
 } from "../api/chatApi";
 import { getWebSocketService } from "../../../shared/utils/WebsocketService";
+
+// --- Helper Functions ---
 
 const cleanText = (text: string): string => {
   if (!text) return "";
@@ -35,6 +39,7 @@ const mapBackendHistoryToFrontend = (
       let sender: "user" | "agent" | "system" = "agent";
       let text = "";
       
+      // Deteksi konten pesan
       if (msg.message.data?.content) {
         text = msg.message.data.content;
       } else if (msg.message.content) {
@@ -42,18 +47,12 @@ const mapBackendHistoryToFrontend = (
       }
       
       text = cleanText(text);
+      if (!text) return null;
       
-      if (!text) {
-        return null;
-      }
-      
-      if (msg.message.type === "human" || msg.message.data?.type === "human") {
+      // Deteksi Sender
+      if (msg.message.type === "human" || msg.message.data?.type === "human" || msg.message.role === "user") {
         sender = "user";
-      } else if (msg.message.type === "ai" || msg.message.data?.type === "ai") {
-        sender = "agent";
-      } else if (msg.message.role === "user") {
-        sender = "user";
-      } else if (msg.message.role === "assistant") {
+      } else if (msg.message.type === "ai" || msg.message.data?.type === "ai" || msg.message.role === "assistant") {
         sender = "agent";
       }
       
@@ -61,6 +60,7 @@ const mapBackendHistoryToFrontend = (
       
       const chatMessage: ChatMessage = {
         id: messageId,
+        dbId: msg.id, // Simpan ID asli Database untuk Feedback API
         sender: sender,
         text: text,
         timestamp: msg.created_at,
@@ -75,58 +75,55 @@ const mapBackendHistoryToFrontend = (
   return messages;
 };
 
+// Update helper mapping sitasi untuk format array of array: [["id", "filename"], ...]
 const mapAskResponseToCitations = (
-  data: AskResponse | any, 
+  data: AskResponse, 
   botMessageId: string
 ): Citation[] => {
   if (!data.citations || data.citations.length === 0) {
     return [];
   }
-  return data.citations.map((docName: string) => ({
-    messageId: botMessageId,
-    documentName: docName,
-    content: `Konten placeholder untuk: "${docName}".`,
-  }));
+  
+  return data.citations.map((citeArray) => {
+    // Pastikan formatnya array dan punya minimal 2 elemen (ID dan Nama File)
+    // Fallback ke string jika format lama (meskipun API baru sudah array)
+    const fileId = Array.isArray(citeArray) ? citeArray[0] : "";
+    const fileName = Array.isArray(citeArray) ? citeArray[1] : (citeArray as string);
+
+    return {
+      messageId: botMessageId,
+      fileId: fileId,       // Simpan ID File untuk fetch URL nanti
+      documentName: fileName,
+      content: "", // Content tidak lagi dikirim langsung, harus fetch via PDF Viewer
+    };
+  });
 };
 
-// --- HELPER BARU: Menambahkan pesan dengan urutan waktu yang aman ---
-// Fungsi ini memastikan pesan baru minimal 1ms setelah pesan terakhir
 const addMessageOrdered = (prevMessages: ChatMessage[], newMessage: ChatMessage): ChatMessage[] => {
-  // Cek jika pesan sudah ada (duplikasi)
-  if (prevMessages.some((m) => m.id === newMessage.id)) {
-    console.log("⏭️ Skip duplicate message:", newMessage.id);
-    return prevMessages;
-  }
+  // Cek duplikasi
+  if (prevMessages.some((m) => m.id === newMessage.id)) return prevMessages;
 
   let finalTimestamp = new Date(newMessage.timestamp || new Date()).getTime();
-
+  
+  // Logika untuk memastikan urutan waktu (jika server time slightly off)
   if (prevMessages.length > 0) {
     const lastMsg = prevMessages[prevMessages.length - 1];
     const lastTime = new Date(lastMsg.timestamp || 0).getTime();
-
-    // LOGIKA INTI:
-    // Jika timestamp pesan baru LEBIH KECIL atau SAMA DENGAN pesan terakhir,
-    // kita "dorong" waktunya jadi lastTime + 1ms.
-    // Ini memperbaiki masalah jam server yang lambat atau presisi detik vs milidetik.
     if (finalTimestamp <= lastTime) {
-      console.log(`⚠️ Adjusting timestamp for ${newMessage.id}. Original: ${finalTimestamp}, Adjusted: ${lastTime + 1}`);
       finalTimestamp = lastTime + 1;
     }
   }
 
-  const adjustedMessage = {
-    ...newMessage,
-    timestamp: new Date(finalTimestamp).toISOString(),
+  const adjustedMessage = { 
+    ...newMessage, 
+    timestamp: new Date(finalTimestamp).toISOString() 
   };
-
-  const updated = [...prevMessages, adjustedMessage];
   
-  // Sort lagi untuk keamanan ganda
-  return updated.sort((a, b) => 
-    new Date(a.timestamp || 0).getTime() - new Date(b.timestamp || 0).getTime()
-  );
+  const updated = [...prevMessages, adjustedMessage];
+  return updated.sort((a, b) => new Date(a.timestamp || 0).getTime() - new Date(b.timestamp || 0).getTime());
 };
-// -------------------------------------------------------------------
+
+// --- Hook Utama ---
 
 export const useServicePublicChat = () => {
   const navigate = useNavigate();
@@ -134,29 +131,38 @@ export const useServicePublicChat = () => {
   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
 
+  // State Chat
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState<string>("");
   const [chatMode, setChatMode] = useState<ChatMode>("bot");
   const [citations, setCitations] = useState<Citation[]>([]);
   const [isHistoryLoaded, setIsHistoryLoaded] = useState(false);
+  const [openCitations, setOpenCitations] = useState<OpenCitationsState>({}); // State dropdown accordion sitasi
 
-  const [openCitations, setOpenCitations] = useState<OpenCitationsState>({});
-  const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null);
+  // State PDF View Modal
+  const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [pdfTitle, setPdfTitle] = useState<string>("");
+  const [isLoadingPdf, setIsLoadingPdf] = useState(false);
+  // (State selectedCitation lama dihapus/diganti fungsinya oleh PDF Modal state di atas)
+
+  // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const processedMessageIdsRef = useRef<Set<string>>(new Set());
-
   const loadingToastRef = useRef<string | null>(null);
   const loadingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
+  // WebSocket Refs
   const wsService = useRef(getWebSocketService());
   const unsubscribeRef = useRef<(() => void) | null>(null);
   const currentConversationIdRef = useRef<string | null>(null);
+  const wsEnabledRef = useRef(false);
 
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const hasLoadedHistoryRef = useRef(false);
-  const wsEnabledRef = useRef(false);
 
+  // --- 1. Query History Percakapan ---
   const {
     data: historyData,
     isLoading: isLoadingHistory,
@@ -169,6 +175,7 @@ export const useServicePublicChat = () => {
     retry: false,
   });
 
+  // --- 2. WebSocket Connection ---
   useEffect(() => {
     const initWebSocket = async () => {
       try {
@@ -187,68 +194,44 @@ export const useServicePublicChat = () => {
     };
   }, []);
 
+  // --- 3. WebSocket Subscription Logic ---
   useEffect(() => {
-    if (sessionId === "new") {
-      hasLoadedHistoryRef.current = false;
-      setIsInitialLoad(true);
-      wsEnabledRef.current = false;
-    }
-  }, [sessionId]);
-  
-  useEffect(() => {
-    if (!wsEnabledRef.current || !sessionId || sessionId === "new") {
-      console.log('⏸️ WebSocket subscription paused');
-      return;
-    }
+    if (!wsEnabledRef.current || !sessionId || sessionId === "new") return;
 
     if (unsubscribeRef.current) {
       unsubscribeRef.current();
       unsubscribeRef.current = null;
     }
 
-    if (!wsService.current.isConnected()) {
-      console.log('❌ WebSocket not connected');
-      return;
-    }
+    if (!wsService.current.isConnected()) return;
 
     currentConversationIdRef.current = sessionId;
     
     const unsubscribe = wsService.current.onMessage(sessionId, (data) => {
       console.log('📨 WebSocket message received:', data);
       
-      // CASE 1: Jawaban AI via WebSocket
+      // CASE 1: Jawaban AI via WebSocket (Helpdesk/Bot)
       if (data.answer && data.chat_history_id) {
         const botMessageId = `agent-${data.chat_history_id}`;
         
-        if (processedMessageIdsRef.current.has(botMessageId)) {
-          console.log('⏭️ Skip WebSocket - already have this message from API:', botMessageId);
-          return;
-        }
-        
+        if (processedMessageIdsRef.current.has(botMessageId)) return;
         processedMessageIdsRef.current.add(botMessageId);
         
         const cleanedAnswer = cleanText(data.answer);
-        
-        if (!cleanedAnswer) {
-          console.log('⏭️ Skip - empty answer after cleaning');
-          return;
-        }
+        if (!cleanedAnswer) return;
         
         const botMessage: ChatMessage = {
           id: botMessageId,
+          dbId: data.answer_id, // ID DB dari WebSocket jika ada
           sender: "agent",
           text: cleanedAnswer,
-          // Gunakan timestamp saat ini jika dari server tidak valid/missing
-          timestamp: new Date().toISOString(), 
+          timestamp: new Date().toISOString(),
           feedback: null,
           is_answered: data.is_answered,
         };
         
-        // --- GUNAKAN HELPER addMessageOrdered ---
         setMessages((prev) => addMessageOrdered(prev, botMessage));
-        // ----------------------------------------
-
-        setCitations((prev) => [...prev, ...mapAskResponseToCitations(data, botMessageId)]);
+        // Note: WebSocket response structure mungkin perlu disesuaikan jika citations dikirim lewat WS juga
       }
       
       // CASE 2: Pesan Agent Manusia via WebSocket
@@ -257,25 +240,17 @@ export const useServicePublicChat = () => {
           ? `agent-${data.chat_history_id}` 
           : `agent-ws-${Date.now()}`;
         
-        if (processedMessageIdsRef.current.has(agentMessageId)) {
-          console.log('⏭️ Skip - already exists:', agentMessageId);
-          return;
-        }
-        
+        if (processedMessageIdsRef.current.has(agentMessageId)) return;
         processedMessageIdsRef.current.add(agentMessageId);
         
         const cleanedMessage = cleanText(data.message);
-        
-        if (!cleanedMessage) {
-          console.log('⏭️ Skip - empty message after cleaning');
-          return;
-        }
+        if (!cleanedMessage) return;
         
         const agentMessage: ChatMessage = {
           id: agentMessageId,
+          dbId: data.chat_history_id,
           sender: "agent",
           text: cleanedMessage,
-          // Handle timestamp dari server (biasanya detik) vs client (milidetik)
           timestamp: data.timestamp 
             ? new Date(data.timestamp * 1000).toISOString() 
             : new Date().toISOString(),
@@ -283,15 +258,12 @@ export const useServicePublicChat = () => {
           isHumanAgent: true,
         };
         
-        // --- GUNAKAN HELPER addMessageOrdered ---
         setMessages((prev) => addMessageOrdered(prev, agentMessage));
-        // ----------------------------------------
       }
     });
 
     unsubscribeRef.current = unsubscribe;
     wsService.current.subscribe(sessionId, '$');
-    console.log(`✅ WebSocket subscribed to: ${sessionId}`);
 
     return () => {
       if (unsubscribeRef.current) {
@@ -301,48 +273,43 @@ export const useServicePublicChat = () => {
     };
   }, [sessionId, wsEnabledRef.current]);
 
+  // --- 4. Process Loaded History ---
   useEffect(() => {
     if (historyData && !hasLoadedHistoryRef.current && sessionId !== "new") {
-      console.log('📦 Loading history from API');
-      
       processedMessageIdsRef.current.clear();
       
       const mappedHistory = mapBackendHistoryToFrontend(
         historyData.chat_history || []
       );
       
+      // Filter unik dan sort
       const uniqueMessages = Array.from(
         new Map(mappedHistory.map(msg => [msg.id, msg])).values()
       );
       
       const sortedMessages = uniqueMessages.sort((a, b) => {
-        const timeA = new Date(a.timestamp || 0).getTime();
-        const timeB = new Date(b.timestamp || 0).getTime();
-        return timeA - timeB;
+        return new Date(a.timestamp || 0).getTime() - new Date(b.timestamp || 0).getTime();
       });
       
       sortedMessages.forEach(msg => {
         processedMessageIdsRef.current.add(msg.id);
       });
       
-      console.log(`✅ History loaded: ${sortedMessages.length} messages`);
-      
       setMessages(sortedMessages);
-      setCitations([]);
+      setCitations([]); // History API saat ini belum return citations full structure (biasanya di-fetch per message jika perlu, atau disesuaikan dengan BE)
       setIsHistoryLoaded(true);
       hasLoadedHistoryRef.current = true;
       
       setTimeout(() => {
         setIsInitialLoad(false);
         wsEnabledRef.current = true;
-        console.log('✅ WebSocket enabled for future messages');
       }, 500);
     }
   }, [historyData, sessionId]);
 
+  // --- 5. Session New Reset ---
   useEffect(() => {
     if (sessionId === "new") {
-      console.log('🆕 Resetting for new session');
       processedMessageIdsRef.current.clear();
       hasLoadedHistoryRef.current = false;
       setIsInitialLoad(true);
@@ -353,14 +320,7 @@ export const useServicePublicChat = () => {
     }
   }, [sessionId]);
 
-  useEffect(() => {
-    if (isHistoryError && historyError) {
-      toast.error(`Gagal memuat riwayat: ${(historyError as Error).message}`);
-      setIsHistoryLoaded(true);
-      wsEnabledRef.current = true;
-    }
-  }, [isHistoryError, historyError]);
-
+  // --- 6. Initial Welcome Message ---
   useEffect(() => {
     if (sessionId === "new" && !isHistoryLoaded) {
       const initialMessageId = "msg-initial";
@@ -377,10 +337,10 @@ export const useServicePublicChat = () => {
       setIsHistoryLoaded(true);
       setCitations([]);
       setInput("");
-      console.log('✅ New session initialized');
     }
   }, [sessionId, isHistoryLoaded]);
 
+  // --- Helper Toasts ---
   const showLoadingToast = () => {
     loadingTimerRef.current = setTimeout(() => {
       loadingToastRef.current = toast.loading(
@@ -399,13 +359,17 @@ export const useServicePublicChat = () => {
       clearTimeout(loadingTimerRef.current);
       loadingTimerRef.current = null;
     }
-    
     if (loadingToastRef.current) {
       toast.dismiss(loadingToastRef.current);
       loadingToastRef.current = null;
     }
   };
 
+  useEffect(() => {
+    return () => hideLoadingToast();
+  }, []);
+
+  // --- 7. Mutation Ask Question ---
   const { mutate: performAsk, isPending: isBotLoading } = useMutation({
     mutationFn: askQuestion,
     onMutate: () => {
@@ -413,37 +377,29 @@ export const useServicePublicChat = () => {
     },
     onSuccess: async (data: AskResponse) => {
       hideLoadingToast();
-      console.log('📬 API Response received:', data);
       
+      // Handle Helpdesk Pending
       if (data.is_helpdesk && !data.answer) {
-        console.log('🔔 Helpdesk mode - waiting for agent via WebSocket');
         if (sessionId === "new") {
-          console.log('🔄 Navigating to new helpdesk session:', data.conversation_id);
           wsEnabledRef.current = true;
           navigate(`/public-service/${data.conversation_id}`, { replace: true });
         } else {
           wsEnabledRef.current = true;
-          console.log('✅ WebSocket enabled for helpdesk messages');
         }
         queryClient.invalidateQueries({ queryKey: ["conversations"] });
         return;
       }
       
       const cleanedAnswer = cleanText(data.answer);
+      if (!cleanedAnswer) return;
       
-      if (!cleanedAnswer) {
-        console.log('⚠️ Empty answer from API');
-        return;
-      }
-      
-      const botMessageId = `agent-api-${Date.now()}`;
-      
-      console.log('➕ Adding API response message:', botMessageId);
-      
+      // Gunakan answer_id dari API sebagai identitas DB
+      const botMessageId = `agent-api-${data.answer_id}`;
       processedMessageIdsRef.current.add(botMessageId);
       
       const botMessage: ChatMessage = {
         id: botMessageId,
+        dbId: data.answer_id, // PENTING: ID ini digunakan untuk feedback API
         sender: "agent",
         text: cleanedAnswer,
         timestamp: new Date().toISOString(),
@@ -451,19 +407,17 @@ export const useServicePublicChat = () => {
         is_answered: data.is_answered,
       };
       
-      // --- GUNAKAN HELPER addMessageOrdered ---
       setMessages((prev) => addMessageOrdered(prev, botMessage));
-      // ----------------------------------------
       
-      setCitations((prev) => [...prev, ...mapAskResponseToCitations(data, botMessageId)]);
+      // Map citations (sekarang array of array [id, name])
+      const newCitations = mapAskResponseToCitations(data, botMessageId);
+      setCitations((prev) => [...prev, ...newCitations]);
 
       if (sessionId === "new") {
-        console.log('🔄 Navigating to new session:', data.conversation_id);
         wsEnabledRef.current = true;
         navigate(`/public-service/${data.conversation_id}`, { replace: true });
       } else {
         wsEnabledRef.current = true;
-        console.log('✅ WebSocket enabled after API response');
       }
 
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
@@ -471,25 +425,19 @@ export const useServicePublicChat = () => {
     onError: (err: any) => {
       hideLoadingToast();
       toast.error(err.response?.data?.message || "Gagal mengirim pesan.");
-      // Hapus pesan user terakhir jika gagal
-      setMessages((prev) => prev.slice(0, -1));
+      setMessages((prev) => prev.slice(0, -1)); // Hapus pesan user jika gagal
     },
   });
 
-  useEffect(() => {
-    return () => {
-      hideLoadingToast();
-    };
-  }, []);
-
+  // --- 8. Send Message Handler ---
   const handleSendMessage = useCallback(() => {
     if (input.trim() === "" || isBotLoading) return;
 
     const sendTime = new Date();
+    // Format timestamp string untuk API
     const startTimestampString = sendTime.toISOString().replace('T', ' ').replace('Z', '').slice(0, 23); 
     
     const userMessageId = `user-${sendTime.getTime()}`;
-    
     processedMessageIdsRef.current.add(userMessageId);
     
     const userMessage: ChatMessage = {
@@ -499,18 +447,10 @@ export const useServicePublicChat = () => {
       timestamp: sendTime.toISOString(),
     };
     
-    console.log('📤 Sending user message:', userMessageId);
-    
-    // --- GUNAKAN HELPER addMessageOrdered JUGA ---
-    // (Meskipun biasanya pesan user adalah 'master', ini menjaga konsistensi jika ada glitch)
     setMessages((prev) => {
-      // 1. Hapus pesan 'system' (Bubble Sambutan) dari daftar pesan sebelumnya
       const messagesWithoutSystem = prev.filter((msg) => msg.sender !== "system");
-      
-      // 2. Tambahkan pesan user baru ke daftar yang sudah bersih
       return addMessageOrdered(messagesWithoutSystem, userMessage);
     });
-    // ---------------------------------------------
 
     performAsk({
       query: input,
@@ -526,7 +466,74 @@ export const useServicePublicChat = () => {
     }
   }, [input, isBotLoading, user, sessionId, performAsk]);
 
-  // ... (Sisa fungsi handleInputChange, handleFeedbackUpdate, dll tetap sama)
+  // --- 9. Feedback Handler ---
+  const handleFeedbackUpdate = useCallback(async (messageId: string, feedback: 'like' | 'dislike' | null) => {
+    // Cari pesan di state
+    const targetMsg = messages.find(m => m.id === messageId);
+    
+    if (!targetMsg || !targetMsg.dbId) {
+      console.warn("Cannot send feedback: Message DB ID missing");
+      return;
+    }
+
+    // Optimistic Update
+    setMessages(prevMessages => 
+      prevMessages.map(msg => 
+        msg.id === messageId ? { ...msg, feedback: feedback } : msg
+      )
+    );
+
+    // Kirim ke API
+    if (feedback !== null) {
+      try {
+        const isLike = feedback === 'like';
+        await sendFeedback(targetMsg.dbId, isLike);
+        
+        if (isLike) toast.success("Terima kasih atas masukan Anda!");
+        else toast.success("Terima kasih atas masukan Anda!");
+      } catch (error) {
+        console.error("Feedback error:", error);
+        toast.error("Gagal mengirim feedback");
+        // Revert jika gagal (opsional, saat ini dibiarkan optimistic)
+      }
+    }
+  }, [messages]); 
+
+  // --- 10. Citation Handler (Open PDF) ---
+  const handleOpenCitation = useCallback(async (citation: Citation) => {
+    if (!citation.fileId) {
+      toast.error("ID Dokumen tidak ditemukan");
+      return;
+    }
+
+    setIsPdfModalOpen(true);
+    setPdfTitle(citation.documentName);
+    setPdfUrl(null); // Reset URL lama agar loading state terlihat
+    setIsLoadingPdf(true);
+
+    try {
+      // Panggil API untuk mendapatkan URL PDF
+      const url = await generateViewUrl(parseInt(citation.fileId));
+      setPdfUrl(url);
+    } catch (error) {
+      console.error("Error fetching PDF URL:", error);
+      toast.error("Gagal membuka dokumen");
+      setIsPdfModalOpen(false);
+    } finally {
+      setIsLoadingPdf(false);
+    }
+  }, []);
+
+  const handleClosePdfModal = useCallback(() => {
+    setIsPdfModalOpen(false);
+    setPdfUrl(null);
+  }, []);
+
+  // --- UI Helpers ---
+  const toggleCitations = useCallback((messageId: string) => {
+    setOpenCitations((prev) => ({ ...prev, [messageId]: !prev[messageId] }));
+  }, []);
+
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
     const textarea = e.target;
@@ -535,23 +542,7 @@ export const useServicePublicChat = () => {
     textarea.style.height = `${Math.min(textarea.scrollHeight, maxHeight)}px`;
   }, []);
 
-  const handleFeedbackUpdate = useCallback((messageId: string, feedback: 'like' | 'dislike' | null) => {
-    setMessages(prevMessages => 
-      prevMessages.map(msg => 
-        msg.id === messageId ? { ...msg, feedback: feedback } : msg
-      )
-    );
-    if (feedback === 'like') {
-      toast.success("Terima kasih atas masukan Anda! (Suka)");
-    } else if (feedback === 'dislike') {
-      toast.success("Terima kasih atas masukan Anda! (Tidak Suka)");
-    } else {
-      toast.success("Feedback dibatalkan");
-    }
-  }, []); 
-
   const handleSelectSession = useCallback((session: ChatSession) => {
-    console.log('🔄 Selecting session:', session.id);
     setIsHistoryLoaded(false);
     hasLoadedHistoryRef.current = false;
     wsEnabledRef.current = false;
@@ -559,7 +550,6 @@ export const useServicePublicChat = () => {
   }, [navigate]);
 
   const handleCreateNewSession = useCallback(() => {
-    console.log('🆕 Creating new session');
     setIsHistoryLoaded(false);
     hasLoadedHistoryRef.current = false;
     wsEnabledRef.current = false;
@@ -571,18 +561,7 @@ export const useServicePublicChat = () => {
     navigate("/public-service");
   }, [navigate]);
 
-  const toggleCitations = useCallback((messageId: string) => {
-    setOpenCitations((prev) => ({ ...prev, [messageId]: !prev[messageId] }));
-  }, []);
-
-  const handleOpenModal = useCallback((citation: Citation) => {
-    setSelectedCitation(citation);
-  }, []);
-
-  const handleCloseModal = useCallback(() => {
-    setSelectedCitation(null);
-  }, []);
-
+  // --- Return Values ---
   return {
     messages,
     input,
@@ -591,13 +570,10 @@ export const useServicePublicChat = () => {
     isBotLoading,
     citations,
     openCitations,
-    selectedCitation,
     toggleCitations,
-    handleOpenModal,
-    handleCloseModal,
     handleSendMessage,
     handleInputChange,
-    handleFeedbackUpdate,
+    handleFeedbackUpdate, // Handler feedback baru
     isRestoringSession: isLoadingHistory,
     handleSelectSession,
     handleCreateNewSession,
@@ -605,5 +581,12 @@ export const useServicePublicChat = () => {
     messagesEndRef,
     textareaRef,
     currentSessionId: sessionId,
+    // Props untuk PDF Modal
+    isPdfModalOpen,
+    pdfUrl,
+    pdfTitle,
+    isLoadingPdf,
+    handleOpenCitation,   // Handler citation klik baru
+    handleClosePdfModal,
   };
 };

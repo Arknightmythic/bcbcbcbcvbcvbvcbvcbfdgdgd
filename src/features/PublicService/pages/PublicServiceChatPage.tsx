@@ -1,72 +1,72 @@
-// [MODIFIKASI: src/features/PublicService/pages/PublicServiceChatPage.tsx]
+// src/features/PublicService/pages/PublicServiceChatPage.tsx
 
-import React, { useState, useEffect } from "react"; // Impor useEffect
+import React, { useState, useEffect } from "react";
 import { Loader2, Send, ArrowLeft, Copy } from "lucide-react";
 import toast from "react-hot-toast";
 import type { ChatMessage, Citation } from "../utils/types";
 import MessageActions from "../components/MessageAction";
-import CitationModal from "../components/CitationModal";
+// Menggunakan PDFViewModal baru
+
 import { useServicePublicChat } from "../hooks/useServicePublicChat";
 import { useAuthStore } from "../../../shared/store/authStore";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { normalizeMarkdown } from "../utils/helper";
+import PdfViewModal from "../../../shared/components/PDFViewModal";
 
-// --- KOMPONEN BANNER (Request 1) ---
-// (Tetap sama, hanya dipindahkan ke sini untuk kerapian)
+// --- KOMPONEN BANNER ---
 interface ConnectToAgentBannerProps {
   onYes: () => void;
   onNo: () => void;
 }
+
 const ConnectToAgentBanner: React.FC<ConnectToAgentBannerProps> = ({
   onYes,
   onNo,
 }) => (
-  // Diberi style agar pas di tengah
-  <div className="mt-2 w-full max-w-lg p-3 bg-gray-100 rounded-lg animate-fade-in-up shadow-sm border border-gray-200">
+  <div className="mt-2 w-full max-w-lg p-3 bg-gray-100 rounded-lg animate-fade-in-up shadow-sm border border-gray-200 mx-auto">
     <p className="text-sm text-gray-800 mb-3 text-center">
-      silahkan pilih "ya, hubungkan" untuk berbicara ke Agent Layanan atau
+      Silahkan pilih "Ya, hubungkan" untuk berbicara ke Agent Layanan atau
       "Tidak" untuk membatalkan
     </p>
     <div className="flex gap-3">
       <button
         onClick={onYes}
-        className="flex-1 bg-blue-600 text-white text-sm font-semibold py-2 px-4 rounded-lg hover:bg-blue-700"
+        className="flex-1 bg-blue-600 text-white text-sm font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
       >
         Ya, hubungkan
       </button>
       <button
         onClick={onNo}
-        className="flex-1 bg-gray-200 text-gray-800 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-gray-300"
+        className="flex-1 bg-gray-200 text-gray-800 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors"
       >
         Tidak
       </button>
     </div>
   </div>
 );
-// --- AKHIR KOMPONEN BANNER ---
 
+// --- MESSAGE BUBBLE COMPONENT ---
 interface MessageBubbleProps {
   message: ChatMessage;
   previousMessage?: ChatMessage;
   citations: Citation[];
   isOpen: boolean;
   onToggleCitation: (messageId: string) => void;
-  onOpenCitationModal: (citation: Citation) => void;
+  onOpenCitation: (citation: Citation) => void; // Handler baru untuk buka PDF
   onFeedback: (messageId: string, feedback: "like" | "dislike" | null) => void;
   onCopy: (question?: ChatMessage, answer?: ChatMessage) => void;
   userInitial: string;
   isLastMessage: boolean;
 }
 
-// --- MessageBubble (Disederhanakan) ---
 const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
   message,
   previousMessage,
   citations,
   isOpen,
   onToggleCitation,
-  onOpenCitationModal,
+  onOpenCitation,
   onFeedback,
   onCopy,
   userInitial,
@@ -88,6 +88,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
     }
   };
 
+  // Efek Animasi Typing
   useEffect(() => {
     const textToDisplay = message.text || "";
 
@@ -104,20 +105,16 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
     setIsCitationVisible(false);
     setIsActionVisible(false);
 
-    const timeouts: ReturnType<typeof setTimeout>[] = [];
+    // Simulasi delay rendering untuk efek smooth
+    const timer = setTimeout(() => {
+      setDisplayedLines(textToDisplay.split("\n"));
+      setIsTextComplete(true);
+    }, 100);
 
-    timeouts.push(
-      setTimeout(() => {
-        setDisplayedLines(textToDisplay.split("\n"));
-        setIsTextComplete(true);
-      }, 100)
-    );
-
-    return () => {
-      timeouts.forEach(clearTimeout);
-    };
+    return () => clearTimeout(timer);
   }, [message.id, message.text, message.sender, isLastMessage]);
 
+  // Efek Tampil Citation
   useEffect(() => {
     if (isTextComplete) {
       const delay = hasCitations ? 200 : 0;
@@ -126,23 +123,23 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
     }
   }, [isTextComplete, hasCitations]);
 
+  // Efek Tampil Action Buttons
   useEffect(() => {
     if (isCitationVisible) {
-      const timer = setTimeout(() => {
-        setIsActionVisible(true);
-      }, 200);
+      const timer = setTimeout(() => setIsActionVisible(true), 200);
       return () => clearTimeout(timer);
     }
-  }, [isCitationVisible, message.is_answered]);
+  }, [isCitationVisible]);
 
   if (!message.text && message.sender !== "system") {
     return null;
   }
 
+  // Render Pesan System (Greeting Awal)
   if (message.sender === "system") {
     return (
       <div className="mb-4 flex justify-center">
-        <div className="p-3 rounded-lg bg-gray-100 text-gray-600 text-xs text-center mx-auto">
+        <div className="p-3 rounded-lg bg-gray-100 text-gray-600 text-xs text-center mx-auto shadow-sm">
           <p className="whitespace-pre-wrap m-0 text-sm">{message.text}</p>
         </div>
       </div>
@@ -155,8 +152,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
         message.sender === "user" ? "flex-row-reverse" : ""
       }`}
     >
+      {/* Avatar */}
       <div
-        className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 text-white ${
+        className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 text-white shadow-sm ${
           message.sender === "user" ? "bg-bOss-blue" : "bg-bOss-red"
         }`}
       >
@@ -166,7 +164,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
         }
       </div>
 
-      <div className="flex flex-col max-w-[75%] items-start">
+      <div className="flex flex-col max-w-[85%] md:max-w-[75%] items-start">
+        {/* Bubble Chat */}
         <div
           className={`relative p-3 rounded-lg leading-relaxed shadow-sm w-fit ${
             message.sender === "user"
@@ -185,7 +184,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
                     ),
                   }}
                 >
-                  {/* Gabungkan kembali baris-baris untuk di-parse oleh Markdown */}
                   {normalizeMarkdown(displayedLines.join("\n"))}
                 </ReactMarkdown>
               </div>
@@ -203,6 +201,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
             )}
           </div>
 
+          {/* Section Citation (Dropdown) */}
           <div
             className={`transition-opacity duration-300 ${
               isCitationVisible ? "opacity-100" : "opacity-0"
@@ -212,7 +211,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
               <div className="mt-3 pt-2 border-t text-xs border-gray-200">
                 <button
                   onClick={() => onToggleCitation(message.id)}
-                  className="w-full flex justify-between items-center text-left font-semibold text-gray-800 mb-1 focus:outline-none"
+                  className="w-full flex justify-between items-center text-left font-semibold text-gray-800 mb-1 focus:outline-none hover:bg-black/5 p-1 rounded transition-colors"
                 >
                   <span>Sumber ({messageCitations.length})</span>
                   <span
@@ -225,18 +224,19 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
                 </button>
                 <div
                   className={`overflow-hidden transition-all ease-in-out duration-300 ${
-                    isOpen ? "max-h-40 pt-1" : "max-h-0"
+                    isOpen ? "max-h-60 pt-1" : "max-h-0"
                   }`}
                 >
-                  <div className="flex flex-col gap-1.5">
+                  <div className="flex flex-col gap-1.5 mt-1">
                     {messageCitations.map((citation, index) => (
                       <div
                         key={index}
-                        onClick={() => onOpenCitationModal(citation)}
-                        className="bg-gray-200 text-gray-700 px-2 py-1 rounded cursor-pointer hover:bg-gray-300 transition-colors truncate"
+                        onClick={() => onOpenCitation(citation)} // Membuka PDF
+                        className="bg-white/50 border border-gray-200 text-gray-700 px-2 py-1.5 rounded cursor-pointer hover:bg-white hover:shadow-sm transition-all truncate flex items-center gap-2"
                         title={citation.documentName}
                       >
-                        {citation.documentName}
+                        <span className="text-xs">📄</span>
+                        <span className="truncate">{citation.documentName}</span>
                       </div>
                     ))}
                   </div>
@@ -245,6 +245,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
             )}
           </div>
 
+          {/* Tombol Copy */}
           <button
             onClick={handleCopyClick}
             className={`absolute top-0 z-10 p-1 text-gray-400 bg-white border border-gray-200 rounded-full shadow-sm
@@ -261,6 +262,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
           </button>
         </div>
 
+        {/* Action Buttons (Feedback & Banner) */}
         <div
           className={`transition-opacity duration-300 w-full ${
             isActionVisible ? "opacity-100" : "opacity-0"
@@ -276,7 +278,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
     </div>
   );
 }, (prevProps, nextProps) => {
-  // Custom comparison to prevent unnecessary re-renders
   return (
     prevProps.message.id === nextProps.message.id &&
     prevProps.message.text === nextProps.message.text &&
@@ -288,10 +289,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
   );
 });
 
-// Add display name for debugging
 MessageBubble.displayName = 'MessageBubble';
-// --- AKHIR MessageBubble ---
 
+// --- MAIN PAGE COMPONENT ---
 const PublicServiceChatPage: React.FC = () => {
   const {
     messages,
@@ -301,23 +301,25 @@ const PublicServiceChatPage: React.FC = () => {
     isBotLoading,
     citations,
     openCitations,
-    selectedCitation,
     toggleCitations,
-    handleOpenModal,
-    handleCloseModal,
     handleSendMessage: sendMessageFromHook,
     handleGoBackToIntro,
     messagesEndRef,
     textareaRef,
     isRestoringSession,
+    // Hook baru
     handleFeedbackUpdate,
+    isPdfModalOpen,
+    pdfUrl,
+    pdfTitle,
+    isLoadingPdf,
+    handleOpenCitation,
+    handleClosePdfModal
   } = useServicePublicChat();
 
-  // --- State Baru: Visibilitas Banner (Request 1) ---
   const [isBannerVisible, setIsBannerVisible] = useState(false);
-  // -------------------------------------------------
 
-  // --- Effect Baru: Kontrol Visibilitas Banner (Request 1) ---
+  // Logic Banner Eskalasi
   useEffect(() => {
     if (messages.length === 0) {
       setIsBannerVisible(false);
@@ -325,21 +327,17 @@ const PublicServiceChatPage: React.FC = () => {
     }
     const lastMessage = messages[messages.length - 1];
 
-    // Tampilkan banner HANYA JIKA pesan terakhir dari AI dan tidak terjawab
+    // Tampilkan banner jika pesan terakhir dari AI dan belum terjawab (is_answered === false/null)
     if (
       lastMessage.sender === "agent" &&
       (lastMessage.is_answered === false || lastMessage.is_answered === null)
     ) {
-      // Tunggu sebentar setelah animasi teks selesai
-      const timer = setTimeout(() => setIsBannerVisible(true), 600); // 600ms = 100ms (mulai) + 100ms (teks) + 200ms (sitasi) + 200ms (action)
+      const timer = setTimeout(() => setIsBannerVisible(true), 600);
       return () => clearTimeout(timer);
     } else {
-      // Sembunyikan banner jika pesan terakhir dari user,
-      // atau jika pesan AI tapi terjawab
       setIsBannerVisible(false);
     }
-  }, [messages]); // Dijalankan setiap kali 'messages' array berubah
-  // -------------------------------------------------------
+  }, [messages]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const textarea = e.target;
@@ -356,17 +354,14 @@ const PublicServiceChatPage: React.FC = () => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
     }
-    setIsBannerVisible(false); // Sembunyikan banner saat kirim pesan baru
+    setIsBannerVisible(false);
   };
 
-  // --- PERBAIKAN FUNGSI COPY (Request 2) ---
   const handleCopy = (question?: ChatMessage, answer?: ChatMessage) => {
     let textToCopy = "";
     if (question && answer) {
-      // Hanya salin teks, tanpa prefix
       textToCopy = `${question.text}\n\n${answer.text}`;
     } else if (answer) {
-      // Hanya salin teks, tanpa prefix
       textToCopy = answer.text;
     } else {
       return;
@@ -377,53 +372,52 @@ const PublicServiceChatPage: React.FC = () => {
       .then(() => {
         toast.success("Pesan berhasil disalin!");
       })
-      .catch((err) => {
+      .catch(() => {
+        // Fallback copy
         try {
           const textArea = document.createElement("textarea");
           textArea.value = textToCopy;
           textArea.style.position = "fixed";
           textArea.style.top = "-9999px";
-          textArea.style.left = "-9999px";
           document.body.appendChild(textArea);
           textArea.focus();
           textArea.select();
           document.execCommand("copy");
           document.body.removeChild(textArea);
-          toast.success("Pesan berhasil disalin! (fallback)");
-        } catch (fallbackErr) {
+          toast.success("Pesan berhasil disalin!");
+        } catch (err) {
           toast.error("Gagal menyalin pesan.");
-          console.error("Copy error:", err, fallbackErr);
         }
       });
   };
-  // --- AKHIR PERBAIKAN COPY ---
 
-  // --- Handler untuk Banner (Request 1) ---
   const handleConnectToAgent = () => {
-    toast.success("Fitur 'Connect to Agent' sedang dalam pengembangan.");
-    // TODO: Panggil API "connect to agent" di sini
+    toast.success("Fitur 'Connect to Agent' akan segera tersedia.");
+    setIsBannerVisible(false);
   };
-  // -------------------------------------
+
+  const handleCancelAgent = () => {
+    setIsBannerVisible(false);
+  };
 
   const userInitial =
     useAuthStore((state) => state.user?.name.charAt(0).toUpperCase()) || "U";
 
   if (isRestoringSession) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-gray-50">
+      <div className="h-full flex items-center justify-center bg-gray-50">
         <Loader2 className="w-12 h-12 animate-spin text-blue-500" />
       </div>
     );
   }
 
   return (
-    // --- PERUBAHAN DI SINI: Ganti 'flex-1' menjadi 'h-full' ---
-    <div className="h-full flex flex-col mx-auto w-full bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-      <div className="p-3 border-b border-gray-200 flex items-center bg-gray-50">
+    <div className="h-full flex flex-col mx-auto w-full bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden relative">
+      {/* Header */}
+      <div className="p-3 border-b border-gray-200 flex items-center bg-gray-50 z-10">
         <button
           onClick={handleGoBackToIntro}
-          className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-full mr-3"
-          aria-label="Kembali ke pemilihan sesi"
+          className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-full mr-3 transition-colors"
           title="Kembali"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -431,7 +425,8 @@ const PublicServiceChatPage: React.FC = () => {
         <h2 className="text-md font-semibold text-gray-800">Sesi Chatbot</h2>
       </div>
 
-      <div className="flex-1 p-4 overflow-y-auto custom-scrollbar">
+      {/* Chat Area */}
+      <div className="flex-1 p-4 overflow-y-auto custom-scrollbar bg-white scroll-smooth">
         {messages.map((msg, index) => {
           const previousMsg =
             index > 0 && messages[index - 1].sender === "user"
@@ -440,24 +435,36 @@ const PublicServiceChatPage: React.FC = () => {
           const isLastMessage = index === messages.length - 1;
 
           return (
-            <MessageBubble
-              key={msg.id} // Use msg.id as key, not index
-              message={msg}
-              previousMessage={previousMsg}
-              isLastMessage={isLastMessage}
-              citations={citations}
-              isOpen={!!openCitations[msg.id]}
-              onToggleCitation={toggleCitations}
-              onOpenCitationModal={handleOpenModal}
-              onFeedback={handleFeedbackUpdate}
-              onCopy={handleCopy}
-              userInitial={userInitial}
-            />
+            <React.Fragment key={msg.id}>
+              <MessageBubble
+                message={msg}
+                previousMessage={previousMsg}
+                isLastMessage={isLastMessage}
+                citations={citations}
+                isOpen={!!openCitations[msg.id]}
+                onToggleCitation={toggleCitations}
+                onOpenCitation={handleOpenCitation} // Pass handler PDF
+                onFeedback={handleFeedbackUpdate}   // Pass handler Feedback
+                onCopy={handleCopy}
+                userInitial={userInitial}
+              />
+              
+              {/* Render Banner jika ini pesan terakhir dan state visible true */}
+              {/* {isLastMessage && isBannerVisible && (
+                <div className="mb-4 animate-fade-in-up">
+                  <ConnectToAgentBanner 
+                    onYes={handleConnectToAgent} 
+                    onNo={handleCancelAgent} 
+                  />
+                </div>
+              )} */}
+            </React.Fragment>
           );
         })}
 
+        {/* Loading Indicator */}
         {isBotLoading && (
-          <div className="mb-4 flex gap-3">
+          <div className="mb-4 flex gap-3 animate-pulse">
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 bg-bOss-red text-white">
               AI
             </div>
@@ -473,7 +480,8 @@ const PublicServiceChatPage: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="p-4 bg-white border-t border-gray-200">
+      {/* Input Area */}
+      <div className="p-4 bg-white border-t border-gray-200 z-10">
         <form onSubmit={handleSendMessage} className="flex gap-3 items-end">
           <textarea
             ref={textareaRef}
@@ -484,7 +492,7 @@ const PublicServiceChatPage: React.FC = () => {
                 handleSendMessage(e);
               }
             }}
-            className="flex-1 py-2.5 px-4 border border-gray-300 rounded-lg text-sm resize-none min-h-[44px] overflow-y-auto focus:outline-none focus:ring-2 focus:ring-bOss-blue focus:border-transparent custom-scrollbar"
+            className="flex-1 py-2.5 px-4 border border-gray-300 rounded-lg text-sm resize-none min-h-[44px] overflow-y-auto focus:outline-none focus:ring-2 focus:ring-bOss-blue focus:border-transparent custom-scrollbar transition-all"
             placeholder={
               chatMode === "bot"
                 ? "Ketik pertanyaan Anda..."
@@ -496,21 +504,29 @@ const PublicServiceChatPage: React.FC = () => {
           />
           <button
             type="submit"
-            className="w-11 h-11 bg-bOss-blue rounded-full text-white cursor-pointer flex items-center justify-center self-end hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-bOss-blue focus:ring-offset-2 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            className="w-11 h-11 bg-bOss-blue rounded-full text-white cursor-pointer flex items-center justify-center self-end hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-bOss-blue focus:ring-offset-2 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md"
             disabled={isBotLoading || input.trim() === ""}
             aria-label="Kirim pesan"
           >
             {isBotLoading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : (
-              <Send className="w-5 h-5" />
+              <Send className="w-5 h-5 ml-0.5" />
             )}
           </button>
         </form>
       </div>
 
-      <CitationModal citation={selectedCitation} onClose={handleCloseModal} />
+      {/* Modal PDF Viewer */}
+      <PdfViewModal
+        isOpen={isPdfModalOpen} 
+        onClose={handleClosePdfModal} 
+        url={pdfUrl || ""} 
+        isLoading={isLoadingPdf} 
+        title={pdfTitle} 
+      />
 
+      {/* Styles */}
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; }
@@ -532,8 +548,17 @@ const PublicServiceChatPage: React.FC = () => {
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #aaa; }
-        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); opacity: 0; } 40% { transform: scale(1.0); opacity: 1; } }
-        .loading-dot { height: 7px; width: 7px; background-color: #9ca3af; border-radius: 9999px; animation: bounce 1.2s infinite ease-in-out both; }
+        
+        @keyframes bounce { 
+          0%, 80%, 100% { transform: scale(0); opacity: 0.5; } 
+          40% { transform: scale(1.0); opacity: 1; } 
+        }
+        .loading-dot { 
+          height: 7px; width: 7px; 
+          background-color: #6b7280; 
+          border-radius: 9999px; 
+          animation: bounce 1.4s infinite ease-in-out both; 
+        }
         .animation-delay-200 { animation-delay: 0.2s; }
         .animation-delay-400 { animation-delay: 0.4s; }
       `}</style>

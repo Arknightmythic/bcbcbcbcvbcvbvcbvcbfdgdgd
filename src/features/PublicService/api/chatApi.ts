@@ -60,3 +60,23 @@ export const askQuestion = async (payload: AskPayload): Promise<AskResponse> => 
   });
   return response.data.data;
 };
+
+
+export const sendFeedback = async (answerId: number, feedback: boolean): Promise<void> => {
+  // Sesuai endpoint backend /api/chat/feedback
+  await instanceApiToken.post("/api/chat/feedback", {
+    answer_id: answerId,
+    feedback: feedback
+  });
+};
+
+/**
+ * Generate URL untuk melihat file PDF berdasarkan ID dokumen
+ */
+export const generateViewUrl = async (id: number): Promise<string> => {
+  // Sesuai endpoint backend dokumen handler: GenerateViewURLByID
+  const response = await instanceApiToken.post("/api/documents/generate-view-url-id", {
+    id: id
+  });
+  return response.data.data.url;
+};

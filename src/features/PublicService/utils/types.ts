@@ -1,23 +1,19 @@
-// [GANTI: src/features/PublicService/utils/types.ts]
-
-// Tipe ini (ChatMessage, Citation, dll) sudah ada dan digunakan oleh UI.
-// Kita akan tetap menggunakannya agar UI tidak berubah.
+// Tipe ini digunakan oleh UI
 export interface ChatMessage {
-  id: string;
+  id: string; // ID unik untuk key React (misal: "agent-123")
+  dbId?: number; // ID asli dari database (question_id atau answer_id) untuk keperluan API
   sender: "user" | "agent" | "system";
   text: string;
   timestamp?: string;
   feedback?: "like" | "dislike" | null;
-  // --- TAMBAHAN BARU ---
   is_answered?: boolean | null;
-  // ---------------------
   isHumanAgent?: boolean;
 }
 
 export interface Citation {
   messageId: string;
-  documentName: string;
-  content: string;
+  fileId: string; // ID File untuk fetch URL
+  documentName: string; // Nama File untuk display
 }
 
 export type ChatMode = "bot" | "agent";
@@ -25,22 +21,14 @@ export type OpenCitationsState = Record<string, boolean>;
 
 // --- TIPE BARU DARI BACKEND GO ---
 
-/**
- * Payload untuk dikirim ke POST /api/chat/ask
- * (Sesuai dengan 'external.ChatRequest' di backend)
- */
 export interface AskPayload {
   platform_unique_id: string;
   query: string;
-  conversation_id: string; // Kirim string kosong untuk sesi baru
+  conversation_id: string;
   platform: string;
   start_timestamp?: string;
 }
 
-/**
- * Respons yang diterima dari POST /api/chat/ask
- * (Sesuai dengan 'external.ChatResponse' di backend)
- */
 export interface AskResponse {
   user: string;
   conversation_id: string;
@@ -49,11 +37,15 @@ export interface AskResponse {
   category: string;
   question_category: string[];
   answer: string;
-  citations: string[]; // Backend mengirim array of string
+  // Struktur baru: Array of Arrays [["id", "filename"], ...]
+  citations: string[][]; 
   is_helpdesk: boolean;
   is_answered: boolean | null;
+  platform: string;
+  platform_unique_id: string;
+  question_id: number;
+  answer_id: number;
 }
-
 /**
  * Struktur pesan dari riwayat (database)
  * (Sesuai dengan 'chat.ChatHistory' di backend)
