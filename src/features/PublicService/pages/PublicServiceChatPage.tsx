@@ -1,12 +1,8 @@
-// src/features/PublicService/pages/PublicServiceChatPage.tsx
-
 import React, { useState, useEffect } from "react";
 import { Loader2, Send, ArrowLeft, Copy } from "lucide-react";
 import toast from "react-hot-toast";
 import type { ChatMessage, Citation } from "../utils/types";
 import MessageActions from "../components/MessageAction";
-// Menggunakan PDFViewModal baru
-
 import { useServicePublicChat } from "../hooks/useServicePublicChat";
 import { useAuthStore } from "../../../shared/store/authStore";
 import ReactMarkdown from "react-markdown";
@@ -14,46 +10,46 @@ import remarkGfm from "remark-gfm";
 import { normalizeMarkdown } from "../utils/helper";
 import PdfViewModal from "../../../shared/components/PDFViewModal";
 
-// --- KOMPONEN BANNER ---
+
 interface ConnectToAgentBannerProps {
   onYes: () => void;
   onNo: () => void;
 }
 
-const ConnectToAgentBanner: React.FC<ConnectToAgentBannerProps> = ({
-  onYes,
-  onNo,
-}) => (
-  <div className="mt-2 w-full max-w-lg p-3 bg-gray-100 rounded-lg animate-fade-in-up shadow-sm border border-gray-200 mx-auto">
-    <p className="text-sm text-gray-800 mb-3 text-center">
-      Silahkan pilih "Ya, hubungkan" untuk berbicara ke Agent Layanan atau
-      "Tidak" untuk membatalkan
-    </p>
-    <div className="flex gap-3">
-      <button
-        onClick={onYes}
-        className="flex-1 bg-blue-600 text-white text-sm font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
-      >
-        Ya, hubungkan
-      </button>
-      <button
-        onClick={onNo}
-        className="flex-1 bg-gray-200 text-gray-800 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors"
-      >
-        Tidak
-      </button>
-    </div>
-  </div>
-);
+// const ConnectToAgentBanner: React.FC<ConnectToAgentBannerProps> = ({
+//   onYes,
+//   onNo,
+// }) => (
+//   <div className="mt-2 w-full max-w-lg p-3 bg-gray-100 rounded-lg animate-fade-in-up shadow-sm border border-gray-200 mx-auto">
+//     <p className="text-sm text-gray-800 mb-3 text-center">
+//       Silahkan pilih "Ya, hubungkan" untuk berbicara ke Agent Layanan atau
+//       "Tidak" untuk membatalkan
+//     </p>
+//     <div className="flex gap-3">
+//       <button
+//         onClick={onYes}
+//         className="flex-1 bg-blue-600 text-white text-sm font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+//       >
+//         Ya, hubungkan
+//       </button>
+//       <button
+//         onClick={onNo}
+//         className="flex-1 bg-gray-200 text-gray-800 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors"
+//       >
+//         Tidak
+//       </button>
+//     </div>
+//   </div>
+// );
 
-// --- MESSAGE BUBBLE COMPONENT ---
+
 interface MessageBubbleProps {
   message: ChatMessage;
   previousMessage?: ChatMessage;
   citations: Citation[];
   isOpen: boolean;
   onToggleCitation: (messageId: string) => void;
-  onOpenCitation: (citation: Citation) => void; // Handler baru untuk buka PDF
+  onOpenCitation: (citation: Citation) => void; 
   onFeedback: (messageId: string, feedback: "like" | "dislike" | null) => void;
   onCopy: (question?: ChatMessage, answer?: ChatMessage) => void;
   userInitial: string;
@@ -87,11 +83,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
       onCopy(previousMessage, message);
     }
   };
-
-  // Efek Animasi Typing
+    
   useEffect(() => {
     const textToDisplay = message.text || "";
-
     if (message.sender !== "agent" || !isLastMessage) {
       setDisplayedLines(textToDisplay.split("\n"));
       setIsTextComplete(true);
@@ -104,8 +98,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
     setIsTextComplete(false);
     setIsCitationVisible(false);
     setIsActionVisible(false);
-
-    // Simulasi delay rendering untuk efek smooth
     const timer = setTimeout(() => {
       setDisplayedLines(textToDisplay.split("\n"));
       setIsTextComplete(true);
@@ -114,7 +106,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
     return () => clearTimeout(timer);
   }, [message.id, message.text, message.sender, isLastMessage]);
 
-  // Efek Tampil Citation
+  
   useEffect(() => {
     if (isTextComplete) {
       const delay = hasCitations ? 200 : 0;
@@ -123,7 +115,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
     }
   }, [isTextComplete, hasCitations]);
 
-  // Efek Tampil Action Buttons
+  
   useEffect(() => {
     if (isCitationVisible) {
       const timer = setTimeout(() => setIsActionVisible(true), 200);
@@ -135,7 +127,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
     return null;
   }
 
-  // Render Pesan System (Greeting Awal)
+  
   if (message.sender === "system") {
     return (
       <div className="mb-4 flex justify-center">
@@ -231,7 +223,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
                     {messageCitations.map((citation, index) => (
                       <div
                         key={index}
-                        onClick={() => onOpenCitation(citation)} // Membuka PDF
+                        onClick={() => onOpenCitation(citation)} 
                         className="bg-white/50 border border-gray-200 text-gray-700 px-2 py-1.5 rounded cursor-pointer hover:bg-white hover:shadow-sm transition-all truncate flex items-center gap-2"
                         title={citation.documentName}
                       >
@@ -291,7 +283,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
 
 MessageBubble.displayName = 'MessageBubble';
 
-// --- MAIN PAGE COMPONENT ---
+
 const PublicServiceChatPage: React.FC = () => {
   const {
     messages,
@@ -307,7 +299,7 @@ const PublicServiceChatPage: React.FC = () => {
     messagesEndRef,
     textareaRef,
     isRestoringSession,
-    // Hook baru
+    
     handleFeedbackUpdate,
     isPdfModalOpen,
     pdfUrl,
@@ -317,27 +309,27 @@ const PublicServiceChatPage: React.FC = () => {
     handleClosePdfModal
   } = useServicePublicChat();
 
-  const [isBannerVisible, setIsBannerVisible] = useState(false);
+  // const [isBannerVisible, setIsBannerVisible] = useState(false);
 
-  // Logic Banner Eskalasi
-  useEffect(() => {
-    if (messages.length === 0) {
-      setIsBannerVisible(false);
-      return;
-    }
-    const lastMessage = messages[messages.length - 1];
+  
+  // useEffect(() => {
+  //   if (messages.length === 0) {
+  //     setIsBannerVisible(false);
+  //     return;
+  //   }
+  //   const lastMessage = messages[messages.length - 1];
 
-    // Tampilkan banner jika pesan terakhir dari AI dan belum terjawab (is_answered === false/null)
-    if (
-      lastMessage.sender === "agent" &&
-      (lastMessage.is_answered === false || lastMessage.is_answered === null)
-    ) {
-      const timer = setTimeout(() => setIsBannerVisible(true), 600);
-      return () => clearTimeout(timer);
-    } else {
-      setIsBannerVisible(false);
-    }
-  }, [messages]);
+    
+  //   if (
+  //     lastMessage.sender === "agent" &&
+  //     (lastMessage.is_answered === false || lastMessage.is_answered === null)
+  //   ) {
+  //     const timer = setTimeout(() => setIsBannerVisible(true), 600);
+  //     return () => clearTimeout(timer);
+  //   } else {
+  //     setIsBannerVisible(false);
+  //   }
+  // }, [messages]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const textarea = e.target;
@@ -354,7 +346,7 @@ const PublicServiceChatPage: React.FC = () => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
     }
-    setIsBannerVisible(false);
+    // setIsBannerVisible(false);
   };
 
   const handleCopy = (question?: ChatMessage, answer?: ChatMessage) => {
@@ -373,7 +365,7 @@ const PublicServiceChatPage: React.FC = () => {
         toast.success("Pesan berhasil disalin!");
       })
       .catch(() => {
-        // Fallback copy
+        
         try {
           const textArea = document.createElement("textarea");
           textArea.value = textToCopy;
@@ -390,16 +382,6 @@ const PublicServiceChatPage: React.FC = () => {
         }
       });
   };
-
-  const handleConnectToAgent = () => {
-    toast.success("Fitur 'Connect to Agent' akan segera tersedia.");
-    setIsBannerVisible(false);
-  };
-
-  const handleCancelAgent = () => {
-    setIsBannerVisible(false);
-  };
-
   const userInitial =
     useAuthStore((state) => state.user?.name.charAt(0).toUpperCase()) || "U";
 
@@ -443,8 +425,8 @@ const PublicServiceChatPage: React.FC = () => {
                 citations={citations}
                 isOpen={!!openCitations[msg.id]}
                 onToggleCitation={toggleCitations}
-                onOpenCitation={handleOpenCitation} // Pass handler PDF
-                onFeedback={handleFeedbackUpdate}   // Pass handler Feedback
+                onOpenCitation={handleOpenCitation} 
+                onFeedback={handleFeedbackUpdate}   
                 onCopy={handleCopy}
                 userInitial={userInitial}
               />

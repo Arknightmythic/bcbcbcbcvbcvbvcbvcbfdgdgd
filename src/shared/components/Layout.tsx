@@ -3,10 +3,12 @@ import { Outlet } from "react-router";
 import Sidebar from "./sidebar/Sidebar";
 import Header from "./header/header";
 import { SIDEBAR_STATE_KEY } from "../utils/constant";
+import { useSyncUser } from "../hooks/useSyncUser";
 
 
 
 function Layout() {
+  useSyncUser();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
     const savedState = localStorage.getItem(SIDEBAR_STATE_KEY);
     return savedState ? JSON.parse(savedState) : false;
@@ -75,7 +77,7 @@ function Layout() {
       >
         <Header toggleSidebar={toggleSidebar} />
         <main
-          className={`flex flex-col flex-1 p-5 bg-[#F9FAFB] overflow-y-auto custom-scrollbar relative ${
+          className={`flex flex-col flex-1 px-5 pt-5 bg-[#F9FAFB] overflow-y-auto custom-scrollbar relative ${
             isAgentPanelPopupOpen ? "blur-sm pointer-events-none" : ""
           } transition-all duration-300`}
         >

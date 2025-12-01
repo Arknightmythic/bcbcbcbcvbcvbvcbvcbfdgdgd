@@ -52,7 +52,7 @@ const UserTable: React.FC<UserTableProps> = ({
             ) : (
               <tr>
                 <td colSpan={6} className="text-center py-10 text-gray-500">
-                  <p>No users found matching your criteria.</p>
+                  <p>tidak ada pengguna yang sesuai kriteria</p>
                 </td>
               </tr>
             )}

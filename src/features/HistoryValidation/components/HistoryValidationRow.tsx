@@ -169,9 +169,9 @@ const HistoryValidationTableRow: React.FC<HistoryValidationTableRowProps> = ({ h
 
       <td className="px-4 py-3 text-center">
         {history.tidak_terjawab ? (
-            <span className="text-red-600 font-semibold">yes</span>
+            <span className="text-red-600 font-semibold">ya</span>
         ) : (
-            <span className="text-gray-500">no</span>
+            <span className="text-gray-500">tidak</span>
         )}
       </td>
 

@@ -61,7 +61,7 @@ const VersioningModal: React.FC<VersioningModalProps> = ({ isOpen, onClose, vers
               </div>
             </div>
           ) : (
-            <p className="text-center text-gray-500 py-8">No previous versions found for this document.</p>
+            <p className="text-center text-gray-500 py-8">Tidak ada versi dokumen sebelumnya</p>
           )}
         </div>
 

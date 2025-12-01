@@ -6,7 +6,7 @@ export interface ApiResponse<T> {
 
 export type ChatChannel = 'web' | 'whatsapp' | 'instagram' | 'email';
 
-export type HelpDeskStatus = 'open' | 'in_progress' | 'pending' | 'resolved' | 'closed';
+export type HelpDeskStatus = 'queue' | 'open' | 'in_progress' | 'pending' | 'resolved' | 'closed';
 
 export type HelpDeskChatListType = 'active' | 'queue' | 'pending' | 'resolve';
 

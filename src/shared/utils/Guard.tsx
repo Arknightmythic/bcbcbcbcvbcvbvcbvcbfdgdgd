@@ -62,13 +62,18 @@ export const unauthorizedLoader = () => {
 };
 
 export const ProtectedRoute = ({ allowedPage, children }: { allowedPage: string, children: React.ReactNode }) => {
-  const { user } = useAuthStore.getState();
+  const user = useAuthStore((state) => state.user);
+
+  
   if (!user?.role || !user?.role?.team) {
+
     return <Navigate to="/unauthorized" replace />;
   }
+
   const userPages = user.role.team.pages || [];
   const hasPageInTeam = userPages.includes(allowedPage);
   const hasPermission = hasReadAccess(user, allowedPage);
+
   if (!hasPageInTeam || !hasPermission) {
     return <Navigate to="/404" replace />;
   }

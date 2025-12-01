@@ -1,20 +1,23 @@
-import React, { useState, useRef, useEffect } from 'react'; 
+// src/features/HelpDesk/pages/HelpDeskChatPage.tsx
+
+import React, { useState, useRef, useEffect, useMemo } from 'react'; 
 import { useParams, useNavigate } from 'react-router';
-import { Send, Check, ArrowLeft, Loader2 } from 'lucide-react'; 
+import { Send, Check, ArrowLeft, Loader2, UserPlus } from 'lucide-react'; 
 import type { HelpDeskMessage } from '../utils/types';
 import toast from 'react-hot-toast';
 import { 
   useGetChatHistory, 
   useGetHelpDeskBySessionId, 
   useResolveHelpDesk,
-  useSendHelpdeskMessage 
+  useSendHelpdeskMessage,
+  useAcceptHelpDesk
 } from '../hooks/useHelpDesk';
 import { getWebSocketService } from '../../../shared/utils/WebsocketService';
 
 const QuickResponseButton = ({ text, onClick }: { text: string; onClick: () => void }) => (
   <button 
     onClick={onClick}
-    className="text-xs font-medium text-blue-600 border border-blue-200 bg-blue-50 rounded-full px-3 py-1.5 hover:bg-blue-100"
+    className="text-xs font-medium text-blue-600 border border-blue-200 bg-blue-50 rounded-full px-3 py-1.5 hover:bg-blue-100 transition-colors"
   >
     {text}
   </button>
@@ -32,62 +35,73 @@ const HelpDeskChatPage: React.FC = () => {
   const previousScrollHeight = useRef<number>(0);
   const wsService = useRef(getWebSocketService());
 
-  
+  // --- HOOKS ---
   const {
     data: chatHistory,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    isLoading,
+    isLoading: isLoadingChat,
     isError,
     refetch: refetchChatHistory,
   } = useGetChatHistory(sessionId || '', 50, !!sessionId);
 
-  
-  const { data: helpdeskInfo } = useGetHelpDeskBySessionId(sessionId || '', !!sessionId);
+  const { data: helpdeskInfo, refetch: refetchInfo } = useGetHelpDeskBySessionId(sessionId || '', !!sessionId);
   
   const resolveMutation = useResolveHelpDesk();
   const sendMessageMutation = useSendHelpdeskMessage();
+  const acceptMutation = useAcceptHelpDesk();
 
-  const isResolved = helpdeskInfo?.status === 'resolved' || helpdeskInfo?.status === 'closed';
+  // --- LOGIKA STATUS (PERBAIKAN CASE SENSITIVE) ---
+  // Normalisasi status ke lowercase agar "Queue" terbaca sebagai "queue"
+  const normalizedStatus = helpdeskInfo?.status?.toLowerCase();
 
+  const isQueue = 
+    normalizedStatus === 'queue' || 
+    normalizedStatus === 'open' || 
+    normalizedStatus === 'pending';
   
+  const canInteract = normalizedStatus === 'in_progress';
+  
+  const isResolved = normalizedStatus === 'resolved' || normalizedStatus === 'closed';
+
+  const currentChatUser = sessionId 
+    ? helpdeskInfo?.platform_unique_id || `Session ${sessionId.substring(0, 8)}...`
+    : 'Sesi Chatbot';
+
+  // --- WEBSOCKET ---
   useEffect(() => {
-  if (!sessionId) return;
+    if (!sessionId) return;
 
-  const ws = wsService.current;
-  
-  
-  if (!ws.isConnected()) {
-    ws.connect().catch((error) => {
-      console.error('Failed to connect to WebSocket:', error);
+    const ws = wsService.current;
+    
+    if (!ws.isConnected()) {
+      ws.connect().catch((error) => {
+        console.error('Failed to connect to WebSocket:', error);
+      });
+    }
+
+    const agentChannel = `${sessionId}-agent`;
+    
+    const unsubscribe = ws.onMessage(agentChannel, (data: any) => {
+      console.log('📨 Received WebSocket message:', data);
+      refetchChatHistory();
+      if (data?.type === 'status_update') {
+        refetchInfo();
+      }
     });
-  }
 
-  
-  const agentChannel = `${sessionId}-agent`;
-  
-  const unsubscribe = ws.onMessage(agentChannel, (data: any) => {
-    console.log('📨 Received WebSocket message:', data);
-    
-    
-    refetchChatHistory();
-  });
+    ws.subscribe(agentChannel, '$');
+    console.log(`✅ Subscribed to channel: ${agentChannel}`);
 
-  
-  ws.subscribe(agentChannel, '$');
-  console.log(`✅ Subscribed to channel: ${agentChannel}`);
+    return () => {
+      console.log(`🔌 Unsubscribing from channel: ${agentChannel}`);
+      unsubscribe();
+    };
+  }, [sessionId, refetchChatHistory, refetchInfo]);
 
-  
-  return () => {
-    console.log(`🔌 Unsubscribing from channel: ${agentChannel}`);
-    unsubscribe();
-  };
-}, [sessionId, refetchChatHistory]);
-
-
-  
-  const messages: HelpDeskMessage[] = React.useMemo(() => {
+  // --- MEMOIZED MESSAGES ---
+  const messages: HelpDeskMessage[] = useMemo(() => {
     if (!chatHistory) return [];
 
     const allMessages = chatHistory.pages
@@ -103,11 +117,7 @@ const HelpDeskChatPage: React.FC = () => {
     }));
   }, [chatHistory]);
 
-  const currentChatUser = sessionId 
-    ? helpdeskInfo?.platform_unique_id || `Session ${sessionId.substring(0, 8)}...`
-    : 'Sesi Chatbot';
-
-  
+  // --- SCROLL HANDLING ---
   useEffect(() => {
     if (!observerTarget.current || !hasNextPage || isFetchingNextPage) return;
 
@@ -124,11 +134,9 @@ const HelpDeskChatPage: React.FC = () => {
     );
 
     observer.observe(observerTarget.current);
-
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  
   useEffect(() => {
     if (chatContainerRef.current && previousScrollHeight.current > 0) {
       const newScrollHeight = chatContainerRef.current.scrollHeight;
@@ -138,7 +146,6 @@ const HelpDeskChatPage: React.FC = () => {
     }
   }, [messages.length]);
 
-  
   useEffect(() => {
     if (shouldScrollToBottom && chatContainerRef.current && messages.length > 0) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
@@ -146,59 +153,23 @@ const HelpDeskChatPage: React.FC = () => {
     }
   }, [messages, shouldScrollToBottom]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const textarea = e.target;
-    setInput(textarea.value);
-    textarea.style.height = 'auto'; 
-    const maxHeight = 160; 
-    textarea.style.height = `${Math.min(textarea.scrollHeight, maxHeight)}px`;
-  };
+  // --- HANDLERS ---
 
-  const handleSend = async () => {
-    if (!input.trim() || !sessionId) return;
-
-    const sendTime = new Date();
-    
-    const startTimestampString = sendTime.toISOString().replace('T', ' ').replace('Z', '').slice(0, 23);
-    
-    const messageText = input.trim();
-    setInput('');
-    
-    if (textareaRef.current) {
-      textareaRef.current.style.height = '44px'; 
+  const handleConnectChat = () => {
+    if (!helpdeskInfo?.id) {
+      toast.error("Data helpdesk tidak valid");
+      return;
     }
-
-    try {
-      
-      await sendMessageMutation.mutateAsync({
-        session_id: sessionId,
-        message: messageText,
-        user_type: "agent",
-        start_timestamp: startTimestampString,
-      });
-      
-      
-      setTimeout(() => {
-        if (chatContainerRef.current) {
-          chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    
+    acceptMutation.mutate(
+      { id: helpdeskInfo.id, userId: 1 }, 
+      {
+        onSuccess: () => {
+          toast.success("Chat terhubung! Anda sekarang dapat membalas.");
+          refetchInfo(); 
         }
-      }, 100);
-    } catch (error) {
-      console.error('Failed to send message:', error);
-      
-      setInput(messageText);
-    }
-  };
-
-  const handleQuickResponse = (template: string) => {
-    const quickResponses: Record<string, string> = {
-      'Greeting': 'Halo! Terima kasih telah menghubungi kami. Ada yang bisa saya bantu?',
-      'Checking': 'Saya sedang memeriksa informasi yang Anda butuhkan. Mohon tunggu sebentar.',
-      'Followup': 'Apakah ada hal lain yang bisa saya bantu?',
-    };
-    
-    setInput(quickResponses[template] || '');
-    textareaRef.current?.focus();
+      }
+    );
   };
 
   const handleResolveChat = () => {
@@ -207,24 +178,72 @@ const HelpDeskChatPage: React.FC = () => {
       return;
     }
     const userAgentTime = new Date().toISOString();
+    
     resolveMutation.mutate(
-      { 
-        sessionId, 
-        timestamp: userAgentTime 
-      }, 
+      { sessionId, timestamp: userAgentTime }, 
       {
         onSuccess: () => {
-          navigate('/helpdesk');
+          toast.success("Percakapan telah diselesaikan.");
+          navigate('/helpdesk'); 
         },
       }
     );
+  };
+
+  const handleSend = async () => {
+    if (!input.trim() || !sessionId) return;
+    
+    if (!canInteract) {
+      toast.error("Anda harus menghubungkan chat ini terlebih dahulu.");
+      return;
+    }
+
+    const sendTime = new Date();
+    const startTimestampString = sendTime.toISOString().replace('T', ' ').replace('Z', '').slice(0, 23);
+    const messageText = input.trim();
+    
+    setInput('');
+    if (textareaRef.current) textareaRef.current.style.height = '44px'; 
+
+    try {
+      await sendMessageMutation.mutateAsync({
+        session_id: sessionId,
+        message: messageText,
+        user_type: "agent",
+        start_timestamp: startTimestampString,
+      });
+      
+      setShouldScrollToBottom(true);
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      setInput(messageText); 
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const textarea = e.target;
+    setInput(textarea.value);
+    textarea.style.height = 'auto'; 
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 160)}px`;
+  };
+
+  const handleQuickResponse = (template: string) => {
+    const quickResponses: Record<string, string> = {
+      'Greeting': 'Halo! Terima kasih telah menghubungi kami. Ada yang bisa saya bantu?',
+      'Checking': 'Saya sedang memeriksa informasi yang Anda butuhkan. Mohon tunggu sebentar.',
+      'Followup': 'Apakah ada hal lain yang bisa saya bantu?',
+    };
+    setInput(quickResponses[template] || '');
+    textareaRef.current?.focus();
   };
 
   const handleGoBack = () => {
     navigate('/helpdesk');
   };
 
-  if (isLoading) {
+  // --- RENDER ---
+
+  if (isLoadingChat) {
     return (
       <div className="flex items-center justify-center h-full">
         <Loader2 className="w-8 h-8 text-gray-400 animate-spin" />
@@ -235,12 +254,9 @@ const HelpDeskChatPage: React.FC = () => {
   if (isError) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center p-8">
-        <p className="text-red-500 mb-4">Failed to load chat history</p>
-        <button
-          onClick={handleGoBack}
-          className="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-900"
-        >
-          Go Back
+        <p className="text-red-500 mb-4">Gagal memuat riwayat chat</p>
+        <button onClick={handleGoBack} className="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-900">
+          Kembali
         </button>
       </div>
     );
@@ -254,7 +270,6 @@ const HelpDeskChatPage: React.FC = () => {
           <button
             onClick={handleGoBack}
             className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-full lg:hidden"
-            aria-label="Kembali ke daftar chat"
             title="Kembali"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -262,25 +277,50 @@ const HelpDeskChatPage: React.FC = () => {
           <div>
             <h2 className="text-md font-semibold text-gray-800">{currentChatUser}</h2>
             {helpdeskInfo && (
-              <p className="text-xs text-gray-500 capitalize">
-                {helpdeskInfo.platform} • {helpdeskInfo.status}
-              </p>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className={`w-2 h-2 rounded-full ${
+                  isQueue ? 'bg-orange-500' : 
+                  canInteract ? 'bg-green-500' : 
+                  'bg-gray-400'
+                }`} />
+                <p className="text-xs text-gray-500 capitalize font-medium">
+                  {helpdeskInfo.platform} • {helpdeskInfo.status.replace('_', ' ')}
+                </p>
+              </div>
             )}
           </div>
         </div>
-        <div>
-          {!isResolved && (
+        
+        <div className="flex gap-2">
+          {/* Tombol Hubungkan (Hanya jika Queue) */}
+          {isQueue && (
+            <button
+              onClick={handleConnectChat}
+              disabled={acceptMutation.isPending}
+              className="flex items-center gap-2 px-4 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-semibold shadow-sm transition-colors disabled:opacity-50"
+            >
+              {acceptMutation.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <UserPlus className="w-4 h-4" />
+              )}
+              Hubungkan
+            </button>
+          )}
+
+          {/* Tombol Selesaikan (Hanya jika In Progress) */}
+          {canInteract && (
             <button
               onClick={handleResolveChat}
               disabled={resolveMutation.isPending}
-              className="flex items-center gap-2 px-3 py-1.5 bg-green-100 text-green-700 rounded-md hover:bg-green-200 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-3 py-1.5 bg-green-100 text-green-700 rounded-md hover:bg-green-200 text-sm font-semibold transition-colors disabled:opacity-50"
             >
               {resolveMutation.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <Check className="w-4 h-4" />
               )}
-              Resolve
+              Selesaikan
             </button>
           )}
         </div>
@@ -289,7 +329,7 @@ const HelpDeskChatPage: React.FC = () => {
       {/* Area Bubble Chat */}
       <div 
         ref={chatContainerRef}
-        className="flex-1 py-4 px-12 overflow-y-auto custom-scrollbar space-y-4"
+        className="flex-1 py-4 px-4 md:px-8 lg:px-12 overflow-y-auto custom-scrollbar space-y-4"
       >
         {hasNextPage && (
           <div ref={observerTarget} className="flex justify-center py-2">
@@ -300,36 +340,55 @@ const HelpDeskChatPage: React.FC = () => {
         )}
 
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full">
-            <p className="text-gray-400 mb-2">belum ada percakapan</p>
-            <p className="text-sm text-gray-300">Start by sending a message below</p>
+          <div className="flex flex-col items-center justify-center h-full text-center p-8">
+            <div className="bg-gray-100 p-4 rounded-full mb-3">
+              <Send className="w-8 h-8 text-gray-400 rotate-45" />
+            </div>
+            <p className="text-gray-500 font-medium">Belum ada riwayat percakapan</p>
+            <p className="text-sm text-gray-400 mt-1">Riwayat chat AI sebelumnya akan muncul di sini</p>
           </div>
         ) : (
           messages.map((msg) => (
             <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-start' : 'justify-end'}`}>
-              <div className={`relative p-3 rounded-lg max-w-[75%] shadow-sm ${
+              <div className={`relative p-3 rounded-xl max-w-[85%] md:max-w-[75%] shadow-sm text-sm leading-relaxed ${
                   msg.sender === 'user' 
-                    ? 'bg-gray-100 text-gray-800 rounded-br-none' 
-                    : 'bg-blue-600 text-white rounded-bl-none'
+                    ? 'bg-gray-100 text-gray-800 rounded-bl-none' 
+                    : 'bg-blue-600 text-white rounded-br-none'
               }`}>
-                <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
-                <div className={`absolute w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold text-white ${
-                    msg.sender === 'user' 
-                      ? 'bg-blue-700 -left-10 bottom-0' 
-                      : 'bg-red-600 -right-10 bottom-0'
-                }`}>
-                  {msg.sender === 'user' ? 'U' : 'A'}
-                </div>
+                <p className="whitespace-pre-wrap">{msg.text}</p>
+                <p className={`text-[10px] mt-1 text-right opacity-70 ${msg.sender === 'user' ? 'text-gray-500' : 'text-blue-100'}`}>
+                  {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </p>
               </div>
             </div>
           ))
         )}
+
+        {/* Indikator Status di Chat Area */}
+        {isResolved && (
+          <div className="flex justify-center pt-4 pb-2">
+            <span className="px-4 py-1.5 bg-gray-100 text-gray-500 text-xs font-medium rounded-full border border-gray-200">
+              Percakapan ini telah selesai
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* Input Area */}
-      {!isResolved && (
+      {/* Footer / Input Area */}
+      
+      {/* 1. Jika Queue -> Tampilkan Banner */}
+      {isQueue && (
+        <div className="p-4 border-t border-gray-200 bg-orange-50 text-center animate-in slide-in-from-bottom-2">
+          <p className="text-sm text-orange-800 font-medium">
+            Tiket ini masih dalam antrian. Klik <span className="font-bold">Hubungkan</span> di atas untuk mulai membalas.
+          </p>
+        </div>
+      )}
+
+      {/* 2. Jika In Progress -> Tampilkan Input */}
+      {canInteract && (
         <div className="p-4 border-t border-gray-200 bg-gray-50 space-y-3">
-          <div className="flex gap-2">
+          <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
             <QuickResponseButton text="Salam" onClick={() => handleQuickResponse('Greeting')} />
             <QuickResponseButton text="Cek" onClick={() => handleQuickResponse('Checking')} />
             <QuickResponseButton text="Bertanya" onClick={() => handleQuickResponse('Followup')} />
@@ -346,15 +405,15 @@ const HelpDeskChatPage: React.FC = () => {
                 }
               }}
               disabled={sendMessageMutation.isPending}
-              className="flex-1 py-2.5 px-4 border border-gray-300 rounded-lg text-sm resize-none min-h-[44px] overflow-y-auto focus:outline-none focus:ring-2 focus:ring-blue-500 custom-scrollbar disabled:opacity-50 disabled:cursor-not-allowed" 
-              placeholder="Ketik pesan Anda..."
+              className="flex-1 py-3 px-4 border border-gray-300 rounded-xl text-sm resize-none min-h-[48px] max-h-[160px] overflow-y-auto focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:opacity-70 transition-all shadow-sm" 
+              placeholder="Ketik balasan Anda..."
               rows={1}
-              style={{ height: '44px' }} 
+              style={{ height: '48px' }} 
             />
             <button
               onClick={handleSend}
               disabled={!input.trim() || sendMessageMutation.isPending}
-              className="w-11 h-11 bg-gray-700 rounded-full text-white cursor-pointer flex items-center justify-center hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed" 
+              className="w-12 h-12 bg-gray-900 rounded-xl text-white cursor-pointer flex items-center justify-center hover:bg-gray-800 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md" 
               aria-label="Kirim pesan"
             >
               {sendMessageMutation.isPending ? (
@@ -369,5 +428,21 @@ const HelpDeskChatPage: React.FC = () => {
     </div>
   );
 };
+
+// Ikon Placeholder
+const MessageSquare = ({ className }: { className?: string }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    className={className}
+  >
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+  </svg>
+);
 
 export default HelpDeskChatPage;

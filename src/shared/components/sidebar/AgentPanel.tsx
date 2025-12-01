@@ -4,8 +4,6 @@ import {
   Clock,
   MessageSquare,
   History,
-  MessageSquareWarning,
-  MessageSquareDiff,
 } from "lucide-react";
 
 import type { Chat } from "../../types/types";
