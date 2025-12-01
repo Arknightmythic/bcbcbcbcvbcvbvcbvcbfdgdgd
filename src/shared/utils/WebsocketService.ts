@@ -221,8 +221,8 @@ let wsServiceInstance: WebSocketService | null = null;
 
 export const getWebSocketService = (): WebSocketService => {
   if (!wsServiceInstance) {
-    const wsUrl = import.meta.env.VITE_WEBSOCKET_URL || 'ws://localhost:8080';
-    const wsToken = import.meta.env.VITE_WEBSOCKET_SECRET_KEY || 'your-secret-key';
+    const wsUrl = import.meta.env.VITE_WEBSOCKET_URL || 'wss://dev-bkpm.cloud-ioh.com/ws';
+    const wsToken = import.meta.env.VITE_WEBSOCKET_SECRET_KEY || 'bkpm-secret445566';
     wsServiceInstance = new WebSocketService(wsUrl, wsToken);
   }
   return wsServiceInstance;
