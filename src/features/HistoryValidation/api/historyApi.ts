@@ -7,18 +7,20 @@ import type {
 } from "../utils/types";
 
 export const getValidationHistory = async (
-  params: URLSearchParams,
+  baseParams: URLSearchParams, // Ganti nama parameter agar jelas ini base-nya
   sort: SortOrder = "", 
   startDate: string = "", 
   endDate: string = "",
-  // Tambahkan parameter baru
-  isValidated?: string, // "null", "1", "0"
-  isAnswered?: string   // "true", "false"
+  isValidated?: string, 
+  isAnswered?: string   
 ): Promise<PaginatedChatPairsResponse> => {
   
+  // SOLUSI: Clone params agar tidak memutasi object asli dari component
+  const params = new URLSearchParams(baseParams);
+
   // Setup params
   if (sort) {
-    params.set("sort_by", "created_at"); // Pastikan backend menerima field yang benar (biasanya created_at)
+    params.set("sort_by", "created_at");
     params.set("sort_direction", sort === "latest" ? "desc" : "asc");
   }
 

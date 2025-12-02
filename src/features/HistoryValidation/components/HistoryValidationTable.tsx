@@ -96,9 +96,9 @@ const HistoryValidationTable: React.FC<HistoryValidationTableProps> = ({
               </th>
 
               {/* Kolom 6: Not Answered */}
-              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">
+              {/* <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">
                 Tidak terjawab
-              </th>
+              </th> */}
 
               {/* Kolom 7: Status */}
               <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">

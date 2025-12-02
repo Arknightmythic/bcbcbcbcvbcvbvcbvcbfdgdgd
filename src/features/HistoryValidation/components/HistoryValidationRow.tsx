@@ -1,9 +1,9 @@
-// [GANTI: src/features/HistoryValidation/components/HistoryValidationRow.tsx]
+// [UPDATE: src/features/HistoryValidation/components/HistoryValidationRow.tsx]
 
 import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import type { ActionType, ValidationHistoryItem } from '../utils/types';
-import { CheckCircle, XCircle, FileText, MoreVertical } from 'lucide-react'; // Hapus Pencil icon
+import { CheckCircle, XCircle, FileText, MoreVertical } from 'lucide-react';
 import StatusBadge from './StatusBadge';
 import { useClickOutside } from '../../../shared/hooks/useClickOutside';
 
@@ -84,12 +84,17 @@ const HistoryValidationTableRow: React.FC<HistoryValidationTableRowProps> = ({ h
   const [position, setPosition] = useState<{ top?: number, bottom?: number, right?: number }>({});
   const moreButtonRef = useRef<HTMLButtonElement>(null);
   
+  // LOGIC: Cek apakah status masih Pending
+  const isPending = history.status_validasi === "Pending";
+  
   const dropdownRef = useClickOutside<HTMLDivElement>(() => {
     setIsDropdownOpen(false);
   });
 
   const handleDropdownToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
+    // Jika tidak pending, dropdown tidak perlu dibuka (opsional, tergantung UX yang diinginkan)
+    // Tapi sesuai request button disabled, kita biarkan buka tapi button di dalamnya disabled
     if (isDropdownOpen) {
       setIsDropdownOpen(false);
       return;
@@ -97,7 +102,7 @@ const HistoryValidationTableRow: React.FC<HistoryValidationTableRowProps> = ({ h
 
     if (moreButtonRef.current) {
       const rect = moreButtonRef.current.getBoundingClientRect();
-      const dropdownHeight = 100; // Dikurangi karena menu revise hilang
+      const dropdownHeight = 100;
       const spaceBelow = window.innerHeight - rect.bottom;
       const spaceAbove = rect.top;
 
@@ -129,15 +134,25 @@ const HistoryValidationTableRow: React.FC<HistoryValidationTableRowProps> = ({ h
     >
       <div className="flex flex-col py-1">
         <button
-          onClick={() => { onAction('approve', history); setIsDropdownOpen(false); }}
-          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-green-600 hover:bg-green-50"
+          disabled={!isPending}
+          onClick={() => { if(isPending) { onAction('approve', history); setIsDropdownOpen(false); } }}
+          className={`flex items-center gap-3 w-full px-4 py-2 text-left text-sm ${
+            isPending 
+              ? "text-green-600 hover:bg-green-50" 
+              : "text-gray-300 cursor-not-allowed"
+          }`}
         >
           <CheckCircle className="w-4 h-4" />
           <span>Approve</span>
         </button>
         <button
-          onClick={() => { onAction('reject', history); setIsDropdownOpen(false); }}
-          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+          disabled={!isPending}
+          onClick={() => { if(isPending) { onAction('reject', history); setIsDropdownOpen(false); } }}
+          className={`flex items-center gap-3 w-full px-4 py-2 text-left text-sm ${
+            isPending 
+              ? "text-red-600 hover:bg-red-50" 
+              : "text-gray-300 cursor-not-allowed"
+          }`}
         >
           <XCircle className="w-4 h-4" />
           <span>Reject</span>
@@ -167,14 +182,6 @@ const HistoryValidationTableRow: React.FC<HistoryValidationTableRowProps> = ({ h
         />
       </td>
 
-      <td className="px-4 py-3 text-center">
-        {history.tidak_terjawab ? (
-            <span className="text-red-600 font-semibold">ya</span>
-        ) : (
-            <span className="text-gray-500">tidak</span>
-        )}
-      </td>
-
       <td className="px-4 py-3 capitalize text-center">
         <StatusBadge status={history.status_validasi} />
       </td>
@@ -184,17 +191,27 @@ const HistoryValidationTableRow: React.FC<HistoryValidationTableRowProps> = ({ h
         {/* Layout Desktop: 2 Tombol (Approve & Reject) */}
         <div className="hidden md:flex items-center justify-center gap-x-2">
           <button
-            onClick={() => onAction('approve', history)}
-            className="p-1 text-green-600 hover:bg-green-50 rounded-md transition-colors"
-            title="Approve"
+            disabled={!isPending}
+            onClick={() => isPending && onAction('approve', history)}
+            className={`p-1 rounded-md transition-colors ${
+              isPending 
+                ? "text-green-600 hover:bg-green-50" 
+                : "text-gray-300 cursor-not-allowed"
+            }`}
+            title={isPending ? "Approve" : "Status sudah final"}
           >
             <CheckCircle className="w-4 h-4" />
           </button>
           
           <button
-            onClick={() => onAction('reject', history)}
-            className="p-1 text-red-600 hover:bg-red-50 rounded-md transition-colors"
-            title="Reject"
+            disabled={!isPending}
+            onClick={() => isPending && onAction('reject', history)}
+            className={`p-1 rounded-md transition-colors ${
+              isPending 
+                ? "text-red-600 hover:bg-red-50" 
+                : "text-gray-300 cursor-not-allowed"
+            }`}
+            title={isPending ? "Reject" : "Status sudah final"}
           >
             <XCircle className="w-4 h-4" />
           </button>

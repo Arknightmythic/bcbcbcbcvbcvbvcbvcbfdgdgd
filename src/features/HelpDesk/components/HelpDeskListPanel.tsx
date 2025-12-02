@@ -185,7 +185,7 @@ const HelpDeskListPanel: React.FC = () => {
   return (
     <div className="flex flex-col h-full min-h-0">
       <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-        <h2 className="text-md font-bold text-gray-800">Help Desk</h2>
+        <h2 className="text-md font-bold text-gray-800">Layanan Bantuan</h2>
         <button
           onClick={handleRefresh}
           disabled={isLoading}

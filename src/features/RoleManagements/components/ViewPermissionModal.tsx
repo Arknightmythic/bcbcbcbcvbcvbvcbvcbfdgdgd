@@ -27,7 +27,7 @@ const ViewPermissionsModal: React.FC<ViewPermissionsModalProps> = ({ isOpen, onC
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-sm p-4" onClick={onClose}>
       <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md animate-fade-in-up" onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4 pb-4 border-b">
-          <h2 className="text-2xl font-bold text-gray-800">Role Details</h2>
+          <h2 className="text-2xl font-bold text-gray-800">Detail Peran</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X className="w-6 h-6" />
           </button>
@@ -35,17 +35,17 @@ const ViewPermissionsModal: React.FC<ViewPermissionsModalProps> = ({ isOpen, onC
 
         <div className="mb-6 bg-gray-50 p-4 rounded-lg">
           <div className="mb-2">
-            <span className="font-semibold text-gray-700">Role Name:</span>
+            <span className="font-semibold text-gray-700">Nama Peran:</span>
             <p className="text-lg text-gray-900 capitalize">{role.name}</p>
           </div>
           <div>
-            <span className="font-semibold text-gray-700">Team:</span>
-            <p className="text-lg text-gray-900 capitalize">{role.team.name || 'Unknown Team'}</p>
+            <span className="font-semibold text-gray-700">Tim:</span>
+            <p className="text-lg text-gray-900 capitalize">{role.team.name || 'Tidak ada tim'}</p>
           </div>
         </div>
 
         <div>
-          <h3 className="text-lg font-bold text-gray-800 mb-3">Assigned Access Rights</h3>
+          <h3 className="text-lg font-bold text-gray-800 mb-3">Izin Akses yang Didaftarkan</h3>
           <div className="max-h-60 overflow-y-auto pr-2 custom-scrollbar">
             {/* Render visiblePermissions yang sudah difilter */}
             {visiblePermissions.length > 0 ? (

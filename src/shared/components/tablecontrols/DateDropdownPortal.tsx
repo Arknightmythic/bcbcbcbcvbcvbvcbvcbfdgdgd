@@ -2,8 +2,12 @@
 
 import React from "react";
 import { createPortal } from "react-dom";
-import DatePicker from "react-datepicker";
+import DatePicker, { registerLocale } from "react-datepicker";
+import { id } from "date-fns/locale/id"; // Import locale Indonesia dari date-fns
 import { Check } from "lucide-react";
+
+// Register locale agar dikenali oleh react-datepicker
+registerLocale("id", id);
 
 interface DateDropdownPortalProps {
   coords: { top: number; left: number };
@@ -45,6 +49,7 @@ const DateDropdownPortal: React.FC<DateDropdownPortalProps> = ({
             selectsRange
             inline
             maxDate={new Date()}
+            locale="id" // <--- Tambahkan properti ini
           />
         </div>
         <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-100 gap-2">
@@ -69,10 +74,11 @@ const DateDropdownPortal: React.FC<DateDropdownPortalProps> = ({
             </button>
           </div>
         </div>
-        {/* Style lokal untuk DatePicker tetap di sini */}
+        {/* Style lokal untuk DatePicker */}
         <style>{`
           .react-datepicker { border: none; font-family: inherit; display: block; }
           .react-datepicker__header { background-color: white; border-bottom: 1px solid #f3f4f6; }
+          .react-datepicker__current-month { text-transform: capitalize; } 
           .react-datepicker__day--selected, .react-datepicker__day--in-range { background-color: #2563eb !important; color: white !important; }
           .react-datepicker__day--in-selecting-range { background-color: #dbeafe !important; color: #2563eb !important; }
           .react-datepicker__day:hover { background-color: #eff6ff; }

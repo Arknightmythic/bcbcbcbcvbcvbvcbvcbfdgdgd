@@ -26,11 +26,11 @@ const VersioningModal: React.FC<VersioningModalProps> = ({ isOpen, onClose, vers
           {sortedVersions.length > 0 ? (
             <div className="w-full text-sm text-left text-gray-500 min-w-[768px]">
               <div className="grid grid-cols-[1fr_4fr_2fr_2fr_1fr] gap-4 px-4 py-3 bg-gray-100 font-semibold text-gray-700 uppercase rounded-t-lg sticky top-0 z-10">
-                <div>Version</div>
-                <div>File Name</div>
-                <div>Modified by</div>
-                <div>Date</div>
-                <div className="text-right sticky right-0 bg-gray-100">Action</div>
+                <div>Versi</div>
+                <div>Dokumen</div>
+                <div>Diubah Oleh</div>
+                <div>Tanggal Ubah</div>
+                <div className="text-right sticky right-0 bg-gray-100">Aksi</div>
               </div>
               <div className="divide-y divide-gray-200">
                 {sortedVersions.map((version, index) => (

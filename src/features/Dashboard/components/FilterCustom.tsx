@@ -1,10 +1,15 @@
+// [UPDATE: FilterCustom.tsx]
+
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import type { Period } from '../utils/types';
 import { Calendar } from 'lucide-react';
-import DatePicker from 'react-datepicker';
+import DatePicker, { registerLocale } from 'react-datepicker'; // 1. Import registerLocale
+import { id } from 'date-fns/locale/id'; // 2. Import locale Indonesia
 import "react-datepicker/dist/react-datepicker.css";
 
+// 3. Register locale
+registerLocale('id', id);
 
 interface DashboardRangePickerProps {
   startDateStr: string;
@@ -88,7 +93,7 @@ const DashboardRangePicker: React.FC<DashboardRangePickerProps> = ({
       <div className="flex items-center gap-2">
          <span className="text-gray-500 text-xs font-medium min-w-[35px]">{label}:</span>
          <span className="text-sm text-slate-800 font-medium truncate">
-           {value || "FIlter Tanggal"}
+           {value || "Filter Tanggal"}
          </span>
       </div>
       <Calendar className="w-4 h-4 text-gray-400" />
@@ -97,8 +102,8 @@ const DashboardRangePicker: React.FC<DashboardRangePickerProps> = ({
 
   return (
     <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto flex-1" ref={containerRef}>
-      {renderDateBox("From", startDateStr)}
-      {renderDateBox("To", endDateStr)}
+      {renderDateBox("Dari", startDateStr)}
+      {renderDateBox("Sampai", endDateStr)}
 
       {isOpen && coords && createPortal(
         <div
@@ -115,10 +120,12 @@ const DashboardRangePicker: React.FC<DashboardRangePickerProps> = ({
             inline
             maxDate={new Date()} 
             monthsShown={1} 
+            locale="id" // 4. Tambahkan prop locale
           />
           <style>{`
             .react-datepicker { border: none; font-family: inherit; }
             .react-datepicker__header { background-color: white; border-bottom: 1px solid #f3f4f6; }
+            .react-datepicker__current-month { text-transform: capitalize; } 
             .react-datepicker__day--selected, .react-datepicker__day--in-range { background-color: #2563eb !important; color: white !important; }
             .react-datepicker__day--in-selecting-range { background-color: #dbeafe !important; color: #2563eb !important; }
             .react-datepicker__day--disabled { color: #ccc !important; cursor: not-allowed; }
@@ -217,10 +224,10 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     <div className="bg-white p-5 px-6 rounded-lg mb-5 border border-gray-200 shadow-sm flex flex-col md:flex-row md:justify-between md:items-center gap-4 flex-wrap z-20 relative">
       <div className="flex-shrink-0">
         <h1 className="text-slate-800 text-lg font-semibold mb-1">
-          🤖 AI Helpdesk Analytics Dashboard
+          🤖 Dasbor Analitik
         </h1>
         <p className="text-gray-500 text-[10px]">
-          Real-time monitoring and performance metrics |{' '}
+          Pemantauan dan metrik performa real-time |{' '}
           <span>{formattedTime}</span>
         </p>
       </div>
@@ -240,7 +247,9 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                  activePeriod === period ? buttonActiveClasses : buttonInactiveClasses
                }`}
              >
-               {period.charAt(0).toUpperCase() + period.slice(1)}
+               {period === 'daily' ? 'Harian' : 
+                period === 'monthly' ? 'Bulanan' : 
+                period === 'yearly' ? 'Tahunan' : 'Custom'}
              </button>
           ))}
         </div>
@@ -266,7 +275,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               disabled={!startDate || !endDate}
               className="bg-blue-600 text-white py-2 px-5 rounded-md text-sm font-medium transition-all duration-300 hover:bg-blue-700 hover:shadow-md w-full md:w-auto h-[38px] disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
-              Apply
+              Terapkan
             </button>
           </div>
         </div>

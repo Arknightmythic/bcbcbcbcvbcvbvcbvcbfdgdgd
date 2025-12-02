@@ -49,7 +49,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     <div className="bg-white p-5 px-6 rounded-lg mb-5 border border-gray-200 shadow-sm flex flex-col md:flex-row md:justify-between md:items-center gap-4 flex-wrap z-20 relative">
       <div className="flex-shrink-0">
         <h1 className="text-slate-800 text-lg font-semibold mb-1">
-          🤖 Dashboard Analitik
+          🤖 Dasbor Analitik
         </h1>
         <p className="text-gray-500 text-[10px]">
           Pemantauan dan metrik performa real-time |{' '}

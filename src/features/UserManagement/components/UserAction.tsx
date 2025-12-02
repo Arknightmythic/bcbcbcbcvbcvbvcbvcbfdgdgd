@@ -67,7 +67,7 @@ const UserActions: React.FC<UserActionsProps> = ({ user, onAction }) => {
           title="Edit User"
         >
           <Edit className="w-4 h-4" />
-          <span>Edit User</span>
+          <span>Ubah Akun</span>
         </button>
         <button
           onClick={() => { onAction('delete', user); setIsDropdownOpen(false); }}
@@ -75,7 +75,7 @@ const UserActions: React.FC<UserActionsProps> = ({ user, onAction }) => {
           title="Delete User"
         >
           <Trash2 className="w-4 h-4" />
-          <span>Delete User</span>
+          <span>Hapus Akun</span>
         </button>
       </div>
     </div>

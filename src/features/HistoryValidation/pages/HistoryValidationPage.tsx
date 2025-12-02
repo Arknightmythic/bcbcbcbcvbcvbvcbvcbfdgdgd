@@ -34,15 +34,15 @@ interface HistoryPageFilters extends Record<string, any> {
 }
 
 const filterConfig: FilterConfig<HistoryPageFilters>[] = [
-  {
-    key: "aiAnswer",
-    type: "select",
-    options: [
-      { value: "", label: "Kondisi Jawaban" },
-      { value: "answered", label: "Terjawab" },
-      { value: "unanswered", label: "Tidak Terjawab" },
-    ],
-  },
+  // {
+  //   key: "aiAnswer",
+  //   type: "select",
+  //   options: [
+  //     { value: "", label: "Kondisi Jawaban" },
+  //     { value: "answered", label: "Terjawab" },
+  //     { value: "unanswered", label: "Tidak Terjawab" },
+  //   ],
+  // },
   {
     key: "validationStatus",
     type: "select",

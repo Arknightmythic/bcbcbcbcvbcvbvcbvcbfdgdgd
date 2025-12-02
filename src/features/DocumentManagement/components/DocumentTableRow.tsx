@@ -22,7 +22,7 @@ const DocumentTableRow: React.FC<DocumentTableRowProps> = ({ document, hasManage
           {document.data_type}
         </span>
       </td>
-      <td className="px-4 py-3 capitalize">{document.category}</td>
+      <td className="px-4 py-3 capitalize">{`${document.category==='qna'?"Tanya Jawab":document.category}`}</td>
       
       {/* --- PERUBAHAN DI SINI: Tambahkan Cell Team --- */}
       <td className="px-4 py-3 text-center">

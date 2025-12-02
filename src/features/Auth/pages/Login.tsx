@@ -222,7 +222,7 @@ function Login() {
         </div>
 
         <p className="mt-8 text-center text-xs text-gray-500">
-          &copy; 2025 Dokuprime. All rights reserved.
+          &copy; 2025 Dokuprime. Semua hak cipta dilindungi
         </p>
       </div>
     </div>
