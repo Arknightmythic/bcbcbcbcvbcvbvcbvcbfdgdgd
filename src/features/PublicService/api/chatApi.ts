@@ -80,3 +80,11 @@ export const generateViewUrl = async (id: number): Promise<string> => {
   });
   return response.data.data.url;
 };
+
+export const generateViewUrlByDocId = async (documentId: number): Promise<string> => {
+  // Payload harus sesuai dengan struct di backend: { document_id: 123 }
+  const response = await instanceApiToken.post("/api/documents/generate-view-url-docid", {
+    document_id: documentId
+  });
+  return response.data.data.url;
+};

@@ -19,7 +19,8 @@ import {
   askQuestion,
   getConversationById,
   sendFeedback,     // Import API Feedback
-  generateViewUrl,  // Import API Generate URL PDF
+  generateViewUrl,
+  generateViewUrlByDocId,  // Import API Generate URL PDF
 } from "../api/chatApi";
 import { getWebSocketService } from "../../../shared/utils/WebsocketService";
 
@@ -513,7 +514,7 @@ export const useServicePublicChat = () => {
 
     try {
       // Panggil API untuk mendapatkan URL PDF
-      const url = await generateViewUrl(parseInt(citation.fileId));
+      const url = await generateViewUrlByDocId(parseInt(citation.fileId));
       setPdfUrl(url);
     } catch (error) {
       console.error("Error fetching PDF URL:", error);
