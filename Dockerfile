@@ -1,21 +1,19 @@
-# Base image
 FROM node:20-alpine
 
-# Set working directory
 WORKDIR /app
 
-# Install dependencies
-COPY package.json yarn.lock ./
-RUN yarn install
+RUN chown -R node:node /app
 
-# Copy the rest of the app
-COPY . .
+USER node
 
-# Build the app
+COPY --chown=node:node package.json yarn.lock ./
+
+RUN yarn install --frozen-lockfile
+
+COPY --chown=node:node . .
+
 RUN yarn build
 
-# Expose the custom port
 EXPOSE 5005
 
-# Start the production server on port 5005
 CMD ["yarn", "preview", "--host", "--port", "5005"]

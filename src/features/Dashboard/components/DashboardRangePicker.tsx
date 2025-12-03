@@ -1,5 +1,3 @@
-// components/DashboardHeader/DashboardRangePicker.tsx
-
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Calendar } from 'lucide-react';
@@ -7,33 +5,31 @@ import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { toDateStr } from '../utils/dateUtils';
 
-
 interface DashboardRangePickerProps {
   startDateStr: string;
   endDateStr: string;
   onChange: (start: string, end: string) => void;
 }
 
-
 const DateDisplayBox: React.FC<{ label: string; value: string; onClick: () => void }> = ({ 
   label, 
   value, 
   onClick 
 }) => (
-  <div 
-    className="flex items-center justify-between bg-white py-2 px-3 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer w-full md:flex-1 gap-2"
+  <button 
+    type="button" 
+    className="flex items-center justify-between bg-white py-2 px-3 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer w-full md:flex-1 gap-2 text-left"
     onClick={onClick}
   >
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 pointer-events-none"> {/* pointer-events-none membantu event bubbling */}
       <span className="text-gray-500 text-xs font-medium min-w-[35px]">{label}:</span>
       <span className="text-sm text-slate-800 font-medium truncate">
-        {value || "FIlter Tanggal"} 
+        {value || "Filter Tanggal"} 
       </span>
     </div>
-    <Calendar className="w-4 h-4 text-gray-400" />
-  </div>
+    <Calendar className="w-4 h-4 text-gray-400 pointer-events-none" />
+  </button>
 );
-
 
 const DashboardRangePicker: React.FC<DashboardRangePickerProps> = ({ 
   startDateStr, 
@@ -57,7 +53,7 @@ const DashboardRangePicker: React.FC<DashboardRangePickerProps> = ({
       
       let left = rect.left + window.scrollX;
       
-      // Perhitungan posisi
+      
       if (left + 300 > screenW) {
         left = Math.max(10, (rect.right + window.scrollX) - 300);
       }
@@ -70,7 +66,6 @@ const DashboardRangePicker: React.FC<DashboardRangePickerProps> = ({
     }
   }, [isOpen]);
 
-
   const handleDateChange = useCallback((dates: [Date | null, Date | null]) => {
     const [start, end] = dates;
     
@@ -79,7 +74,6 @@ const DashboardRangePicker: React.FC<DashboardRangePickerProps> = ({
 
     onChange(newStartStr, newEndStr);
   }, [onChange]);
-
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -139,6 +133,7 @@ const DashboardRangePicker: React.FC<DashboardRangePickerProps> = ({
             <button 
               onClick={handleResetRange} 
               className="text-xs text-red-500 hover:text-red-700 font-medium"
+              type="button"
             >
               Reset Rentang
             </button>

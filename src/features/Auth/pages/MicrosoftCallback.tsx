@@ -74,8 +74,7 @@ function MicrosoftCallback() {
 
         toast.success('Berhasil Masuk!');
 
-        
-        if (!result.data.role || !result.data.role.team) {
+        if (!result.data.role?.team) {
             navigate("/unauthorized", { replace: true });
             return;
         }

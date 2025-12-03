@@ -31,8 +31,18 @@ const TabButton = ({ label, count, isActive, onClick }: { label: string, count: 
   );
 };
 
+const getStatusFromTab = (tab: HelpDeskChatListType) => {
+  switch (tab) {
+    case 'active': return 'in_progress';
+    case 'pending': return 'pending';
+    case 'resolve': return 'resolved'; 
+    case 'queue': 
+    default: return 'queue';
+  }
+};
+
 const HelpDeskListPanel: React.FC = () => {
-  // State untuk Tab Aktif (Default: queue)
+
   const [activeList, setActiveList] = useState<HelpDeskChatListType>('queue');
   const [selectedChannel, setSelectedChannel] = useState<ChatChannel | ''>('');
   
@@ -40,17 +50,17 @@ const HelpDeskListPanel: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
   const queryClient = useQueryClient();
 
-  // --- DATA FETCHING UNTUK COUNTER (SEMUA DATA) ---
+
   const { data: allHelpDesks } = useGetAllHelpDesks();
 
-  // Hitung statistik untuk angka di Tab
+
   const counts = useMemo(() => {
     const stats = { active: 0, queue: 0, pending: 0, resolve: 0 };
     
     if (!allHelpDesks) return stats;
 
     allHelpDesks.forEach((ticket) => {
-      // Normalisasi status ke lowercase untuk keamanan
+    
       const status = ticket.status?.toLowerCase();
       
       if (status === 'in_progress') {
@@ -60,8 +70,6 @@ const HelpDeskListPanel: React.FC = () => {
       } else if (status === 'pending') {
         stats.pending++;
       } else if (status === 'queue' || status === 'open') {
-        // PERBAIKAN: Hapus logika waktu 15 menit. 
-        // Semua status 'queue' atau 'open' masuk ke Antrian.
         stats.queue++;
       }
     });
@@ -69,23 +77,14 @@ const HelpDeskListPanel: React.FC = () => {
     return stats;
   }, [allHelpDesks]);
 
-  // --- DATA FETCHING UNTUK LIST (PAGINATED PER TAB) ---
-  
-  // Mapping Tab UI ke Status Backend API
-  const getStatusFromTab = (tab: HelpDeskChatListType) => {
-    switch (tab) {
-      case 'active': return 'in_progress';
-      case 'queue': return 'queue'; // Mengambil status queue/open dari backend
-      case 'pending': return 'pending';
-      case 'resolve': return 'resolved'; 
-      default: return 'queue';
-    }
-  };
 
-  // Membentuk Query Parameters untuk API List
+
+
+
   const queryParams = useMemo(() => {
     const params = new URLSearchParams();
     params.append('limit', '50');
+  
     params.append('status', getStatusFromTab(activeList));
     
     if (selectedChannel) {
@@ -95,16 +94,16 @@ const HelpDeskListPanel: React.FC = () => {
     return params;
   }, [activeList, selectedChannel]);
 
-  // Fetch Data List (Hanya memuat data sesuai tab)
+
   const { data: responseData, isLoading, isError, refetch } = useGetHelpDesks(queryParams);
   const acceptMutation = useAcceptHelpDesk();
 
-  // Refresh data saat tab berubah atau visibility berubah
+
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        refetch(); // Refresh list
-        queryClient.invalidateQueries({ queryKey: ['helpdesks', 'all'] }); // Refresh counter
+        refetch();
+        queryClient.invalidateQueries({ queryKey: ['helpdesks', 'all'] });
       }
     };
 
@@ -114,7 +113,7 @@ const HelpDeskListPanel: React.FC = () => {
     };
   }, [refetch, queryClient]);
 
-  // Transformasi data backend ke format List UI
+
   const currentChats: HelpDeskChat[] = useMemo(() => {
     if (!responseData?.helpdesks) return [];
 
@@ -129,7 +128,7 @@ const HelpDeskListPanel: React.FC = () => {
     }));
   }, [responseData]);
 
-  // Konfigurasi UI
+
   const listConfig: Record<HelpDeskChatListType, { icon: LucideIcon; title: string; empty: string }> = {
     active: { icon: MessageSquare, title: "Chat Aktif", empty: "Tidak ada chat aktif." },
     queue: { icon: Clock, title: "Antrian", empty: "Antrian kosong." },
@@ -196,7 +195,7 @@ const HelpDeskListPanel: React.FC = () => {
         </button>
       </div>
 
-      {/* Tabs dengan Counter yang dihitung dari useGetAllHelpDesks */}
+      {/* Tabs dengan Counter */}
       <div className="flex justify-between text-center bg-gray-200 rounded-lg p-1 space-x-1 m-4">
         <TabButton 
           label="Aktif" 

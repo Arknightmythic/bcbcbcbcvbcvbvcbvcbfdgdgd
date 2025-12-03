@@ -18,8 +18,7 @@ export const useMicrosoftSSO = () => {
   return useMutation({
     mutationFn: getMicrosoftAuthURL,
     onSuccess: (data) => {
-      window.location.href = data.data.auth_url;
-    },
+      globalThis.location.href = data.data.auth_url;    },
     onError: (error: any) => {
       console.error('Failed to get Microsoft auth URL:', error);
     },

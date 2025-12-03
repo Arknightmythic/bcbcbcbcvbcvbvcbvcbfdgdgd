@@ -11,36 +11,6 @@ import { normalizeMarkdown } from "../utils/helper";
 import PdfViewModal from "../../../shared/components/PDFViewModal";
 
 
-interface ConnectToAgentBannerProps {
-  onYes: () => void;
-  onNo: () => void;
-}
-
-// const ConnectToAgentBanner: React.FC<ConnectToAgentBannerProps> = ({
-//   onYes,
-//   onNo,
-// }) => (
-//   <div className="mt-2 w-full max-w-lg p-3 bg-gray-100 rounded-lg animate-fade-in-up shadow-sm border border-gray-200 mx-auto">
-//     <p className="text-sm text-gray-800 mb-3 text-center">
-//       Silahkan pilih "Ya, hubungkan" untuk berbicara ke Agent Layanan atau
-//       "Tidak" untuk membatalkan
-//     </p>
-//     <div className="flex gap-3">
-//       <button
-//         onClick={onYes}
-//         className="flex-1 bg-blue-600 text-white text-sm font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
-//       >
-//         Ya, hubungkan
-//       </button>
-//       <button
-//         onClick={onNo}
-//         className="flex-1 bg-gray-200 text-gray-800 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors"
-//       >
-//         Tidak
-//       </button>
-//     </div>
-//   </div>
-// );
 
 
 interface MessageBubbleProps {
@@ -309,28 +279,7 @@ const PublicServiceChatPage: React.FC = () => {
     handleClosePdfModal
   } = useServicePublicChat();
 
-  // const [isBannerVisible, setIsBannerVisible] = useState(false);
-
-  
-  // useEffect(() => {
-  //   if (messages.length === 0) {
-  //     setIsBannerVisible(false);
-  //     return;
-  //   }
-  //   const lastMessage = messages[messages.length - 1];
-
-    
-  //   if (
-  //     lastMessage.sender === "agent" &&
-  //     (lastMessage.is_answered === false || lastMessage.is_answered === null)
-  //   ) {
-  //     const timer = setTimeout(() => setIsBannerVisible(true), 600);
-  //     return () => clearTimeout(timer);
-  //   } else {
-  //     setIsBannerVisible(false);
-  //   }
-  // }, [messages]);
-
+ 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const textarea = e.target;
     setInput(textarea.value);
@@ -430,16 +379,6 @@ const PublicServiceChatPage: React.FC = () => {
                 onCopy={handleCopy}
                 userInitial={userInitial}
               />
-              
-              {/* Render Banner jika ini pesan terakhir dan state visible true */}
-              {/* {isLastMessage && isBannerVisible && (
-                <div className="mb-4 animate-fade-in-up">
-                  <ConnectToAgentBanner 
-                    onYes={handleConnectToAgent} 
-                    onNo={handleCancelAgent} 
-                  />
-                </div>
-              )} */}
             </React.Fragment>
           );
         })}

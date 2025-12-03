@@ -16,9 +16,9 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   isOpen,
   onClose,
   onConfirm,
-  title = "Confirmation",
+  title = "Konfirmasi",
   children,
-  confirmText = "Confirm",
+  confirmText = "Konfirmasi",
   confirmColor = "bg-blue-600 hover:bg-blue-700",
   isConfirming = false, 
 }) => {

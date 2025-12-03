@@ -1,14 +1,11 @@
-// [UPDATE: FilterCustom.tsx]
-
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import type { Period } from '../utils/types';
 import { Calendar } from 'lucide-react';
-import DatePicker, { registerLocale } from 'react-datepicker'; // 1. Import registerLocale
-import { id } from 'date-fns/locale/id'; // 2. Import locale Indonesia
+import DatePicker, { registerLocale } from 'react-datepicker'; 
+import { id } from 'date-fns/locale/id'; 
 import "react-datepicker/dist/react-datepicker.css";
 
-// 3. Register locale
 registerLocale('id', id);
 
 interface DashboardRangePickerProps {
@@ -85,19 +82,23 @@ const DashboardRangePicker: React.FC<DashboardRangePickerProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
+  // FIX: Mengubah renderDateBox dari <div> menjadi <button>
+  // SonarQube Error: "Avoid non-native interactive elements..."
+  // Perubahan: div -> button, type="button", dan penyesuaian layout text
   const renderDateBox = (label: string, value: string) => (
-    <div 
-      className="flex items-center justify-between bg-white py-2 px-3 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer w-full md:flex-1"
+    <button 
+      type="button" // Penting: Mencegah submit form
+      className="flex items-center justify-between bg-white py-2 px-3 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer w-full md:flex-1 text-left"
       onClick={toggleCalendar}
     >
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 pointer-events-none">
          <span className="text-gray-500 text-xs font-medium min-w-[35px]">{label}:</span>
          <span className="text-sm text-slate-800 font-medium truncate">
            {value || "Filter Tanggal"}
          </span>
       </div>
-      <Calendar className="w-4 h-4 text-gray-400" />
-    </div>
+      <Calendar className="w-4 h-4 text-gray-400 pointer-events-none" />
+    </button>
   );
 
   return (
@@ -120,7 +121,7 @@ const DashboardRangePicker: React.FC<DashboardRangePickerProps> = ({
             inline
             maxDate={new Date()} 
             monthsShown={1} 
-            locale="id" // 4. Tambahkan prop locale
+            locale="id" 
           />
           <style>{`
             .react-datepicker { border: none; font-family: inherit; }
@@ -137,6 +138,7 @@ const DashboardRangePicker: React.FC<DashboardRangePickerProps> = ({
             <button 
               onClick={() => onChange("", "")}
               className="text-xs text-red-500 hover:text-red-700 font-medium"
+              type="button" // Menambahkan type button eksplisit
             >
               Reset Range
             </button>
@@ -170,11 +172,11 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const [activePeriod, setActivePeriod] = useState<Period>(defaultPeriod);
   const [isCustomDateVisible, setIsCustomDateVisible] = useState(defaultPeriod === 'custom');
   
-  // State String YYYY-MM-DD
+  
   const [startDate, setStartDate] = useState(defaultStartDate);
   const [endDate, setEndDate] = useState(defaultEndDate);
 
-  // Sync dengan props default
+  
   useEffect(() => {
     setActivePeriod(defaultPeriod);
     setStartDate(defaultStartDate);
@@ -182,7 +184,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     setIsCustomDateVisible(defaultPeriod === 'custom');
   }, [defaultPeriod, defaultStartDate, defaultEndDate]);
 
-  // Jam Realtime
+  
   useEffect(() => {
     const timerId = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timerId);
@@ -204,7 +206,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   };
 
   const handleApplyClick = () => {
-    // Validasi sederhana: Pastikan start dan end terisi sebelum apply
+    
     if (startDate && endDate) {
       onCustomDateApply({ startDate, endDate });
       onPeriodChange('custom');
@@ -243,6 +245,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
              <button
                key={period}
                onClick={() => handlePeriodClick(period)}
+               type="button" // Explicit type button
                className={`${buttonBaseClasses} ${
                  activePeriod === period ? buttonActiveClasses : buttonInactiveClasses
                }`}
@@ -273,6 +276,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             <button
               onClick={handleApplyClick}
               disabled={!startDate || !endDate}
+              type="button" // Explicit type button
               className="bg-blue-600 text-white py-2 px-5 rounded-md text-sm font-medium transition-all duration-300 hover:bg-blue-700 hover:shadow-md w-full md:w-auto h-[38px] disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
               Terapkan

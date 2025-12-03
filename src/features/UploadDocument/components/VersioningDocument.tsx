@@ -115,7 +115,7 @@ const VersioningDocumentModal: React.FC<VersioningDocumentModalProps> = ({
       >
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-md font-bold text-gray-800">
-            Versioning Document
+            Versi Dokumen
           </h2>
           <button
             onClick={onClose}
@@ -125,7 +125,7 @@ const VersioningDocumentModal: React.FC<VersioningDocumentModalProps> = ({
           </button>
         </div>
         <p className="text-sm text-gray-600 mb-4">
-          You are versioning:{" "}
+          file saat ini:{" "}
           <span className="font-semibold">{document?.document_name}</span>
         </p>
 
@@ -157,7 +157,7 @@ const VersioningDocumentModal: React.FC<VersioningDocumentModalProps> = ({
               />
               <UploadCloud className="w-10 h-10 text-gray-400 mb-3" />
               <p className="text-gray-600">
-                Drag a file, or{" "}
+                Tarik dokumen, atau{" "}
                 <label
                   htmlFor="versioning-file-input"
                   className={`font-semibold ${
@@ -166,11 +166,11 @@ const VersioningDocumentModal: React.FC<VersioningDocumentModalProps> = ({
                       : "text-blue-600 cursor-pointer hover:underline"
                   }`}
                 >
-                  choose file
+                  pilih dokumen
                 </label>
               </p>
               <p className="text-xs text-gray-400 mt-1">
-                Only 1 PDF or TXT file is allowed.
+                hanya 1 dokumen pdf atau txt yang diizinkan.
               </p>
             </div>
 

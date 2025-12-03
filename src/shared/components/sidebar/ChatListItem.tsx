@@ -1,6 +1,5 @@
 import type { Chat, ChatChannel } from "../../types/types";
-// --- PERUBAHAN DI SINI: Hapus MessageSquare, kita akan pakai SVG kustom ---
-import { Globe, Instagram, Mail, type LucideIcon } from 'lucide-react';
+import { Globe, Instagram, Mail, Phone, type LucideIcon } from 'lucide-react';
 
 interface ChatListItemProps {
   chat: Chat;
@@ -19,29 +18,18 @@ const typeMessages = {
   resolve: "Percakapan terselesaikan.",
 };
 
-// --- PERUBAHAN DI SINI: Komponen Ikon Kanal Dimodifikasi ---
-// Pisahkan ikon Lucide ke konstanta terpisah
-const lucideIcons: Record<'web' | 'instagram' | 'email', { icon: LucideIcon, color: string, label: string }> = {
+const lucideIcons: Record<'web' | 'instagram' | 'email' | 'whatsapp', { icon: LucideIcon, color: string, label: string }> = {
   web: { icon: Globe, color: 'text-blue-500', label: 'Web' },
   instagram: { icon: Instagram, color: 'text-pink-500', label: 'Instagram' },
   email: { icon: Mail, color: 'text-red-500', label: 'Email' },
+
+  whatsapp: { icon: Phone, color: 'text-green-500', label: 'WhatsApp' },
 };
 
 const ChannelIcon: React.FC<{ channel: ChatChannel }> = ({ channel }) => {
-  // 1. Buat kasus khusus untuk WhatsApp
-  if (channel === 'whatsapp') {
-    return (
-      <div title="WhatsApp">
-        <img 
-          src="/whatsapp-svgrepo-com.svg" 
-          alt="WhatsApp" 
-          className="w-3.5 h-3.5 text-green-500" // Samakan ukuran dengan ikon Lucide
-        />
-      </div>
-    );
-  }
 
-  // 2. Gunakan ikon Lucide untuk kasus lainnya
+
+  
   const { icon: Icon, color, label } = lucideIcons[channel as keyof typeof lucideIcons] || lucideIcons.web;
   
   return (
@@ -50,8 +38,6 @@ const ChannelIcon: React.FC<{ channel: ChatChannel }> = ({ channel }) => {
     </div>
   );
 };
-// --- AKHIR PERUBAHAN ---
-
 
 export const ChatListItem = ({ chat, isActive, onClick, type, actionType, onActionClick }: ChatListItemProps) => {
   
