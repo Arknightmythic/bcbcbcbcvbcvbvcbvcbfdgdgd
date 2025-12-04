@@ -72,7 +72,7 @@ const TablePagination: React.FC<TablePaginationProps> = ({
               disabled={currentPage === 1}
               className="flex items-center justify-center h-[30px] px-3 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50"
             >
-              <span className="sr-only">Previous</span>
+              <span className="sr-only">Sebelumnya</span>
               <ChevronLeft className="w-3 h-3" />
             </button>
           </li>
@@ -90,7 +90,7 @@ const TablePagination: React.FC<TablePaginationProps> = ({
               disabled={currentPage === totalPages || totalPages === 0}
               className="flex items-center justify-center h-[30px] px-3 leading-tight text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50"
             >
-              <span className="sr-only">Next</span>
+              <span className="sr-only">Selanjutnya</span>
               <ChevronRight className="w-3 h-3" />
             </button>
           </li>

@@ -89,7 +89,7 @@ const PdfViewModal: React.FC<PdfViewModalProps> = ({ isOpen, onClose, url, isLoa
           {!isLoading && url && (
             <iframe
               src={url}
-              title="Document Viewer"
+              title="Pratinjau Dokumen"
               className="w-full h-full border-0"
               allow="fullscreen"
             />
@@ -97,7 +97,7 @@ const PdfViewModal: React.FC<PdfViewModalProps> = ({ isOpen, onClose, url, isLoa
 
           {!isLoading && !url && (
              <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
-                <p className="text-red-500">File tidak bisa dibuka!</p>
+                <p className="text-red-500">File tidak dapat dibuka!</p>
              </div>
           )}
         </div>
@@ -126,7 +126,7 @@ const PdfViewModal: React.FC<PdfViewModalProps> = ({ isOpen, onClose, url, isLoa
                {/* Tetap coba render iframe pake blob (kadang support di Android Chrome) */}
                <iframe
                  src={blobUrl}
-                 title="Mobile Document Viewer"
+                 title="Mobile Pratinjau Dokumen"
                  className="w-full h-full border-0"
                />
                

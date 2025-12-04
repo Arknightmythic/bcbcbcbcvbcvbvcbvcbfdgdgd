@@ -149,8 +149,8 @@ const TeamManagementPage = () => {
         isOpen={isConfirmModalOpen}
         onClose={() => setConfirmModalOpen(false)}
         onConfirm={handleConfirmDelete}
-        title="Confirm Deletion"
-        confirmText="Delete"
+        title="Konfirmasi Penghapusan"
+        confirmText="Hapus"
         confirmColor="bg-red-600 hover:bg-red-700"
         isConfirming={isDeleting}
       >

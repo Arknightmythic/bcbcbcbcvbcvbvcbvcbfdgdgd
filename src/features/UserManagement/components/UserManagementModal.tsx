@@ -178,7 +178,7 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
                       isMicrosoftAccount
                         ? "Dikelola oleh Microsoft SSO"
                         : isEditMode
-                        ? "Kosongkan jika tidak ingin mengubah"
+                        ? "Opsional"
                         : "Masukkan kata sandi (min. 8 karakter)"
                     }
                     value={formData.password}

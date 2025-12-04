@@ -87,23 +87,23 @@ export const AgentPanel = ({
   > = {
     queue: {
       icon: Clock,
-      title: "Chat Queue",
-      empty: "No chats in queue.",
+      title: "Antrian Chat",
+      empty: "Tidak ada antrian chat.",
     },
     active: {
       icon: MessageSquare,
-      title: "Active Sessions",
-      empty: "No active sessions.",
+      title: "Sesi Aktif",
+      empty: "Tidak ada sesi aktif.",
     },
     history: {
       icon: History,
-      title: "Chat History",
-      empty: "No chat history available.",
+      title: "Riwayat Chat",
+      empty: "Tidak ada riwayat chat tersedia.",
     },
     pending: {
       icon: Clock,
-      title: "Pending Chats",
-      empty: "No pending chats.",
+      title: "Chat Tertunda",
+      empty: "Tidak ada chat tertunda.",
     },
   };
 

@@ -282,9 +282,11 @@ const UploadPage: React.FC = () => {
     const { action, data } = modalState;
     switch (action) {
       case "upload":
+        const displayCategory = data.category === 'qna' 
+          ? 'Tanya Jawab' : data.category;
         return {
           title: "Konfirmasi Unggah",
-          body: `Apakah Anda yakin ingin mengunggah file ke kategori "${data.category}"?`,
+          body: `Apakah Anda yakin ingin mengunggah file ke kategori "${displayCategory}"?`,
           confirmText: "Unggah",
           confirmColor: "bg-blue-600 hover:bg-blue-700",
         };

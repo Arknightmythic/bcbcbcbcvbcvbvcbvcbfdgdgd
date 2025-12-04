@@ -10,7 +10,7 @@ import { useQueryClient } from '@tanstack/react-query';
 
 const channelFilterOptions = [
   { value: "", label: "Semua Channel" },
-  { value: "web", label: "Web" },
+  { value: "web", label: "Situs" },
   { value: "whatsapp", label: "WhatsApp" },
   { value: "instagram", label: "Instagram" },
   { value: "email", label: "Email" },
@@ -145,7 +145,7 @@ const HelpDeskListPanel: React.FC = () => {
   const handleRefresh = () => {
     refetch();
     queryClient.invalidateQueries({ queryKey: ['helpdesks', 'all'] });
-    toast.success('Refreshing helpdesk data...');
+    toast.success('Memuat ulang data berhasil');
   };
 
   const handleAcceptChat = (chatId: string) => {

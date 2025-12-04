@@ -42,7 +42,7 @@ const ApproveWithCorrectionModal: React.FC<ApproveWithCorrectionModalProps> = ({
         <div className="flex items-start justify-between pb-4 border-b border-gray-200">
           <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
             <CheckCircle className="w-6 h-6 text-green-600" />
-            Konfirmasi Validasi (Approve)
+            Konfirmasi Validasi
           </h3>
           <button type="button" className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center" onClick={handleClose}>
             <X className="w-5 h-5" />

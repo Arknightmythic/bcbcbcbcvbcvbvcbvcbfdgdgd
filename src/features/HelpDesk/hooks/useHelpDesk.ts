@@ -93,11 +93,11 @@ export const useCreateHelpDesk = () => {
   return useMutation({
     mutationFn: (data: HelpDeskPayload) => createHelpDesk(data),
     onSuccess: () => {
-      toast.success("Helpdesk created successfully!");
+      toast.success("Tiket bantuan berhasil dibuat!");
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Failed to create helpdesk.");
+      toast.error(err.response?.data?.message || "Gagal membuat tiket bantuan.");
     },
   });
 };
@@ -111,11 +111,11 @@ export const useUpdateHelpDesk = () => {
     mutationFn: ({ id, data }: { id: number; data: HelpDeskPayload }) =>
       updateHelpDesk({ id, data }),
     onSuccess: () => {
-      toast.success("Helpdesk updated successfully!");
+      toast.success("Tiket bantuan berhasil diperbarui!");
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Failed to update helpdesk.");
+      toast.error(err.response?.data?.message || "gagal memperbarui tiket bantuan.");
     },
   });
 };
@@ -129,12 +129,12 @@ export const useUpdateHelpDeskStatus = () => {
     mutationFn: ({ id, status }: { id: number; status: string }) =>
       updateHelpDeskStatus({ id, status }),
     onSuccess: () => {
-      toast.success("Helpdesk status updated successfully!");
+      toast.success("Tiket bantuan berhasil diperbarui statusnya!");
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
     onError: (err: any) => {
       toast.error(
-        err.response?.data?.message || "Failed to update helpdesk status."
+        err.response?.data?.message || "Gagal memperbarui status tiket bantuan."
       );
     },
   });
@@ -148,11 +148,11 @@ export const useDeleteHelpDesk = () => {
   return useMutation({
     mutationFn: (id: number) => deleteHelpDesk(id),
     onSuccess: () => {
-      toast.success("Helpdesk deleted successfully!");
+      toast.success("Tiket bantuan berhasil dihapus!");
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Failed to delete helpdesk.");
+      toast.error(err.response?.data?.message || "Gagal menghapus tiket bantuan.");
     },
   });
 };
@@ -167,11 +167,11 @@ export const useAcceptHelpDesk = () => {
     mutationFn: ({ id, userId }: { id: number; userId: number }) =>
       updateHelpDeskStatus({ id, status: "in_progress" }),
     onSuccess: () => {
-      toast.success("Chat accepted!");
+      toast.success("Tiket bantuan telah diterima!");
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Failed to accept chat.");
+      toast.error(err.response?.data?.message || "Gagal menerima tiket bantuan.");
     },
   });
 };
@@ -241,7 +241,7 @@ export const useSendHelpdeskMessage = () => {
       });
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Failed to send message.");
+      toast.error(err.response?.data?.message || "Gagal mengirim pesan.");
     },
   });
 };

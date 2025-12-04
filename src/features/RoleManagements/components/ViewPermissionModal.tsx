@@ -65,7 +65,7 @@ const ViewPermissionsModal: React.FC<ViewPermissionsModalProps> = ({ isOpen, onC
         
         <div className="flex justify-end mt-6 pt-4 border-t">
           <button onClick={onClose} className="px-5 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">
-            Close
+            Tutup
           </button>
         </div>
       </div>

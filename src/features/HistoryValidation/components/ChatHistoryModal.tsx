@@ -40,13 +40,13 @@ const ChatHistoryModal: React.FC<ChatHistoryModalProps> = ({ isOpen, onClose, ch
                   <div className="flex justify-end gap-x-2 mt-2 pt-2 border-t border-gray-200">
                     <button
                       className="p-1 text-green-600 hover:bg-green-50 rounded-md transition-colors"
-                      title="Approve"
+                      title="Setujui"
                     >
                       <CheckCircle className="w-5 h-5" />
                     </button>
                     <button
                       className="p-1 text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                      title="Reject"
+                      title="Tolak"
                     >
                       <XCircle className="w-5 h-5" />
                     </button>
@@ -57,7 +57,7 @@ const ChatHistoryModal: React.FC<ChatHistoryModalProps> = ({ isOpen, onClose, ch
           ))}
         </div>
         <div className="flex justify-end pt-4 border-t">
-          <button onClick={onClose} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Close</button>
+          <button onClick={onClose} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Tutup</button>
         </div>
       </div>
        <style>{`

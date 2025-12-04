@@ -85,7 +85,7 @@ const GuideTable: React.FC<GuideTableProps> = ({
             ) : isError ? (
               <tr>
                 <td colSpan={4} className="text-center py-10 text-red-500">
-                  Failed to load guides.
+                  Gagal memuat panduan.
                 </td>
               </tr>
             ) : guides.length > 0 ? (

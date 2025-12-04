@@ -229,9 +229,9 @@ const HelpDeskChatPage: React.FC = () => {
 
   const handleQuickResponse = (template: string) => {
     const quickResponses: Record<string, string> = {
-      'Greeting': 'Halo! Terima kasih telah menghubungi kami. Ada yang bisa saya bantu?',
-      'Checking': 'Saya sedang memeriksa informasi yang Anda butuhkan. Mohon tunggu sebentar.',
-      'Followup': 'Apakah ada hal lain yang bisa saya bantu?',
+      'Salam': 'Halo! Terima kasih telah menghubungi kami. Ada yang bisa saya bantu?',
+      'Pengecekan': 'Saya sedang memeriksa informasi yang Anda butuhkan. Mohon tunggu sebentar.',
+      'Tindak Lanjut': 'Apakah ada hal lain yang bisa saya bantu?',
     };
     setInput(quickResponses[template] || '');
     textareaRef.current?.focus();

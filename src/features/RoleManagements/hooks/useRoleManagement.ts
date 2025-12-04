@@ -35,7 +35,7 @@ export const useCreateRole = () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || "gagal membuat peran.");
+      toast.error(err.response?.data?.message || "Gagal membuat peran.");
     },
   });
 };
@@ -51,7 +51,7 @@ export const useUpdateRole = () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || "gagal memperbarui peran.");
+      toast.error(err.response?.data?.message || "Gagal memperbarui peran.");
     },
   });
 };

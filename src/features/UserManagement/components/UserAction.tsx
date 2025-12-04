@@ -64,7 +64,7 @@ const UserActions: React.FC<UserActionsProps> = ({ user, onAction }) => {
         <button
           onClick={() => { onAction('edit', user); setIsDropdownOpen(false); }}
           className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-          title="Edit User"
+          title="Ubah Akun"
         >
           <Edit className="w-4 h-4" />
           <span>Ubah Akun</span>
@@ -72,7 +72,7 @@ const UserActions: React.FC<UserActionsProps> = ({ user, onAction }) => {
         <button
           onClick={() => { onAction('delete', user); setIsDropdownOpen(false); }}
           className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
-          title="Delete User"
+          title="Hapus Akun"
         >
           <Trash2 className="w-4 h-4" />
           <span>Hapus Akun</span>
@@ -88,14 +88,14 @@ const UserActions: React.FC<UserActionsProps> = ({ user, onAction }) => {
         <button
           onClick={() => onAction('edit', user)}
           className="p-1 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-          title="Edit User"
+          title="Ubah Akun"
         >
           <Edit className="w-4 h-4" />
         </button>
         <button
           onClick={() => onAction('delete', user)}
           className="p-1 text-red-600 hover:bg-red-50 rounded-md transition-colors"
-          title="Delete User"
+          title="Hapus Akun"
         >
           <Trash2 className="w-4 h-4" />
         </button>

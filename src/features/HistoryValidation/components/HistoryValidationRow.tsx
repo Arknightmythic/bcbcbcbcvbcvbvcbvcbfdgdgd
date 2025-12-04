@@ -143,7 +143,7 @@ const HistoryValidationTableRow: React.FC<HistoryValidationTableRowProps> = ({ h
           }`}
         >
           <CheckCircle className="w-4 h-4" />
-          <span>Approve</span>
+          <span>Setujui</span>
         </button>
         <button
           disabled={!isPending}
@@ -155,7 +155,7 @@ const HistoryValidationTableRow: React.FC<HistoryValidationTableRowProps> = ({ h
           }`}
         >
           <XCircle className="w-4 h-4" />
-          <span>Reject</span>
+          <span>Tolak</span>
         </button>
       </div>
     </div>
@@ -198,7 +198,7 @@ const HistoryValidationTableRow: React.FC<HistoryValidationTableRowProps> = ({ h
                 ? "text-green-600 hover:bg-green-50" 
                 : "text-gray-300 cursor-not-allowed"
             }`}
-            title={isPending ? "Approve" : "Status sudah final"}
+            title={isPending ? "Setujui" : "Status sudah final"}
           >
             <CheckCircle className="w-4 h-4" />
           </button>
@@ -211,7 +211,7 @@ const HistoryValidationTableRow: React.FC<HistoryValidationTableRowProps> = ({ h
                 ? "text-red-600 hover:bg-red-50" 
                 : "text-gray-300 cursor-not-allowed"
             }`}
-            title={isPending ? "Reject" : "Status sudah final"}
+            title={isPending ? "Tolak" : "Status sudah final"}
           >
             <XCircle className="w-4 h-4" />
           </button>

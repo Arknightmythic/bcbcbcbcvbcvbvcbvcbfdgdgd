@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
 export const signInSchema = z.object({
-  email: z.email({ message: "Invalid email address" }),
-  password: z.string().min(1, { message: "Password is required" }),
+  email: z.email({ message: "format email tidak valid" }),
+  password: z.string().min(1, { message: "Sandi di perlukan" }),
 });
 
 export type SignInValues = z.infer<typeof signInSchema>;

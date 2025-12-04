@@ -34,7 +34,7 @@ const RoleTable: React.FC<RoleTableProps> = ({
             <tr className="text-left text-[10px] font-semibold text-gray-600">
               <th className="px-4 py-3 sticky top-0 bg-gray-100">Nama Role</th>
               <th className="px-4 py-3 sticky top-0 bg-gray-100">Tim</th>
-              <th className="px-4 py-3 sticky top-0 bg-gray-100">Izin</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100">Izin Akses</th>
               {/* --- PERUBAHAN DI SINI: Buat header Action sticky --- */}
               <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center right-0 z-10">Aksi</th>
             </tr>
