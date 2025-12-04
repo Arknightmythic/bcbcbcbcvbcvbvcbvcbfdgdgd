@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { X, CheckCircle, XCircle } from 'lucide-react';
 import type { ChatMessage } from '../utils/types';
 
@@ -10,16 +10,52 @@ interface ChatHistoryModalProps {
 }
 
 const ChatHistoryModal: React.FC<ChatHistoryModalProps> = ({ isOpen, onClose, chatHistory, userInitial = "U" }) => {
+  // 1. Buat Ref untuk mengakses elemen dialog
+  const dialogRef = useRef<HTMLDialogElement>(null);
+
+  // 2. Gunakan useEffect untuk handle Event Listener
+  // Ini memindahkan logika dari JSX (yang diprotes Sonar) ke JavaScript murni (yang valid)
+  useEffect(() => {
+    const dialogElement = dialogRef.current;
+    if (!isOpen || !dialogElement) return;
+
+    const handleBackdropClick = (e: MouseEvent) => {
+      // Cek apakah yang diklik adalah elemen dialog itu sendiri (backdrop)
+      if (e.target === dialogElement) {
+        onClose();
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    // Pasang listener
+    dialogElement.addEventListener('click', handleBackdropClick);
+    dialogElement.addEventListener('keydown', handleKeyDown);
+
+    // Bersihkan listener saat unmount/close
+    return () => {
+      dialogElement.removeEventListener('click', handleBackdropClick);
+      dialogElement.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]); // Dependency array memastikan listener update jika props berubah
+
   if (!isOpen) return null;
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-sm p-4 transition-opacity" 
-      onClick={onClose}
+    // PERBAIKAN: 
+    // Hapus semua props onClick dan onKeyDown dari sini.
+    // Biarkan useEffect yang menanganinya.
+    <dialog 
+      ref={dialogRef}
+      open={true}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-sm p-4 transition-opacity w-full h-full border-none m-0"
     >
       <div 
-        className="bg-white rounded-lg shadow-xl w-full max-w-2xl p-6 m-4 animate-fade-in-up flex flex-col" 
-        onClick={(e) => e.stopPropagation()}
+        className="bg-white rounded-lg shadow-xl w-full max-w-2xl p-6 m-4 animate-fade-in-up flex flex-col"
       >
         <div className="flex justify-between items-center pb-4 border-b">
           <h2 className="text-md font-bold text-gray-800">Chat History</h2>
@@ -66,7 +102,7 @@ const ChatHistoryModal: React.FC<ChatHistoryModalProps> = ({ isOpen, onClose, ch
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #aaa; }
       `}</style>
-    </div>
+    </dialog>
   );
 };
 

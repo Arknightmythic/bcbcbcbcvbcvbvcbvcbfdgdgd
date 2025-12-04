@@ -14,13 +14,12 @@ function Layout() {
     return savedState ? JSON.parse(savedState) : false;
   });
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const [isAgentPanelPopupOpen, setIsAgentPanelPopupOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(
-    window.matchMedia("(min-width: 1024px)").matches
+    globalThis.matchMedia("(min-width: 1024px)").matches
   );
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(min-width: 1024px)");
+    const mediaQuery = globalThis.matchMedia("(min-width: 1024px)");
     const handleChange = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
     mediaQuery.addEventListener("change", handleChange);
     if (!mediaQuery.matches) {
@@ -68,7 +67,6 @@ function Layout() {
         isCollapsed={isDesktop ? isSidebarCollapsed : false}
         isMobileOpen={isMobileSidebarOpen}
         isDesktop={isDesktop}
-        setOutletBlurred={setIsAgentPanelPopupOpen}
       />
       <div
         className={`flex flex-col flex-1 transition-all duration-300 ${
@@ -77,9 +75,7 @@ function Layout() {
       >
         <Header toggleSidebar={toggleSidebar} />
         <main
-          className={`flex flex-col flex-1 px-5 pt-5 bg-[#F9FAFB] overflow-y-auto custom-scrollbar relative ${
-            isAgentPanelPopupOpen ? "blur-sm pointer-events-none" : ""
-          } transition-all duration-300`}
+          className="flex flex-col flex-1 px-5 pt-5 bg-[#F9FAFB] overflow-y-auto custom-scrollbar relative transition-all duration-300"
         >
           <Outlet />
         </main>

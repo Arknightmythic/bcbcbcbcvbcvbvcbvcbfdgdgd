@@ -82,12 +82,12 @@ const DashboardRangePicker: React.FC<DashboardRangePickerProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
-  // FIX: Mengubah renderDateBox dari <div> menjadi <button>
-  // SonarQube Error: "Avoid non-native interactive elements..."
-  // Perubahan: div -> button, type="button", dan penyesuaian layout text
+  
+  
+  
   const renderDateBox = (label: string, value: string) => (
     <button 
-      type="button" // Penting: Mencegah submit form
+      type="button" 
       className="flex items-center justify-between bg-white py-2 px-3 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer w-full md:flex-1 text-left"
       onClick={toggleCalendar}
     >
@@ -138,7 +138,7 @@ const DashboardRangePicker: React.FC<DashboardRangePickerProps> = ({
             <button 
               onClick={() => onChange("", "")}
               className="text-xs text-red-500 hover:text-red-700 font-medium"
-              type="button" // Menambahkan type button eksplisit
+              type="button" 
             >
               Reset Range
             </button>
@@ -168,11 +168,8 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   defaultEndDate = getTodayDateString(),
 }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
-  
   const [activePeriod, setActivePeriod] = useState<Period>(defaultPeriod);
   const [isCustomDateVisible, setIsCustomDateVisible] = useState(defaultPeriod === 'custom');
-  
-  
   const [startDate, setStartDate] = useState(defaultStartDate);
   const [endDate, setEndDate] = useState(defaultEndDate);
 
@@ -222,6 +219,13 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const buttonInactiveClasses = 'bg-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-200';
   const buttonActiveClasses = 'bg-blue-600 text-white shadow-md';
 
+  const periodLabels: Record<string, string> = {
+    daily: 'Harian',
+    monthly: 'Bulanan',
+    yearly: 'Tahunan',
+    custom: 'Custom'
+  };
+
   return (
     <div className="bg-white p-5 px-6 rounded-lg mb-5 border border-gray-200 shadow-sm flex flex-col md:flex-row md:justify-between md:items-center gap-4 flex-wrap z-20 relative">
       <div className="flex-shrink-0">
@@ -245,14 +249,12 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
              <button
                key={period}
                onClick={() => handlePeriodClick(period)}
-               type="button" // Explicit type button
+               type="button"
                className={`${buttonBaseClasses} ${
                  activePeriod === period ? buttonActiveClasses : buttonInactiveClasses
                }`}
              >
-               {period === 'daily' ? 'Harian' : 
-                period === 'monthly' ? 'Bulanan' : 
-                period === 'yearly' ? 'Tahunan' : 'Custom'}
+               {periodLabels[period]}
              </button>
           ))}
         </div>
@@ -276,7 +278,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             <button
               onClick={handleApplyClick}
               disabled={!startDate || !endDate}
-              type="button" // Explicit type button
+              type="button" 
               className="bg-blue-600 text-white py-2 px-5 rounded-md text-sm font-medium transition-all duration-300 hover:bg-blue-700 hover:shadow-md w-full md:w-auto h-[38px] disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
               Terapkan

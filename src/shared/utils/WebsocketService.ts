@@ -20,14 +20,14 @@ type MessageHandler = (data: any) => void;
 
 class WebSocketService {
   private ws: WebSocket | null = null;
-  private url: string;
-  private token: string;
-  private messageHandlers: Map<string, MessageHandler[]> = new Map();
+  private readonly url: string;
+  private readonly token: string;
+  private readonly messageHandlers: Map<string, MessageHandler[]> = new Map();
   private reconnectAttempts = 0;
-  private maxReconnectAttempts = 5;
+  private readonly maxReconnectAttempts = 5;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private isConnecting = false;
-  private subscribedChannels: Set<string> = new Set();
+  private readonly subscribedChannels: Set<string> = new Set();
 
   constructor(url: string, token: string) {
     this.url = url;
@@ -159,7 +159,12 @@ class WebSocketService {
       return;
     }
 
-    const messageId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    // Perbaikan 1: Gunakan crypto.getRandomValues alih-alih Math.random()
+    const array = new Uint32Array(1);
+    crypto.getRandomValues(array);
+    const randomPart = array[0].toString(36);
+    const messageId = `${Date.now()}-${randomPart}`;
+
     const message: WebSocketMessage = {
       action: 'publish',
       channel: conversationId,

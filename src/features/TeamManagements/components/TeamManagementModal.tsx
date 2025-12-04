@@ -94,8 +94,7 @@ const TeamManagementModal: React.FC<TeamManagementModalProps> = ({ isOpen, onClo
                     onChange={() => handleCheckboxChange(page)}
                     className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
-                  <span className="text-sm text-gray-800 capitalize">{page.replace(/-/g, ' ')}</span>
-                </label>
+                  <span className="text-sm text-gray-800 capitalize">{page.replaceAll('-', ' ')}</span>                </label>
               ))}
             </div>
           </div>

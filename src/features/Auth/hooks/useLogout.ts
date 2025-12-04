@@ -13,12 +13,12 @@ export const useLogout = () => {
     mutationFn: logoutApi,
     onSuccess: () => {
       logoutFromStore();
-      window.location.href = '/login';
+      globalThis.location.href = '/login';
     },
     onError: (error) => {
       console.error('Logout failed but forcing client logout:', error);
       logoutFromStore();
-      window.location.href = '/login';
+      globalThis.location.href = '/login';
     }
   });
 };

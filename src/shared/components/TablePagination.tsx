@@ -28,15 +28,11 @@ const TablePagination: React.FC<TablePaginationProps> = ({
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const startItem = totalItems > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
-
-  // Filter opsi yang relevan (misalnya jika itemsPerPage 50, pastikan ada di opsi)
   const availableOptions = itemsPerPageOptions.filter(
     (opt) => 
       Number(opt.value) >= 10 && (Number(opt.value) >= itemsPerPage || Number(opt.value) % 10 === 0)
   );
-  
-  // Pastikan opsi yang sedang aktif ada di daftar, jika tidak tambahkan
-  if (!availableOptions.find(opt => Number(opt.value) === itemsPerPage)) {
+  if (!availableOptions.some(opt => Number(opt.value) === itemsPerPage)) {
     availableOptions.push({ value: String(itemsPerPage), label: String(itemsPerPage) });
     availableOptions.sort((a, b) => Number(a.value) - Number(b.value));
   }

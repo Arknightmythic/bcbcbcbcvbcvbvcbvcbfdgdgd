@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface AccessRightsProps {
   rights: string[];
@@ -11,9 +11,12 @@ const AccessRights: React.FC<AccessRightsProps> = ({ rights }) => {
 
   return (
     <div className="flex flex-wrap gap-1 max-w-xl">
-      {rights.map(right => (
-        <span key={right} className="px-2 py-0.5 text-[10px] bg-gray-200 text-gray-800 rounded-full">
-          {right.replace(/_/g, ' ')}
+      {rights.map((right) => (
+        <span
+          key={right}
+          className="px-2 py-0.5 text-[10px] bg-gray-200 text-gray-800 rounded-full"
+        >
+          {right.replaceAll("_", " ")}
         </span>
       ))}
     </div>

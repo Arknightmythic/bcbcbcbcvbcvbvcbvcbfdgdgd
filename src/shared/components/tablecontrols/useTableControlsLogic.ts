@@ -6,9 +6,7 @@ import {
   useCallback,
   useMemo,
 } from "react";
-import { formatDate } from "../../utils/formatDate"; // Sesuaikan path
 
-// Export Interface
 export interface FilterOption {
   value: string;
   label: string;
@@ -24,7 +22,7 @@ export interface FilterConfig<T extends Record<string, any>> {
   endDateKey?: string;
 }
 
-// Props
+
 interface UseTableControlsLogicProps<T extends Record<string, any>> {
   filters: T;
   onFilterChange: (filterName: keyof T, value: any) => void;
@@ -33,7 +31,7 @@ interface UseTableControlsLogicProps<T extends Record<string, any>> {
   onSearchSubmit: () => void;
 }
 
-// Return Value
+
 interface UseTableControlsLogicResult<T extends Record<string, any>> {
   activeDropdown: "filter" | "date" | null;
   coords: { top: number; left: number } | null;
@@ -66,7 +64,7 @@ const calculatePosition = (
   const scrollY = window.scrollY;
   const scrollX = window.scrollX;
 
-  // Mobile layout
+  
   if (screenW < 640) {
     return {
       top: rect.bottom + scrollY + 8,
@@ -74,7 +72,7 @@ const calculatePosition = (
     };
   }
 
-  // Desktop layout
+  
   const estimatedWidth = type === "date" ? 340 : 300;
   let leftPos = rect.left + scrollX;
 
@@ -108,7 +106,7 @@ export const useTableControlsLogic = <T extends Record<string, any>>({
     [Date | null, Date | null]
   >([null, null]);
 
-  // Memoized Configs
+  
   const dateRangeConfig = useMemo(
     () => filterConfig.find((c) => c.type === "date-range"),
     [filterConfig]
@@ -135,7 +133,7 @@ export const useTableControlsLogic = <T extends Record<string, any>>({
     [activeDropdown]
   );
 
-  // Sync temp state when dropdown opens or filters prop changes
+  
   useEffect(() => {
     if (activeDropdown === "filter") {
       setTempFilters({ ...filters });
@@ -149,7 +147,7 @@ export const useTableControlsLogic = <T extends Record<string, any>>({
     }
   }, [activeDropdown, filters, dateRangeConfig]);
 
-  // Reposition on resize/scroll
+  
   useLayoutEffect(() => {
     const handleResize = () => {
       if (activeDropdown) {
@@ -167,29 +165,32 @@ export const useTableControlsLogic = <T extends Record<string, any>>({
     };
   }, [activeDropdown]);
 
-  // Click outside handler (membantu memisahkan logika dari UI)
+  
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
       const portalEl = document.getElementById("table-controls-portal");
       const filterBtn = filterBtnRef.current;
       const dateBtn = dateBtnRef.current;
-      // Perlu juga mengecek elemen CustomSelect jika ada
-      const customSelectDropdown = document.getElementById(
-        "custom-select-dropdown"
-      ); 
+      const customSelectDropdown = document.getElementById("custom-select-dropdown");
+
+      // PERBAIKAN: Pecah kondisi kompleks menjadi variabel terpisah
+      const isOutsidePortal = portalEl ? !portalEl.contains(target) : false;
+      const isOutsideFilterBtn = filterBtn ? !filterBtn.contains(target) : true;
+      const isOutsideDateBtn = dateBtn ? !dateBtn.contains(target) : true;
+      const isOutsideCustomDropdown = customSelectDropdown ? !customSelectDropdown.contains(target) : true;
 
       if (
-        portalEl &&
-        !portalEl.contains(event.target as Node) &&
-        (!filterBtn || !filterBtn.contains(event.target as Node)) &&
-        (!dateBtn || !dateBtn.contains(event.target as Node)) &&
-        (!customSelectDropdown ||
-          !customSelectDropdown.contains(event.target as Node))
+        isOutsidePortal &&
+        isOutsideFilterBtn &&
+        isOutsideDateBtn &&
+        isOutsideCustomDropdown
       ) {
         setActiveDropdown(null);
         setCoords(null);
       }
     };
+    
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
@@ -208,29 +209,29 @@ export const useTableControlsLogic = <T extends Record<string, any>>({
     if (!dateRangeConfig) return;
     const [start, end] = tempDateRange;
 
-    // 1. Handle Start Date
+    
     if (start) {
-      // React-datepicker memberikan object Date yang sudah diset ke 00:00:00 waktu lokal (Local Time)
-      // Kita langsung convert ke ISO String (UTC)
-      // Contoh: User pilih 30 Nov (WIB/GMT+7) -> Date object: 30 Nov 00:00 WIB
-      // toISOString() -> "2025-11-29T17:00:00.000Z" (Benar, mundur 7 jam)
+      
+      
+      
+      
       onFilterChange(dateRangeConfig.startDateKey as keyof T, start.toISOString());
     } else {
       onFilterChange(dateRangeConfig.startDateKey as keyof T, "");
     }
 
-    // 2. Handle End Date
+    
     if (end) {
-      // End date dari picker biasanya juga 00:00:00 waktu lokal.
-      // Kita harus mengubahnya menjadi AKHIR hari tersebut (23:59:59) agar range-nya mencakup seluruh hari.
       
-      // Clone tanggal agar tidak memutasi state tempDateRange secara langsung
+      
+      
+      
       const endOfDay = new Date(end);
       endOfDay.setHours(23, 59, 59, 999);
 
-      // Convert ke ISO String (UTC)
-      // Contoh: User pilih 30 Nov (WIB) -> Date object: 30 Nov 23:59 WIB
-      // toISOString() -> "2025-11-30T16:59:59.999Z" (Benar, mundur 7 jam)
+      
+      
+      
       onFilterChange(dateRangeConfig.endDateKey as keyof T, endOfDay.toISOString());
     } else {
       onFilterChange(dateRangeConfig.endDateKey as keyof T, "");
@@ -265,16 +266,12 @@ export const useTableControlsLogic = <T extends Record<string, any>>({
     const startVal = filters[dateRangeConfig.startDateKey as string];
     const endVal = filters[dateRangeConfig.endDateKey as string];
 
-    // Helper untuk format tampilan ke user (Local Time)
-    // Input: "2025-11-29T17:00:00.000Z" (UTC) -> Output: "30 Nov 2025" (WIB)
     const formatDisplayDate = (isoString: string) => {
       if (!isoString) return "";
       const date = new Date(isoString);
       
-      // Validasi jika string bukan tanggal valid
       if (isNaN(date.getTime())) return isoString; 
 
-      // Format ke lokal Indonesia (id-ID) atau sesuai kebutuhan
       return date.toLocaleDateString("id-ID", {
         day: "2-digit",
         month: "short",

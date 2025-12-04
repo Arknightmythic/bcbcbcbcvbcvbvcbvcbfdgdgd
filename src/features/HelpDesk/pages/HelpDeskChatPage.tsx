@@ -1,21 +1,25 @@
-// src/features/HelpDesk/pages/HelpDeskChatPage.tsx
-
-import React, { useState, useRef, useEffect, useMemo } from 'react'; 
-import { useParams, useNavigate } from 'react-router';
-import { Send, Check, ArrowLeft, Loader2, UserPlus } from 'lucide-react'; 
-import type { HelpDeskMessage } from '../utils/types';
-import toast from 'react-hot-toast';
-import { 
-  useGetChatHistory, 
-  useGetHelpDeskBySessionId, 
+import React, { useState, useRef, useEffect, useMemo } from "react";
+import { useParams, useNavigate } from "react-router";
+import { Send, Check, ArrowLeft, Loader2, UserPlus } from "lucide-react";
+import type { HelpDeskMessage } from "../utils/types";
+import toast from "react-hot-toast";
+import {
+  useGetChatHistory,
+  useGetHelpDeskBySessionId,
   useResolveHelpDesk,
   useSendHelpdeskMessage,
-  useAcceptHelpDesk
-} from '../hooks/useHelpDesk';
-import { getWebSocketService } from '../../../shared/utils/WebsocketService';
+  useAcceptHelpDesk,
+} from "../hooks/useHelpDesk";
+import { getWebSocketService } from "../../../shared/utils/WebsocketService";
 
-const QuickResponseButton = ({ text, onClick }: { text: string; onClick: () => void }) => (
-  <button 
+const QuickResponseButton = ({
+  text,
+  onClick,
+}: {
+  text: string;
+  onClick: () => void;
+}) => (
+  <button
     onClick={onClick}
     className="text-xs font-medium text-blue-600 border border-blue-200 bg-blue-50 rounded-full px-3 py-1.5 hover:bg-blue-100 transition-colors"
   >
@@ -26,8 +30,8 @@ const QuickResponseButton = ({ text, onClick }: { text: string; onClick: () => v
 const HelpDeskChatPage: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
-  const [input, setInput] = useState('');
-  
+  const [input, setInput] = useState("");
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const observerTarget = useRef<HTMLDivElement>(null);
@@ -44,10 +48,11 @@ const HelpDeskChatPage: React.FC = () => {
     isLoading: isLoadingChat,
     isError,
     refetch: refetchChatHistory,
-  } = useGetChatHistory(sessionId || '', 50, !!sessionId);
+  } = useGetChatHistory(sessionId || "", 50, !!sessionId);
 
-  const { data: helpdeskInfo, refetch: refetchInfo } = useGetHelpDeskBySessionId(sessionId || '', !!sessionId);
-  
+  const { data: helpdeskInfo, refetch: refetchInfo } =
+    useGetHelpDeskBySessionId(sessionId || "", !!sessionId);
+
   const resolveMutation = useResolveHelpDesk();
   const sendMessageMutation = useSendHelpdeskMessage();
   const acceptMutation = useAcceptHelpDesk();
@@ -56,42 +61,50 @@ const HelpDeskChatPage: React.FC = () => {
   // Normalisasi status ke lowercase agar "Queue" terbaca sebagai "queue"
   const normalizedStatus = helpdeskInfo?.status?.toLowerCase();
 
-  const isQueue = 
-    normalizedStatus === 'queue' || 
-    normalizedStatus === 'open' || 
-    normalizedStatus === 'pending';
-  
-  const canInteract = normalizedStatus === 'in_progress';
-  
-  const isResolved = normalizedStatus === 'resolved' || normalizedStatus === 'closed';
+  const isQueue =
+    normalizedStatus === "queue" ||
+    normalizedStatus === "open" ||
+    normalizedStatus === "pending";
 
-  const currentChatUser = sessionId 
-    ? helpdeskInfo?.platform_unique_id || `Session ${sessionId.substring(0, 8)}...`
-    : 'Sesi Chatbot';
+  const canInteract = normalizedStatus === "in_progress";
 
+  const isResolved =
+    normalizedStatus === "resolved" || normalizedStatus === "closed";
+
+  const currentChatUser = sessionId
+    ? helpdeskInfo?.platform_unique_id ||
+      `Session ${sessionId.substring(0, 8)}...`
+    : "Sesi Chatbot";
+
+  let statusColorClass = "bg-gray-400"; // Default color
+  if (isQueue) {
+    statusColorClass = "bg-orange-500";
+  } else if (canInteract) {
+    statusColorClass = "bg-green-500";
+  }
   // --- WEBSOCKET ---
   useEffect(() => {
     if (!sessionId) return;
 
     const ws = wsService.current;
-    
+
     if (!ws.isConnected()) {
       ws.connect().catch((error) => {
-        console.error('Failed to connect to WebSocket:', error);
+        console.error("Failed to connect to WebSocket:", error);
       });
     }
 
     const agentChannel = `${sessionId}-agent`;
-    
+
     const unsubscribe = ws.onMessage(agentChannel, (data: any) => {
-      console.log('📨 Received WebSocket message:', data);
+      console.log("📨 Received WebSocket message:", data);
       refetchChatHistory();
-      if (data?.type === 'status_update') {
+      if (data?.type === "status_update") {
         refetchInfo();
       }
     });
 
-    ws.subscribe(agentChannel, '$');
+    ws.subscribe(agentChannel, "$");
     console.log(`✅ Subscribed to channel: ${agentChannel}`);
 
     return () => {
@@ -111,7 +124,7 @@ const HelpDeskChatPage: React.FC = () => {
 
     return allMessages.map((item) => ({
       id: `msg-${item.id}`,
-      sender: item.message.type === 'human' ? 'user' : 'agent',
+      sender: item.message.type === "human" ? "user" : "agent",
       text: item.message.data.content,
       timestamp: item.created_at,
     }));
@@ -125,12 +138,13 @@ const HelpDeskChatPage: React.FC = () => {
       (entries) => {
         if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
           if (chatContainerRef.current) {
-            previousScrollHeight.current = chatContainerRef.current.scrollHeight;
+            previousScrollHeight.current =
+              chatContainerRef.current.scrollHeight;
           }
           fetchNextPage();
         }
       },
-      { threshold: 1.0 }
+      { threshold: 1 }
     );
 
     observer.observe(observerTarget.current);
@@ -147,8 +161,13 @@ const HelpDeskChatPage: React.FC = () => {
   }, [messages.length]);
 
   useEffect(() => {
-    if (shouldScrollToBottom && chatContainerRef.current && messages.length > 0) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    if (
+      shouldScrollToBottom &&
+      chatContainerRef.current &&
+      messages.length > 0
+    ) {
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
       setShouldScrollToBottom(false);
     }
   }, [messages, shouldScrollToBottom]);
@@ -160,14 +179,14 @@ const HelpDeskChatPage: React.FC = () => {
       toast.error("Data helpdesk tidak valid");
       return;
     }
-    
+
     acceptMutation.mutate(
-      { id: helpdeskInfo.id, userId: 1 }, 
+      { id: helpdeskInfo.id, userId: 1 },
       {
         onSuccess: () => {
           toast.success("Chat terhubung! Anda sekarang dapat membalas.");
-          refetchInfo(); 
-        }
+          refetchInfo();
+        },
       }
     );
   };
@@ -178,13 +197,13 @@ const HelpDeskChatPage: React.FC = () => {
       return;
     }
     const userAgentTime = new Date().toISOString();
-    
+
     resolveMutation.mutate(
-      { sessionId, timestamp: userAgentTime }, 
+      { sessionId, timestamp: userAgentTime },
       {
         onSuccess: () => {
           toast.success("Percakapan telah diselesaikan.");
-          navigate('/helpdesk'); 
+          navigate("/helpdesk");
         },
       }
     );
@@ -192,18 +211,22 @@ const HelpDeskChatPage: React.FC = () => {
 
   const handleSend = async () => {
     if (!input.trim() || !sessionId) return;
-    
+
     if (!canInteract) {
       toast.error("Anda harus menghubungkan chat ini terlebih dahulu.");
       return;
     }
 
     const sendTime = new Date();
-    const startTimestampString = sendTime.toISOString().replace('T', ' ').replace('Z', '').slice(0, 23);
+    const startTimestampString = sendTime
+      .toISOString()
+      .replace("T", " ")
+      .replace("Z", "")
+      .slice(0, 23);
     const messageText = input.trim();
-    
-    setInput('');
-    if (textareaRef.current) textareaRef.current.style.height = '44px'; 
+
+    setInput("");
+    if (textareaRef.current) textareaRef.current.style.height = "44px";
 
     try {
       await sendMessageMutation.mutateAsync({
@@ -212,33 +235,35 @@ const HelpDeskChatPage: React.FC = () => {
         user_type: "agent",
         start_timestamp: startTimestampString,
       });
-      
+
       setShouldScrollToBottom(true);
     } catch (error) {
-      console.error('Failed to send message:', error);
-      setInput(messageText); 
+      console.error("Failed to send message:", error);
+      setInput(messageText);
     }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const textarea = e.target;
     setInput(textarea.value);
-    textarea.style.height = 'auto'; 
+    textarea.style.height = "auto";
     textarea.style.height = `${Math.min(textarea.scrollHeight, 160)}px`;
   };
 
   const handleQuickResponse = (template: string) => {
     const quickResponses: Record<string, string> = {
-      'Salam': 'Halo! Terima kasih telah menghubungi kami. Ada yang bisa saya bantu?',
-      'Pengecekan': 'Saya sedang memeriksa informasi yang Anda butuhkan. Mohon tunggu sebentar.',
-      'Tindak Lanjut': 'Apakah ada hal lain yang bisa saya bantu?',
+      Salam:
+        "Halo! Terima kasih telah menghubungi kami. Ada yang bisa saya bantu?",
+      Pengecekan:
+        "Saya sedang memeriksa informasi yang Anda butuhkan. Mohon tunggu sebentar.",
+      "Tindak Lanjut": "Apakah ada hal lain yang bisa saya bantu?",
     };
-    setInput(quickResponses[template] || '');
+    setInput(quickResponses[template] || "");
     textareaRef.current?.focus();
   };
 
   const handleGoBack = () => {
-    navigate('/helpdesk');
+    navigate("/helpdesk");
   };
 
   // --- RENDER ---
@@ -255,7 +280,10 @@ const HelpDeskChatPage: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center p-8">
         <p className="text-red-500 mb-4">Gagal memuat riwayat chat</p>
-        <button onClick={handleGoBack} className="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-900">
+        <button
+          onClick={handleGoBack}
+          className="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-900"
+        >
           Kembali
         </button>
       </div>
@@ -275,22 +303,21 @@ const HelpDeskChatPage: React.FC = () => {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h2 className="text-md font-semibold text-gray-800">{currentChatUser}</h2>
+            <h2 className="text-md font-semibold text-gray-800">
+              {currentChatUser}
+            </h2>
             {helpdeskInfo && (
               <div className="flex items-center gap-2 mt-0.5">
-                <span className={`w-2 h-2 rounded-full ${
-                  isQueue ? 'bg-orange-500' : 
-                  canInteract ? 'bg-green-500' : 
-                  'bg-gray-400'
-                }`} />
+                <span className={`w-2 h-2 rounded-full ${statusColorClass}`} />
                 <p className="text-xs text-gray-500 capitalize font-medium">
-                  {helpdeskInfo.platform} • {helpdeskInfo.status.replace('_', ' ')}
+                  {helpdeskInfo.platform} •{" "}
+                  {helpdeskInfo.status.replace("_", " ")}
                 </p>
               </div>
             )}
           </div>
         </div>
-        
+
         <div className="flex gap-2">
           {/* Tombol Hubungkan (Hanya jika Queue) */}
           {isQueue && (
@@ -327,7 +354,7 @@ const HelpDeskChatPage: React.FC = () => {
       </div>
 
       {/* Area Bubble Chat */}
-      <div 
+      <div
         ref={chatContainerRef}
         className="flex-1 py-4 px-4 md:px-8 lg:px-12 overflow-y-auto custom-scrollbar space-y-4"
       >
@@ -344,20 +371,38 @@ const HelpDeskChatPage: React.FC = () => {
             <div className="bg-gray-100 p-4 rounded-full mb-3">
               <Send className="w-8 h-8 text-gray-400 rotate-45" />
             </div>
-            <p className="text-gray-500 font-medium">Belum ada riwayat percakapan</p>
-            <p className="text-sm text-gray-400 mt-1">Riwayat chat AI sebelumnya akan muncul di sini</p>
+            <p className="text-gray-500 font-medium">
+              Belum ada riwayat percakapan
+            </p>
+            <p className="text-sm text-gray-400 mt-1">
+              Riwayat chat AI sebelumnya akan muncul di sini
+            </p>
           </div>
         ) : (
           messages.map((msg) => (
-            <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-start' : 'justify-end'}`}>
-              <div className={`relative p-3 rounded-xl max-w-[85%] md:max-w-[75%] shadow-sm text-sm leading-relaxed ${
-                  msg.sender === 'user' 
-                    ? 'bg-gray-100 text-gray-800 rounded-bl-none' 
-                    : 'bg-blue-600 text-white rounded-br-none'
-              }`}>
+            <div
+              key={msg.id}
+              className={`flex ${
+                msg.sender === "user" ? "justify-start" : "justify-end"
+              }`}
+            >
+              <div
+                className={`relative p-3 rounded-xl max-w-[85%] md:max-w-[75%] shadow-sm text-sm leading-relaxed ${
+                  msg.sender === "user"
+                    ? "bg-gray-100 text-gray-800 rounded-bl-none"
+                    : "bg-blue-600 text-white rounded-br-none"
+                }`}
+              >
                 <p className="whitespace-pre-wrap">{msg.text}</p>
-                <p className={`text-[10px] mt-1 text-right opacity-70 ${msg.sender === 'user' ? 'text-gray-500' : 'text-blue-100'}`}>
-                  {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                <p
+                  className={`text-[10px] mt-1 text-right opacity-70 ${
+                    msg.sender === "user" ? "text-gray-500" : "text-blue-100"
+                  }`}
+                >
+                  {new Date(msg.timestamp).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 </p>
               </div>
             </div>
@@ -375,12 +420,14 @@ const HelpDeskChatPage: React.FC = () => {
       </div>
 
       {/* Footer / Input Area */}
-      
+
       {/* 1. Jika Queue -> Tampilkan Banner */}
       {isQueue && (
         <div className="p-4 border-t border-gray-200 bg-orange-50 text-center animate-in slide-in-from-bottom-2">
           <p className="text-sm text-orange-800 font-medium">
-            Tiket ini masih dalam antrian. Klik <span className="font-bold">Hubungkan</span> di atas untuk mulai membalas.
+            Tiket ini masih dalam antrian. Klik{" "}
+            <span className="font-bold">Hubungkan</span> di atas untuk mulai
+            membalas.
           </p>
         </div>
       )}
@@ -389,31 +436,40 @@ const HelpDeskChatPage: React.FC = () => {
       {canInteract && (
         <div className="p-4 border-t border-gray-200 bg-gray-50 space-y-3">
           <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-            <QuickResponseButton text="Salam" onClick={() => handleQuickResponse('Greeting')} />
-            <QuickResponseButton text="Cek" onClick={() => handleQuickResponse('Checking')} />
-            <QuickResponseButton text="Bertanya" onClick={() => handleQuickResponse('Followup')} />
+            <QuickResponseButton
+              text="Salam"
+              onClick={() => handleQuickResponse("Greeting")}
+            />
+            <QuickResponseButton
+              text="Cek"
+              onClick={() => handleQuickResponse("Checking")}
+            />
+            <QuickResponseButton
+              text="Bertanya"
+              onClick={() => handleQuickResponse("Followup")}
+            />
           </div>
-          <div className="flex gap-3 items-end"> 
+          <div className="flex gap-3 items-end">
             <textarea
               ref={textareaRef}
               value={input}
-              onChange={handleInputChange} 
+              onChange={handleInputChange}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault(); 
-                  handleSend(); 
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
                 }
               }}
               disabled={sendMessageMutation.isPending}
-              className="flex-1 py-3 px-4 border border-gray-300 rounded-xl text-sm resize-none min-h-[48px] max-h-[160px] overflow-y-auto focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:opacity-70 transition-all shadow-sm" 
+              className="flex-1 py-3 px-4 border border-gray-300 rounded-xl text-sm resize-none min-h-[48px] max-h-[160px] overflow-y-auto focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:opacity-70 transition-all shadow-sm"
               placeholder="Ketik balasan Anda..."
               rows={1}
-              style={{ height: '48px' }} 
+              style={{ height: "48px" }}
             />
             <button
               onClick={handleSend}
               disabled={!input.trim() || sendMessageMutation.isPending}
-              className="w-12 h-12 bg-gray-900 rounded-xl text-white cursor-pointer flex items-center justify-center hover:bg-gray-800 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md" 
+              className="w-12 h-12 bg-gray-900 rounded-xl text-white cursor-pointer flex items-center justify-center hover:bg-gray-800 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
               aria-label="Kirim pesan"
             >
               {sendMessageMutation.isPending ? (
@@ -428,21 +484,5 @@ const HelpDeskChatPage: React.FC = () => {
     </div>
   );
 };
-
-// Ikon Placeholder
-const MessageSquare = ({ className }: { className?: string }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className={className}
-  >
-    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-  </svg>
-);
 
 export default HelpDeskChatPage;

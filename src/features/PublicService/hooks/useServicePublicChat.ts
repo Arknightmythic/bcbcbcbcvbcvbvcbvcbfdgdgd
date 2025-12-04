@@ -225,59 +225,65 @@ export const useServicePublicChat = () => {
     if (!wsService.current.isConnected()) return;
 
     currentConversationIdRef.current = sessionId;
-    
+
+    // --- Helper 1: Handle Standard Answer ---
+    const handleWsAnswer = (data: any) => {
+      const botMessageId = `agent-${data.chat_history_id}`;
+      
+      if (processedMessageIdsRef.current.has(botMessageId)) return;
+      processedMessageIdsRef.current.add(botMessageId);
+      
+      const cleanedAnswer = cleanText(data.answer);
+      if (!cleanedAnswer) return;
+      
+      const botMessage: ChatMessage = {
+        id: botMessageId,
+        dbId: data.answer_id, 
+        sender: "agent",
+        text: cleanedAnswer,
+        timestamp: new Date().toISOString(),
+        feedback: null,
+        is_answered: data.is_answered,
+      };
+      
+      setMessages((prev) => addMessageOrdered(prev, botMessage));
+    };
+
+    // --- Helper 2: Handle Agent Message ---
+    const handleWsAgentMessage = (data: any) => {
+      const agentMessageId = data.chat_history_id 
+        ? `agent-${data.chat_history_id}` 
+        : `agent-ws-${Date.now()}`;
+      
+      if (processedMessageIdsRef.current.has(agentMessageId)) return;
+      processedMessageIdsRef.current.add(agentMessageId);
+      
+      const cleanedMessage = cleanText(data.message);
+      if (!cleanedMessage) return;
+      
+      const agentMessage: ChatMessage = {
+        id: agentMessageId,
+        dbId: data.chat_history_id,
+        sender: "agent",
+        text: cleanedMessage,
+        timestamp: data.timestamp 
+          ? new Date(data.timestamp * 1000).toISOString() 
+          : new Date().toISOString(),
+        feedback: null,
+        isHumanAgent: true,
+      };
+      
+      setMessages((prev) => addMessageOrdered(prev, agentMessage));
+    };
+
+    // --- Main Callback (Simplified) ---
     const unsubscribe = wsService.current.onMessage(sessionId, (data) => {
       console.log('📨 WebSocket message received:', data);
       
-      
       if (data.answer && data.chat_history_id) {
-        const botMessageId = `agent-${data.chat_history_id}`;
-        
-        if (processedMessageIdsRef.current.has(botMessageId)) return;
-        processedMessageIdsRef.current.add(botMessageId);
-        
-        const cleanedAnswer = cleanText(data.answer);
-        if (!cleanedAnswer) return;
-        
-        const botMessage: ChatMessage = {
-          id: botMessageId,
-          dbId: data.answer_id, 
-          sender: "agent",
-          text: cleanedAnswer,
-          timestamp: new Date().toISOString(),
-          feedback: null,
-          is_answered: data.is_answered,
-        };
-        
-        setMessages((prev) => addMessageOrdered(prev, botMessage));
-        
-      }
-      
-      
-      else if (data.user_type === 'agent' && data.message) {
-        const agentMessageId = data.chat_history_id 
-          ? `agent-${data.chat_history_id}` 
-          : `agent-ws-${Date.now()}`;
-        
-        if (processedMessageIdsRef.current.has(agentMessageId)) return;
-        processedMessageIdsRef.current.add(agentMessageId);
-        
-        const cleanedMessage = cleanText(data.message);
-        if (!cleanedMessage) return;
-        
-        const agentMessage: ChatMessage = {
-          id: agentMessageId,
-          dbId: data.chat_history_id,
-          sender: "agent",
-          text: cleanedMessage,
-          timestamp: data.timestamp 
-            ? new Date(data.timestamp * 1000).toISOString() 
-            : new Date().toISOString(),
-          feedback: null,
-          isHumanAgent: true,
-        };
-        
-        setMessages((prev) => addMessageOrdered(prev, agentMessage));
+        handleWsAnswer(data);
+      } else if (data.user_type === 'agent' && data.message) {
+        handleWsAgentMessage(data);
       }
     });
 

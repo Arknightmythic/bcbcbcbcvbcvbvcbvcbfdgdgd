@@ -14,7 +14,7 @@ export const getDefaultPath = () => {
   }
 
   
-  if (!user.role || !user.role.team) {
+  if (!user?.role?.team) {
     return "/unauthorized";
   }
 
@@ -65,7 +65,7 @@ export const ProtectedRoute = ({ allowedPage, children }: { allowedPage: string,
   const user = useAuthStore((state) => state.user);
 
   
-  if (!user?.role || !user?.role?.team) {
+  if (!user?.role?.team) {
 
     return <Navigate to="/unauthorized" replace />;
   }

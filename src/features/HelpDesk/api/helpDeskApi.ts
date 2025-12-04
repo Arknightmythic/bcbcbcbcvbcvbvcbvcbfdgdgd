@@ -2,15 +2,12 @@ import { instanceApiToken } from "../../../shared/utils/Axios";
 import type {
   HelpDesk,
   HelpDeskPayload,
-  HelpDeskStatusUpdate,
   PaginatedHelpDeskResponse,
   ApiResponse,
   ChatHistoryResponse,
 } from "../utils/types";
 
-/**
- * Get all helpdesks with pagination and search
- */
+
 export const getHelpDesks = async (
   params: URLSearchParams
 ): Promise<PaginatedHelpDeskResponse> => {
@@ -21,9 +18,6 @@ export const getHelpDesks = async (
   return response.data.data;
 };
 
-/**
- * Get a single helpdesk by ID
- */
 export const getHelpDeskById = async (id: number): Promise<HelpDesk> => {
   const response = await instanceApiToken.get<ApiResponse<HelpDesk>>(
     `/api/helpdesk/${id}`
@@ -31,9 +25,6 @@ export const getHelpDeskById = async (id: number): Promise<HelpDesk> => {
   return response.data.data;
 };
 
-/**
- * Get a helpdesk by session_id
- */
 export const getHelpDeskBySessionId = async (
   sessionId: string
 ): Promise<HelpDesk | null> => {
@@ -58,9 +49,6 @@ export const getHelpDeskBySessionId = async (
   }
 };
 
-/**
- * Create a new helpdesk
- */
 export const createHelpDesk = async (data: HelpDeskPayload): Promise<HelpDesk> => {
   const response = await instanceApiToken.post<ApiResponse<HelpDesk>>(
     "/api/helpdesk",
@@ -69,9 +57,7 @@ export const createHelpDesk = async (data: HelpDeskPayload): Promise<HelpDesk> =
   return response.data.data;
 };
 
-/**
- * Update helpdesk - full update
- */
+
 export const updateHelpDesk = async ({
   id,
   data,
@@ -86,9 +72,7 @@ export const updateHelpDesk = async ({
   return response.data.data;
 };
 
-/**
- * Update helpdesk status only
- */
+
 export const updateHelpDeskStatus = async ({
   id,
   status,
@@ -103,16 +87,12 @@ export const updateHelpDeskStatus = async ({
   return response.data.data;
 };
 
-/**
- * Delete a helpdesk
- */
+
 export const deleteHelpDesk = async (id: number): Promise<void> => {
   await instanceApiToken.delete(`/api/helpdesk/${id}`);
 };
 
-/**
- * Fetch all helpdesks (for scenarios where you need all data)
- */
+
 export const getAllHelpDesks = async (): Promise<HelpDesk[]> => {
   const LIMIT = 100;
   
@@ -148,9 +128,7 @@ export const getAllHelpDesks = async (): Promise<HelpDesk[]> => {
   return [...firstBatchData, ...remainingData];
 };
 
-/**
- * Get helpdesks by status
- */
+
 export const getHelpDesksByStatus = async (
   status: string,
   limit: number = 100,
@@ -168,9 +146,7 @@ export const getHelpDesksByStatus = async (
   return response.data.data;
 };
 
-/**
- * Get chat history by session_id
- */
+
 export const getChatHistoryBySession = async (
   sessionId: string,
   page: number = 1,
@@ -189,9 +165,6 @@ export const getChatHistoryBySession = async (
   return response.data.data;
 };
 
-/**
- * Send a message in helpdesk chat (user or agent)
- */
 export const sendHelpdeskMessage = async (data: {
   session_id: string;
   message: string;

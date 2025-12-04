@@ -5,7 +5,6 @@ import type {
   Permission,
   RolePayload,
   PaginatedRolesResponse,
-  TeamResponse,
   ApiResponse,
 } from "../utils/types";
 

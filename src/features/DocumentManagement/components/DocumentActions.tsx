@@ -11,10 +11,9 @@ interface DocumentActionsProps {
   onViewFile: (doc: Document) => void;
 }
 
-
 interface DropdownContentProps {
   
-  dropdownRef: React.RefObject<HTMLDivElement | null>; 
+  dropdownRef: React.RefObject<HTMLDialogElement | null>; 
   position: { top?: number; bottom?: number; right?: number };
   doc: Document;
   hasManagerAccess: boolean;
@@ -36,15 +35,18 @@ const DropdownContent: React.FC<DropdownContentProps> = ({
   onViewFile,
   onClose
 }) => (
-  <div
+  
+  <dialog
     ref={dropdownRef}
-    className="fixed z-[9999] w-48 bg-white rounded-md shadow-lg border border-gray-200"
+    open={true} 
+    className="fixed z-[9999] w-48 bg-white rounded-md shadow-lg border border-gray-200 p-0 m-0 text-left"
     style={{
       top: position.top ? `${position.top}px` : 'auto',
       right: position.right ? `${position.right}px` : 'auto',
       bottom: position.bottom ? `${position.bottom}px` : 'auto',
     }}
-    onClick={(e) => e.stopPropagation()}
+    
+    
   >
     <div className="flex flex-col py-1">
       <button
@@ -86,9 +88,8 @@ const DropdownContent: React.FC<DropdownContentProps> = ({
         </>
       )}
     </div>
-  </div>
+  </dialog>
 );
-
 
 const DocumentActions: React.FC<DocumentActionsProps> = ({
   document: doc,
@@ -99,17 +100,15 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
   const isPending = doc.is_approve === null;
   const isRejected = doc.is_approve === false;
 
-  
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [position, setPosition] = useState<{ top?: number, bottom?: number, right?: number }>({});
   const moreButtonRef = useRef<HTMLButtonElement>(null);
   
   
-  const dropdownRef = useClickOutside<HTMLDivElement>(() => {
+  const dropdownRef = useClickOutside<HTMLDialogElement>(() => {
     setIsDropdownOpen(false);
   });
 
-  
   const handleDropdownToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isDropdownOpen) {
@@ -120,7 +119,6 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
     if (moreButtonRef.current) {
       const rect = moreButtonRef.current.getBoundingClientRect();
       
-      
       const dropdownHeight = 140; 
       const spaceBelow = window.innerHeight - rect.bottom;
       const spaceAbove = rect.top;
@@ -129,11 +127,9 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
         right: window.innerWidth - rect.right + 8, 
       };
 
-      
       if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
         newPos.bottom = window.innerHeight - rect.top;
       } else {
-        
         newPos.top = rect.bottom;
       }
       

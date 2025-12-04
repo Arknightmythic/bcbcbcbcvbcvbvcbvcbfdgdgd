@@ -1,6 +1,4 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import CustomSelect from '../../../shared/components/CustomSelect';
 import type { ActionType, User } from '../utils/types';
 import UserTableRow from './UserTableRow';
 import TablePagination from '../../../shared/components/TablePagination';
@@ -15,11 +13,7 @@ interface UserTableProps {
   onItemsPerPageChange: (items: number) => void;
 }
 
-const itemsPerPageOptions = [
-  { value: '10', label: '10' },
-  { value: '20', label: '20' },
-  { value: '30', label: '30' },
-];
+
 
 const UserTable: React.FC<UserTableProps> = ({
   users,

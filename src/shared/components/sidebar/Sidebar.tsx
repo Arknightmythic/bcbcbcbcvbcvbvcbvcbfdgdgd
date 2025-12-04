@@ -1,22 +1,18 @@
-import {  useLocation } from "react-router";
+import { useLocation } from "react-router";
 import { useRef } from "react";
 import { AgentPanel } from "./AgentPanel";
 import { useAuthStore } from "../../store/authStore";
 import { SidebarMenu } from "../../utils/title_content";
-import { DummyChats } from "../../utils/dummy";
 import { NavigationMenu } from "./NavigationMenu";
-
 
 const Sidebar = ({
   isCollapsed,
   isMobileOpen,
   isDesktop,
-  setOutletBlurred,
 }: {
   isCollapsed: boolean;
   isMobileOpen: boolean;
   isDesktop: boolean;
-  setOutletBlurred: (isBlurred: boolean) => void;
 }) => {
   const location = useLocation();
   const sidebarRef = useRef<HTMLElement>(null);
@@ -38,6 +34,13 @@ const Sidebar = ({
     (p: any) => p.name === "helpdesk:read"
   );
   const agentStatus = "aktif";
+  let sidebarPositionClass = "z-50 -translate-x-full"; 
+  
+  if (isDesktop) {
+    sidebarPositionClass = "z-50";
+  } else if (isMobileOpen) {
+    sidebarPositionClass = "z-[60]";
+  }
 
   return (
     <nav
@@ -45,7 +48,7 @@ const Sidebar = ({
       className={`fixed top-0 left-0 flex h-screen flex-col bg-white text-gray-700 shadow-lg transition-all duration-300 ${
         isCollapsed ? "w-25" : "w-50"
       } 
-      ${isDesktop ? "z-50" : isMobileOpen ? "z-[60]" : "z-50 -translate-x-full"}
+      ${sidebarPositionClass} 
       `}
     >
       <div
@@ -85,10 +88,8 @@ const Sidebar = ({
             <AgentPanel
               panelRef={agentPanelRef}
               agentName={user?.name || "Guest"}
-              chats={DummyChats}
               agentStatus={agentStatus}
               isCollapsed={isCollapsed}
-              setOutletBlurred={setOutletBlurred}
             />
           </div>
         )}

@@ -1,23 +1,17 @@
-// components/TableControls/TableControls.tsx
-
 import React from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import {
   useTableControlsLogic,
-  type FilterConfig,
-  type FilterOption,
-} from "./useTableControlsLogic"; // Import hook logic
+  type FilterConfig as LocalFilterConfig,
+} from "./useTableControlsLogic";
 
-// Import komponen UI yang dipecah
 import TableSearch from "./TableSearch";
 import TableDateButton from "./TableDateButton";
 import TableFilterButton from "./TableFilterButton";
 import DateDropdownPortal from "./DateDropdownPortal";
 import FilterDropdownPortal from "./FilterDropdownPortal";
 
-// Export Interfaces yang diperlukan
-export type { FilterOption, FilterConfig };
-
+export type { FilterOption, FilterConfig } from "./useTableControlsLogic";
 interface TableControlsProps<T extends Record<string, any>> {
   searchTerm: string;
   searchPlaceholder: string;
@@ -25,7 +19,7 @@ interface TableControlsProps<T extends Record<string, any>> {
   onSearchChange: (value: string) => void;
   onSearchSubmit: () => void;
   onFilterChange: (filterName: keyof T, value: any) => void;
-  filterConfig: FilterConfig<T>[];
+  filterConfig: LocalFilterConfig<T>[];
 }
 
 const TableControls = <T extends Record<string, any>>({
@@ -37,7 +31,6 @@ const TableControls = <T extends Record<string, any>>({
   onFilterChange,
   filterConfig,
 }: React.PropsWithChildren<TableControlsProps<T>>) => {
-  // Gunakan Logic Hook
   const {
     activeDropdown,
     coords,
@@ -64,13 +57,12 @@ const TableControls = <T extends Record<string, any>>({
   });
 
   const handleCancelDropdown = () => {
-    // Logic hook sudah memiliki akses ke setActiveDropdown dan setCoords
-    toggleDropdown(activeDropdown as "filter" | "date"); 
+    toggleDropdown(activeDropdown as "filter" | "date");
   };
 
   return (
     <div className="flex flex-col md:flex-row gap-3 py-4">
-      {/* 1. Search Component */}
+      
       <TableSearch
         searchTerm={searchTerm}
         searchPlaceholder={searchPlaceholder}
@@ -80,7 +72,7 @@ const TableControls = <T extends Record<string, any>>({
       />
 
       <div className="flex flex-wrap items-center gap-3">
-        {/* 2. Date Range Button */}
+        
         <TableDateButton
           dateBtnRef={dateBtnRef}
           dateRangeConfig={dateRangeConfig}
@@ -89,7 +81,7 @@ const TableControls = <T extends Record<string, any>>({
           onClick={() => toggleDropdown("date")}
         />
 
-        {/* 3. Filter Button */}
+        
         <TableFilterButton
           filterBtnRef={filterBtnRef}
           dropdownFiltersCount={dropdownFilters.length}
@@ -98,7 +90,7 @@ const TableControls = <T extends Record<string, any>>({
         />
       </div>
 
-      {/* 4. Dropdown Portals */}
+      
       {activeDropdown === "date" && coords && (
         <DateDropdownPortal
           coords={coords}

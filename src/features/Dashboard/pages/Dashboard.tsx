@@ -22,7 +22,7 @@ const getInitialFilterState = (): DashboardFilterState => {
         parsed.period = 'daily';
       }
       return parsed;
-    } catch (e) {
+    } catch{
       // Abaikan error JSON
     }
   }
@@ -100,7 +100,7 @@ function Dashboard() {
 
   return (
     <div className="w-full h-full flex flex-col">
-      {/* 1. HEADER: Ditempatkan di luar area loading */}
+      
       <DashboardHeader
         onPeriodChange={handlePeriodChange}
         onCustomDateApply={handleCustomDateApply}
@@ -109,10 +109,10 @@ function Dashboard() {
         defaultEndDate={filterState.endDate || getTodayDateString()}
       />
 
-      {/* 2. CONTENT AREA: Wrapper relatif untuk Iframe & Loading */}
+      
       <div className="relative flex-1 w-full flex flex-col min-h-0">
         
-        {/* Loading Overlay (Hanya menutupi area ini) */}
+        
         <div
           className={`
             absolute inset-0 flex flex-col items-center justify-center bg-white z-10 
@@ -126,7 +126,7 @@ function Dashboard() {
           </p>
         </div>
 
-        {/* Iframe */}
+        
         {iframeUrl && (
           <iframe
             src={iframeUrl}

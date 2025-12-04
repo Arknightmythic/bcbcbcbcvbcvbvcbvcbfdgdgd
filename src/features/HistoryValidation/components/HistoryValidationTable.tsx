@@ -26,6 +26,38 @@ interface HistoryValidationTableProps {
   onSortToggle: () => void;
 }
 
+// PERBAIKAN 1: Definisi interface props untuk SortableHeader
+interface SortableHeaderProps {
+  label: string;
+  onClick?: () => void;
+  className?: string;
+  currentSort: SortOrder; // Menambahkan currentSort sebagai props
+}
+
+// PERBAIKAN 2: Memindahkan component definition keluar
+const SortableHeader: React.FC<SortableHeaderProps> = ({ 
+  label, 
+  onClick, 
+  className = "",
+  currentSort 
+}) => {
+  return (
+    <th 
+      className={`px-4 py-3 sticky top-0 bg-gray-100 cursor-pointer hover:bg-gray-200 transition-colors ${className}`}
+      onClick={onClick}
+    >
+      <div className="flex items-center justify-center gap-1">
+        {label}
+        {/* Logika Icon: latest (desc) -> ArrowDown, oldest (asc) -> ArrowUp */}
+        {currentSort === 'oldest' 
+          ? <ArrowUp className="w-3 h-3 text-blue-600" /> 
+          : <ArrowDown className="w-3 h-3 text-blue-600" />
+        }
+      </div>
+    </th>
+  );
+};
+
 const HistoryValidationTable: React.FC<HistoryValidationTableProps> = ({
   histories,
   onAction,
@@ -39,32 +71,6 @@ const HistoryValidationTable: React.FC<HistoryValidationTableProps> = ({
   onSortToggle,
 }) => {
 
-  const SortableHeader = ({ 
-    label, 
-    onClick, 
-    className = "" 
-  }: { 
-    label: string; 
-    onClick?: () => void; 
-    className?: string; 
-  }) => {
-    return (
-      <th 
-        className={`px-4 py-3 sticky top-0 bg-gray-100 cursor-pointer hover:bg-gray-200 transition-colors ${className}`}
-        onClick={onClick}
-      >
-        <div className="flex items-center justify-center gap-1">
-          {label}
-          {/* Logika Icon: latest (desc) -> ArrowDown, oldest (asc) -> ArrowUp */}
-          {currentSort === 'oldest' 
-            ? <ArrowUp className="w-3 h-3 text-blue-600" /> 
-            : <ArrowDown className="w-3 h-3 text-blue-600" />
-          }
-        </div>
-      </th>
-    );
-  };
-
   return (
     <div className="bg-white p-6 rounded-b-lg shadow-md">
       <div className="overflow-x-auto relative">
@@ -73,7 +79,12 @@ const HistoryValidationTable: React.FC<HistoryValidationTableProps> = ({
             <tr className="text-left text-[10px] font-semibold text-gray-600">
               
               {/* Kolom 1: Request Date (Sortable) */}
-              <SortableHeader label="Tanggal" onClick={onSortToggle} />
+              {/* PERBAIKAN 3: Mengirim currentSort sebagai props */}
+              <SortableHeader 
+                label="Tanggal" 
+                onClick={onSortToggle} 
+                currentSort={currentSort}
+              />
 
               {/* Kolom 2: User */}
               <th className="px-4 py-3 sticky top-0 bg-gray-100">
@@ -95,7 +106,7 @@ const HistoryValidationTable: React.FC<HistoryValidationTableProps> = ({
                 Jawaban AI
               </th>
 
-              {/* Kolom 6: Not Answered */}
+              {/* Kolom 6: Not Answered - Commented out as in original */}
               {/* <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">
                 Tidak terjawab
               </th> */}

@@ -1,22 +1,16 @@
-
-// 1. Impor useEffect
 import React, { useMemo, useRef, useCallback, useEffect } from "react";
 import { Loader2, MessageSquarePlus, MessageSquareText } from "lucide-react";
-// 2. Impor useInfiniteQuery dan useQueryClient
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-
-// Impor tipe DAN API
 import type { Conversation, ChatSession } from "../utils/types";
 import { getConversations } from "../api/chatApi";
 import { useServicePublicChat } from "../hooks/useServicePublicChat";
 import { useAuthStore } from "../../../shared/store/authStore";
 
-// Komponen SessionCard (Tidak Berubah)
 interface SessionCardProps {
   session: ChatSession;
   onSelect: (session: ChatSession) => void;
 }
-const SessionCard: React.FC<SessionCardProps> = ({ session, onSelect}) => {
+const SessionCard: React.FC<SessionCardProps> = ({ session, onSelect }) => {
   return (
     <button
       key={session.id}
@@ -24,7 +18,9 @@ const SessionCard: React.FC<SessionCardProps> = ({ session, onSelect}) => {
       className="text-left p-4 border border-gray-200 rounded-lg hover:bg-gray-50 flex items-center justify-between transition-colors duration-150 shadow-sm hover:shadow-md"
     >
       <div>
-        <p className="font-semibold text-gray-800 text-sm">{session.cardContext}</p>
+        <p className="font-semibold text-gray-800 text-sm">
+          {session.cardContext}
+        </p>
         <p className="text-[10px] text-gray-500 mt-1">
           Dibuat :{" "}
           {new Date(session.created_at).toLocaleString("id-ID", {
@@ -38,22 +34,15 @@ const SessionCard: React.FC<SessionCardProps> = ({ session, onSelect}) => {
   );
 };
 
-// Komponen Halaman Intro (Modifikasi)
 const PublicServiceIntroPage: React.FC = () => {
   const user = useAuthStore((state) => state.user);
   const platformUniqueId = user?.email || "anonymous_user";
 
-  const {
-    isRestoringSession,
-    handleSelectSession,
-    handleCreateNewSession,
-  } = useServicePublicChat();
+  const { isRestoringSession, handleSelectSession, handleCreateNewSession } =
+    useServicePublicChat();
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-
-  // 3. Dapatkan queryClient
   const queryClient = useQueryClient();
-
   const {
     data: infiniteData,
     isLoading: isLoadingSessions,
@@ -63,7 +52,7 @@ const PublicServiceIntroPage: React.FC = () => {
   } = useInfiniteQuery({
     queryKey: ["conversations", platformUniqueId],
     queryFn: ({ pageParam = 1 }) =>
-      getConversations(platformUniqueId, pageParam as number),
+      getConversations(platformUniqueId, pageParam),
     getNextPageParam: (lastPage) => {
       if (lastPage.page < lastPage.total_pages) {
         return lastPage.page + 1;
@@ -74,29 +63,26 @@ const PublicServiceIntroPage: React.FC = () => {
     enabled: !!platformUniqueId,
   });
 
-  // 4. Tambahkan useEffect ini untuk mereset query saat unmount
   useEffect(() => {
-    // Fungsi 'return' dari useEffect akan dijalankan saat
-    // komponen 'unmount' (ditinggalkan)
     return () => {
       queryClient.resetQueries({
         queryKey: ["conversations", platformUniqueId],
-        exact: true, // Pastikan hanya query ini yang direset
+        exact: true,
       });
     };
-  }, [queryClient, platformUniqueId]); // <-- Akhir blok useEffect
+  }, [queryClient, platformUniqueId]);
 
   const activeSessions: ChatSession[] = useMemo(
     () =>
       infiniteData?.pages.flatMap((page) =>
         (page.data || []).map((convo: Conversation) => ({
-        id: convo.id,
-        created_at: convo.start_timestamp,
-        agent_name: convo.is_helpdesk ? "Agent" : "AI Assistant",
-        cardContext: convo.context || "lanjutkan sesi",
-      }))
-    ) || [],
-  [infiniteData]
+          id: convo.id,
+          created_at: convo.start_timestamp,
+          agent_name: convo.is_helpdesk ? "Agent" : "AI Assistant",
+          cardContext: convo.context || "lanjutkan sesi",
+        }))
+      ) || [],
+    [infiniteData]
   );
 
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -134,7 +120,9 @@ const PublicServiceIntroPage: React.FC = () => {
               Selamat datang
             </h2>
             <p className="text-gray-600 mb-6 text-sm">
-Mulai percakapan baru atau lanjutkan sesi Anda dengan Asisten AI kami.</p>
+              Mulai percakapan baru atau lanjutkan sesi Anda dengan Asisten AI
+              kami.
+            </p>
 
             {activeSessions && activeSessions.length > 0 && (
               <>
@@ -179,7 +167,7 @@ Mulai percakapan baru atau lanjutkan sesi Anda dengan Asisten AI kami.</p>
                 className="w-md bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center transition-colors duration-150 disabled:bg-gray-400"
               >
                 <MessageSquarePlus className="w-5 h-5 mr-2" />
-               Percakapan Baru
+                Percakapan Baru
               </button>
             </div>
           </>

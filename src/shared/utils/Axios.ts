@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 
-
 const instanceApi = axios.create({
   baseURL: import.meta.env.VITE_API_BE_URL,
   timeout: 10000,
@@ -22,15 +21,16 @@ instanceApiToken.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  async (error) => {
+    throw error;
+  }
 );
-
 
 instanceApiToken.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    if (error.response.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
         const { data } = await instanceApi.post('/auth/refresh');
@@ -40,11 +40,13 @@ instanceApiToken.interceptors.response.use(
         return instanceApiToken(originalRequest);
       } catch (refreshError) {
         useAuthStore.getState().actions.logout();
-        window.location.href = '/login';
-        return Promise.reject(refreshError);
+        globalThis.location.href = '/login';
+    
+        throw refreshError;
       }
     }
-    return Promise.reject(error);
+
+    throw error;
   }
 );
 

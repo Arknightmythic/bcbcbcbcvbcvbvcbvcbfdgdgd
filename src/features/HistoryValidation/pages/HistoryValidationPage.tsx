@@ -65,13 +65,21 @@ const filterConfig: FilterConfig<HistoryPageFilters>[] = [
 const mapChatPairToValidationItem = (
   pair: ChatPair
 ): ValidationHistoryItem => {
+  // Inisialisasi awal 'Pending'
   let status: ValidationStatus = "Pending";
   
   // @ts-ignore
-  if (pair.is_validated === true) status = "Validated";
+  if (pair.is_validated === true) {
+    status = "Validated";
+  }
   // @ts-ignore
-  else if (pair.is_validated === false) status = "Rejected";
-  else status = "Pending";
+  else if (pair.is_validated === false) {
+    status = "Rejected";
+  }
+  
+  // PERBAIKAN: Blok 'else status = "Pending"' DIHAPUS.
+  // Karena jika tidak masuk ke if/else if di atas, nilai status otomatis 
+  // tetap "Pending" (sesuai inisialisasi awal).
 
   return {
     id: pair.question_id,

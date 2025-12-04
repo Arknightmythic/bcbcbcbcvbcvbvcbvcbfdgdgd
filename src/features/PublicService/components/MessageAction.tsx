@@ -9,13 +9,8 @@ interface MessageActionsProps {
 }
 
 const MessageActions: React.FC<MessageActionsProps> = ({ message, onFeedback }) => { 
-  
-  
-  
-  
-  const feedbackGiven = message.feedback || null;
 
-  
+  const feedbackGiven = message.feedback || null;  
   const handleFeedback = (feedbackType: 'like' | 'dislike') => {
     if (feedbackGiven === feedbackType) {
       

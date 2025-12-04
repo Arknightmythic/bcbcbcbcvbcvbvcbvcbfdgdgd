@@ -1,9 +1,5 @@
-// src/features/UserManagement/pages/UserManagementPage.tsx
-
 import { useState, useMemo } from 'react';
 import { Plus, Loader2 } from 'lucide-react';
-
-// Import tipe baru dan tipe payload
 import type {
   ActionType,
   User,
@@ -12,7 +8,6 @@ import type {
   UpdateUserPayload,
 } from '../utils/types';
 
-// Import hooks
 import {
   useGetUsers,
   useCreateUser,
@@ -27,7 +22,7 @@ import UserTable from '../components/UserTable';
 import ConfirmationModal from '../../../shared/components/ConfirmationModal';
 import UserManagementModal from '../components/UserManagementModal';
 
-// --- PERUBAHAN 1: Update interface Filters ---
+
 interface Filters {
   accountType: string;
   teamId: string;
@@ -35,76 +30,76 @@ interface Filters {
 }
 
 const UserManagementPage = () => {
-  // --- PERUBAHAN 2: Update state Search ---
-  const [searchInput, setSearchInput] = useState(''); // State untuk input field
-  const [searchTerm, setSearchTerm] = useState('');   // State untuk filter aktif
+  
+  const [searchInput, setSearchInput] = useState(''); 
+  const [searchTerm, setSearchTerm] = useState('');   
   
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // --- PERUBAHAN 3: Update state Filters ---
+  
   const [filters, setFilters] = useState<Filters>({
     accountType: '',
     teamId: '',
     roleId: '',
   });
 
-  // State untuk UI (modal, delete)
+  
   const [isUserModalOpen, setUserModalOpen] = useState(false);
   const [isConfirmModalOpen, setConfirmModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
-  // --- Integrasi React Query ---
+  
 
-  // --- PERUBAHAN 4: Update searchParams ---
+  
   const searchParams = useMemo(() => {
     const params = new URLSearchParams();
     params.set('limit', String(itemsPerPage));
     params.set('offset', String((currentPage - 1) * itemsPerPage));
     
     if (searchTerm) params.set('search', searchTerm);
-    // Tambahkan filter baru ke parameter API
+    
     if (filters.accountType) params.set('account_type', filters.accountType);
     if (filters.teamId) params.set('team_id', filters.teamId);
     if (filters.roleId) params.set('role_id', filters.roleId);
     
     return params;
-  }, [currentPage, itemsPerPage, searchTerm, filters]); // <-- TAMBAHKAN 'filters'
+  }, [currentPage, itemsPerPage, searchTerm, filters]); 
 
-  // 2. Fetch data menggunakan hooks
-  const { data: usersData, isLoading: isLoadingUsers } = useGetUsers(searchParams);
+  
+  const { data: usersData} = useGetUsers(searchParams);
   const { data: teamsData, isLoading: isLoadingTeams } = useGetTeams();
   const { data: rolesData, isLoading: isLoadingRoles } = useGetRoles();
 
-  // 3. Siapkan data mutasi
+  
   const { mutate: createUser, isPending: isCreating } = useCreateUser();
   const { mutate: updateUser, isPending: isUpdating } = useUpdateUser();
   const { mutate: deleteUser, isPending: isDeleting } = useDeleteUser();
 
   const isSaving = isCreating || isUpdating;
 
-  // 4. Memoize data untuk tabel dan modal
+  
   const users = useMemo(() => usersData?.data || [], [usersData]);
   const totalItems = useMemo(() => usersData?.total || 0, [usersData]);
   const teams = useMemo(() => teamsData || [], [teamsData]);
   const roles = useMemo(() => rolesData || [], [rolesData]);
 
-  // --- PERUBAHAN 5: Hapus 'filteredUsers' (client-side filtering) ---
-  // const filteredUsers = useMemo(() => { ... }); // <-- HAPUS BLOK INI
+  
+  
 
-  // --- Handler ---
+  
 
-  // --- PERUBAHAN 6: Update handleFilterChange ---
+  
   const handleFilterChange = (filterName: keyof Filters, value: string) => {
     setFilters(prev => ({ ...prev, [filterName]: value }));
-    setCurrentPage(1); // Reset paginasi saat filter berubah
+    setCurrentPage(1); 
   };
   
-  // (Handler ini sudah benar)
+  
   const handleSearchSubmit = () => {
-    setSearchTerm(searchInput); // Terapkan nilai dari input ke state filter aktif
-    setCurrentPage(1); // Reset ke halaman pertama saat search
+    setSearchTerm(searchInput); 
+    setCurrentPage(1); 
   };
 
 
@@ -157,7 +152,7 @@ const UserManagementPage = () => {
     }
   };
 
-  // --- PERUBAHAN 7: Update opsi filter ---
+  
   const accountTypeOptions = [
     { value: '', label: 'Semua Tipe Akun' },
     { value: 'credential', label: 'Credential' },
@@ -166,15 +161,15 @@ const UserManagementPage = () => {
 
    const filterTeamOptions = useMemo(() => [
      { value: '', label: 'Semua Tim' },
-     ...teams.map(t => ({ value: t.id.toString(), label: t.name })) // Gunakan ID
+     ...teams.map(t => ({ value: t.id.toString(), label: t.name })) 
    ], [teams]);
   
    const filterRoleOptions = useMemo(() => [
      { value: '', label: 'Semua Peran' },
-     ...roles.map(r => ({ value: r.id.toString(), label: r.name })) // Gunakan ID
+     ...roles.map(r => ({ value: r.id.toString(), label: r.name })) 
    ], [roles]);
 
-  // --- PERUBAHAN 8: Update filterConfig ---
+  
   const filterConfig = [
     { key: 'accountType' as keyof Filters, options: accountTypeOptions },
     { key: 'teamId' as keyof Filters, options: filterTeamOptions },
@@ -222,11 +217,11 @@ const UserManagementPage = () => {
         
         {/* --- PERUBAHAN 9: Gunakan 'users' dari server --- */}
         <UserTable
-          users={users} // Gunakan data dari server, bukan 'filteredUsers'
+          users={users} 
           onAction={handleOpenModal}
           currentPage={currentPage}
           itemsPerPage={itemsPerPage}
-          totalItems={totalItems} // Total item tetap dari server
+          totalItems={totalItems} 
           onPageChange={setCurrentPage}
           onItemsPerPageChange={setItemsPerPage}
         />

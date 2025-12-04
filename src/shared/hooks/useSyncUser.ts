@@ -40,7 +40,7 @@ export const useSyncUser = () => {
       if (status === 404 || status === 401) {
         console.warn("🚫 User tidak valid atau tidak ditemukan. Melakukan logout...");
         actions.logout();
-        window.location.href = "/login"; // Redirect paksa ke login
+        globalThis.location.href = "/login"; // Redirect paksa ke login
       }
     }
   }, [isError, error, actions]);

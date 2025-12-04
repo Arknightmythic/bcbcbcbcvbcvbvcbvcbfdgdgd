@@ -1,7 +1,5 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { ActionType, Role } from '../utils/types';
-import CustomSelect from '../../../shared/components/CustomSelect';
 import RoleTableRow from './RoleTableRow';
 import TablePagination from '../../../shared/components/TablePagination';
 
@@ -29,13 +27,12 @@ const RoleTable: React.FC<RoleTableProps> = ({
   return (
     <div className="bg-white p-6 rounded-b-lg shadow-md">
       <div className="overflow-x-auto relative">
-        <table className="min-w-full min-w-[768px]"> {/* Tambah min-w */}
-          <thead className="bg-gray-100 sticky top-0 "> {/* Tambah sticky & z-index */}
+        <table className="min-w-full"> 
+          <thead className="bg-gray-100 sticky top-0 "> 
             <tr className="text-left text-[10px] font-semibold text-gray-600">
               <th className="px-4 py-3 sticky top-0 bg-gray-100">Nama Role</th>
               <th className="px-4 py-3 sticky top-0 bg-gray-100">Tim</th>
               <th className="px-4 py-3 sticky top-0 bg-gray-100">Izin Akses</th>
-              {/* --- PERUBAHAN DI SINI: Buat header Action sticky --- */}
               <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center right-0 z-10">Aksi</th>
             </tr>
           </thead>

@@ -31,14 +31,14 @@ const TabButton = ({ label, count, isActive, onClick }: { label: string, count: 
   );
 };
 
-const getStatusFromTab = (tab: HelpDeskChatListType) => {
-  switch (tab) {
-    case 'active': return 'in_progress';
-    case 'pending': return 'pending';
-    case 'resolve': return 'resolved'; 
-    case 'queue': 
-    default: return 'queue';
-  }
+const getStatusFromTab = (tab: HelpDeskChatListType): string => {
+  const statusMap: Record<string, string> = {
+    active: 'in_progress',
+    pending: 'pending',
+    resolve: 'resolved',
+    queue: 'queue',
+  };
+  return statusMap[tab] || 'queue';
 };
 
 const HelpDeskListPanel: React.FC = () => {
@@ -54,32 +54,27 @@ const HelpDeskListPanel: React.FC = () => {
   const { data: allHelpDesks } = useGetAllHelpDesks();
 
 
-  const counts = useMemo(() => {
+const counts = useMemo(() => {
     const stats = { active: 0, queue: 0, pending: 0, resolve: 0 };
     
-    if (!allHelpDesks) return stats;
-
-    allHelpDesks.forEach((ticket) => {
-    
-      const status = ticket.status?.toLowerCase();
-      
-      if (status === 'in_progress') {
-        stats.active++;
-      } else if (status === 'resolved' || status === 'closed') {
-        stats.resolve++;
-      } else if (status === 'pending') {
-        stats.pending++;
-      } else if (status === 'queue' || status === 'open') {
-        stats.queue++;
+    if (allHelpDesks) {
+      for (const ticket of allHelpDesks) {
+        const status = ticket.status?.toLowerCase();
+        
+        if (status === 'in_progress') {
+          stats.active++;
+        } else if (status === 'resolved' || status === 'closed') {
+          stats.resolve++;
+        } else if (status === 'pending') {
+          stats.pending++;
+        } else if (status === 'queue' || status === 'open') {
+          stats.queue++;
+        }
       }
-    });
+    }
 
     return stats;
   }, [allHelpDesks]);
-
-
-
-
 
   const queryParams = useMemo(() => {
     const params = new URLSearchParams();
@@ -151,7 +146,7 @@ const HelpDeskListPanel: React.FC = () => {
   const handleAcceptChat = (chatId: string) => {
     const chat = currentChats.find((c) => c.id === chatId);
     
-    if (!chat || !chat.helpdesk_id) {
+    if (!chat?.helpdesk_id) {
       toast.error("Chat tidak ditemukan");
       return;
     }
