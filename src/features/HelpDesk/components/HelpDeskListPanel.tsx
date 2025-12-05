@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import CustomSelect from '../../../shared/components/CustomSelect'; 
 import { useGetHelpDesks, useAcceptHelpDesk, useGetAllHelpDesks } from '../hooks/useHelpDesk';
 import { useQueryClient } from '@tanstack/react-query';
+import HelpDeskSwitch from './HelpDeskSwitch';
 
 const channelFilterOptions = [
   { value: "", label: "Semua Channel" },
@@ -56,7 +57,7 @@ const HelpDeskListPanel: React.FC = () => {
 
 const counts = useMemo(() => {
     const stats = { active: 0, queue: 0, pending: 0, resolve: 0 };
-    
+
     if (allHelpDesks) {
       for (const ticket of allHelpDesks) {
         const status = ticket.status?.toLowerCase();
@@ -180,14 +181,21 @@ const counts = useMemo(() => {
     <div className="flex flex-col h-full min-h-0">
       <div className="p-4 border-b border-gray-200 flex items-center justify-between">
         <h2 className="text-md font-bold text-gray-800">Layanan Bantuan</h2>
-        <button
-          onClick={handleRefresh}
-          disabled={isLoading}
-          className="p-1.5 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
-          title="Refresh data"
-        >
-          <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-        </button>
+        <div className="flex items-center gap-3">
+          <HelpDeskSwitch />
+          
+          <div className="h-4 w-px bg-gray-300 mx-1"></div> {/* Divider */}
+
+          <button
+            onClick={handleRefresh}
+            disabled={isLoading}
+            className="p-1.5 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
+            title="Refresh data"
+          >
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
+
       </div>
 
       {/* Tabs dengan Counter */}

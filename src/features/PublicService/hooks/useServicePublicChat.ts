@@ -56,11 +56,8 @@ const determineSender = (msg: any): "user" | "agent" => {
 
 const checkIsHumanAgent = (sender: string, msg: any): boolean => {
   if (sender !== "agent") return false;
-
   const data = msg.message.data || {};
   const responseMetadata = data.response_metadata || {};
-  
-  
   return Object.keys(responseMetadata).length === 0 && !responseMetadata.model;
 };
 
@@ -78,7 +75,6 @@ const mapBackendHistoryToFrontend = (
       const sender = determineSender(msg);
       const isHumanAgent = checkIsHumanAgent(sender, msg);
       const messageId = `${sender}-${msg.id}`;
-      
       const chatMessage: ChatMessage = {
         id: messageId,
         dbId: msg.id, 
@@ -87,7 +83,10 @@ const mapBackendHistoryToFrontend = (
         timestamp: msg.created_at,
         feedback: msg.feedback === true ? "like" : msg.feedback === false ? "dislike" : null,
         is_answered: msg.is_cannot_answer === null ? null : !msg.is_cannot_answer,
-        isHumanAgent: isHumanAgent, 
+        isHumanAgent: isHumanAgent,
+        isHelpdesk: false, 
+        questionId: msg.id, // Placeholder non-zero
+        answerId: msg.id,  
       };
       
       return chatMessage;
@@ -226,7 +225,7 @@ export const useServicePublicChat = () => {
 
     currentConversationIdRef.current = sessionId;
 
-    // --- Helper 1: Handle Standard Answer ---
+    
     const handleWsAnswer = (data: any) => {
       const botMessageId = `agent-${data.chat_history_id}`;
       
@@ -244,12 +243,15 @@ export const useServicePublicChat = () => {
         timestamp: new Date().toISOString(),
         feedback: null,
         is_answered: data.is_answered,
+        isHelpdesk: false, 
+        questionId: data.question_id,
+        answerId: data.answer_id,
       };
       
       setMessages((prev) => addMessageOrdered(prev, botMessage));
     };
 
-    // --- Helper 2: Handle Agent Message ---
+    
     const handleWsAgentMessage = (data: any) => {
       const agentMessageId = data.chat_history_id 
         ? `agent-${data.chat_history_id}` 
@@ -276,7 +278,7 @@ export const useServicePublicChat = () => {
       setMessages((prev) => addMessageOrdered(prev, agentMessage));
     };
 
-    // --- Main Callback (Simplified) ---
+    
     const unsubscribe = wsService.current.onMessage(sessionId, (data) => {
       console.log('📨 WebSocket message received:', data);
       
@@ -419,7 +421,15 @@ export const useServicePublicChat = () => {
       if (!cleanedAnswer) return;
       
       
-      const botMessageId = `agent-api-${data.answer_id}`;
+      const isGenericResponse = data.answer_id === 0;
+      const botMessageId = isGenericResponse 
+        ? `agent-api-gen-${Date.now()}` // Gunakan timestamp sebagai unique key
+        : `agent-api-${data.answer_id}`;
+
+      // Cek duplikasi (Penting untuk WebSocket race condition, tapi sekarang aman untuk ID 0)
+      if (processedMessageIdsRef.current.has(botMessageId)) {
+         return; 
+      }
       processedMessageIdsRef.current.add(botMessageId);
       
       const botMessage: ChatMessage = {
@@ -430,6 +440,9 @@ export const useServicePublicChat = () => {
         timestamp: new Date().toISOString(),
         feedback: null,
         is_answered: data.is_answered,
+        isHelpdesk: data.is_helpdesk,
+        questionId: data.question_id,
+        answerId: data.answer_id,
       };
       
       setMessages((prev) => addMessageOrdered(prev, botMessage));
@@ -493,7 +506,6 @@ export const useServicePublicChat = () => {
 
   
   const handleFeedbackUpdate = useCallback(async (messageId: string, feedback: 'like' | 'dislike' | null) => {
-    
     const targetMsg = messages.find(m => m.id === messageId);
     
     if (!targetMsg || !targetMsg.dbId) {
@@ -501,31 +513,48 @@ export const useServicePublicChat = () => {
       return;
     }
 
-    
+    const previousFeedback = targetMsg.feedback;
     setMessages(prevMessages => 
       prevMessages.map(msg => 
         msg.id === messageId ? { ...msg, feedback: feedback } : msg
       )
     );
+    let booleanToSend: boolean;
 
-    
     if (feedback !== null) {
-      try {
-        const isLike = feedback === 'like';
-        await sendFeedback(targetMsg.dbId, isLike);
-        
-        if (isLike) {
-          
-          toast.success("Terima kasih! Kami senang ini membantu.");
-        } else {
-          
-          toast.success("Terima kasih! Masukan Anda membantu kami untuk perbaikan."); 
-        }
-      } catch (error) {
-        console.error("Feedback error:", error);
-        toast.error("Gagal mengirim feedback");
-        
+      booleanToSend = feedback === 'like';
+    } else {
+      if (previousFeedback === 'like') {
+         booleanToSend = true; 
+      } else if (previousFeedback === 'dislike') {
+         booleanToSend = false; 
+      } else {
+         
+         return; 
       }
+    }
+
+    try {
+      
+      await sendFeedback(targetMsg.dbId, booleanToSend);
+      
+      
+      if (feedback === 'like') {
+        toast.success("Terima kasih! Kami senang ini membantu.");
+      } else if (feedback === 'dislike') {
+        toast.success("Terima kasih! Masukan Anda membantu kami untuk perbaikan."); 
+      }
+      
+    } catch (error) {
+      console.error("Feedback error:", error);
+      toast.error("Gagal mengirim feedback");
+      
+      
+      setMessages(prevMessages => 
+        prevMessages.map(msg => 
+          msg.id === messageId ? { ...msg, feedback: previousFeedback } : msg
+        )
+      );
     }
   }, [messages]); 
 

@@ -12,6 +12,8 @@ import {
   getChatHistoryBySession,
   sendHelpdeskMessage,
   solveHelpDeskSession,
+  getHelpDeskSwitchStatus,
+  updateHelpDeskSwitchStatus,
 } from "../api/helpDeskApi";
 import type { HelpDeskPayload, SendHelpdeskMessagePayload } from "../utils/types";
 import toast from "react-hot-toast";
@@ -167,7 +169,6 @@ export const useAcceptHelpDesk = () => {
     mutationFn: ({ id, userId }: { id: number; userId: number }) =>
       updateHelpDeskStatus({ id, status: "in_progress" }),
     onSuccess: () => {
-      toast.success("Tiket bantuan telah diterima!");
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
     onError: (err: any) => {
@@ -189,7 +190,6 @@ export const useResolveHelpDesk = () => {
       solveHelpDeskSession(sessionId, timestamp),
     
     onSuccess: () => {
-      toast.success("Percakapan telah diselesaikan!");
       queryClient.invalidateQueries({ queryKey: ["helpdesks"] });
     },
     onError: (err: any) => {
@@ -242,6 +242,34 @@ export const useSendHelpdeskMessage = () => {
     },
     onError: (err: any) => {
       toast.error(err.response?.data?.message || "Gagal mengirim pesan.");
+    },
+  });
+};
+
+
+
+export const useGetHelpDeskSwitchStatus = () => {
+  return useQuery({
+    queryKey: ["helpdesk-switch"],
+    queryFn: getHelpDeskSwitchStatus,
+    staleTime: 0,
+  });
+};
+
+/**
+ * Hook to update helpdesk switch status
+ */
+export const useUpdateHelpDeskSwitchStatus = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (status: boolean) => updateHelpDeskSwitchStatus(status),
+    onSuccess: (data) => {
+      const statusText = data.status ? "AKTIF" : "NON-AKTIF";
+      toast.success(`Layanan Helpdesk berhasil diubah menjadi ${statusText}`);
+      queryClient.invalidateQueries({ queryKey: ["helpdesk-switch"] });
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || "Gagal mengubah status layanan helpdesk.");
     },
   });
 };

@@ -5,6 +5,7 @@ import type {
   PaginatedHelpDeskResponse,
   ApiResponse,
   ChatHistoryResponse,
+  HelpDeskSwitchStatus,
 } from "../utils/types";
 
 
@@ -181,4 +182,20 @@ export const solveHelpDeskSession = async (
     `/api/helpdesk/solved/${sessionId}`,
     { resolved_at: clientTimestamp } // Kirim sebagai payload
   );
+};
+
+
+export const getHelpDeskSwitchStatus = async (): Promise<HelpDeskSwitchStatus> => {
+  const response = await instanceApiToken.get<ApiResponse<HelpDeskSwitchStatus>>(
+    "/api/helpdesk/switch"
+  );
+  return response.data.data;
+};
+
+export const updateHelpDeskSwitchStatus = async (status: boolean): Promise<HelpDeskSwitchStatus> => {
+  const response = await instanceApiToken.post<ApiResponse<HelpDeskSwitchStatus>>(
+    "/api/helpdesk/switch",
+    { status }
+  );
+  return response.data.data;
 };

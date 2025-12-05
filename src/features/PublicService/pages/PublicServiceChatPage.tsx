@@ -108,6 +108,16 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
     );
   }
 
+  const isZeroIds = message.questionId === 0 && message.answerId === 0;
+  const isHelpdesk = message.isHelpdesk === true;
+  
+  const showFeedback = 
+    message.sender === "agent" && 
+    !message.isHumanAgent && 
+    !isHelpdesk &&
+    !isZeroIds;
+
+
   return (
     <div
       className={`relative group mb-4 flex gap-3 ${
@@ -230,7 +240,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
             isActionVisible ? "opacity-100" : "opacity-0"
           }`}
         >
-          {message.sender === "agent" && !message.isHumanAgent && (
+          {showFeedback && (
             <div className="mt-2 w-full">
               <MessageActions message={message} onFeedback={onFeedback} />
             </div>

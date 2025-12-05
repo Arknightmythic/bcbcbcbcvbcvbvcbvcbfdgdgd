@@ -120,7 +120,7 @@ const HelpDeskChatPage: React.FC = () => {
     const allMessages = chatHistory.pages
       .flatMap((page) => page.data || [])
       .filter(Boolean)
-      .reverse();
+      .sort((a, b) => a.id - b.id)
 
     return allMessages.map((item) => ({
       id: `msg-${item.id}`,
@@ -252,11 +252,12 @@ const HelpDeskChatPage: React.FC = () => {
 
   const handleQuickResponse = (template: string) => {
     const quickResponses: Record<string, string> = {
-      Salam:
+     Greeting: // Sebelumnya "Salam"
         "Halo! Terima kasih telah menghubungi kami. Ada yang bisa saya bantu?",
-      Pengecekan:
+      Checking: // Sebelumnya "Pengecekan"
         "Saya sedang memeriksa informasi yang Anda butuhkan. Mohon tunggu sebentar.",
-      "Tindak Lanjut": "Apakah ada hal lain yang bisa saya bantu?",
+      Followup: // Sebelumnya "Tindak Lanjut"
+        "Apakah ada hal lain yang bisa saya bantu?",
     };
     setInput(quickResponses[template] || "");
     textareaRef.current?.focus();

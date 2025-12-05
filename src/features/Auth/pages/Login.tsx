@@ -207,7 +207,8 @@ function Login() {
               <button
                 type="button"
                 onClick={handleMicrosoftLogin}
-                disabled={isMicrosoftPending}
+                // disabled={isMicrosoftPending}
+                disabled={true}
                 className="w-full inline-flex justify-center items-center py-3 px-4 border border-blue-600 rounded-md shadow-sm bg-white font-medium text-gray-700 hover:bg-blue-50 transition-colors duration-200 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
               >
                 <img

@@ -8,6 +8,9 @@ export interface ChatMessage {
   feedback?: "like" | "dislike" | null;
   is_answered?: boolean | null;
   isHumanAgent?: boolean;
+  isHelpdesk?: boolean;
+  questionId?: number;
+  answerId?: number;
 }
 
 export interface Citation {

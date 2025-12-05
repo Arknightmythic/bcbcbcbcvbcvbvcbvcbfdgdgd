@@ -123,3 +123,7 @@ export interface HelpDeskMessage {
   timestamp: string;
 }
 
+export interface HelpDeskSwitchStatus {
+  id: number;
+  status: boolean;
+}
