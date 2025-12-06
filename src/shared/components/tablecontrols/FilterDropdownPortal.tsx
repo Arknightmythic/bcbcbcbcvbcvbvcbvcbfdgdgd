@@ -1,12 +1,8 @@
-// components/TableControls/FilterDropdownPortal.tsx
-
 import React from "react";
 import { createPortal } from "react-dom";
 import { Check } from "lucide-react";
-import CustomSelect from "../CustomSelect"; // Sesuaikan path
+import CustomSelect from "../CustomSelect"; 
 import type { FilterConfig } from "./useTableControlsLogic";
-
-
 
 interface FilterDropdownPortalProps<T extends Record<string, any>> {
   coords: { top: number; left: number };
@@ -45,11 +41,9 @@ const FilterDropdownPortal = <T extends Record<string, any>>({
           {dropdownFilters.map((config) => (
             <div key={config.key as string}>
               <label className="block text-xs font-medium text-gray-700 mb-1.5">
-                {(config.options &&
-                  config.options[0]?.label
-                    .replace("All ", "")
-                    .replace("AI ", "")) ||
-                  config.label}
+                {config.options?.[0]?.label
+                  .replace("All ", "")
+                  .replace("AI ", "") || config.label}
               </label>
               <CustomSelect
                 options={config.options || []}

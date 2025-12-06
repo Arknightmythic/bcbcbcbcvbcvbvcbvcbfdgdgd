@@ -52,9 +52,13 @@ const storage = {
   removeItems: () => {
     const keys = [ACCESS_TOKEN_KEY, USER_KEY];
     if (isDevelopment) {
-      keys.forEach(key => localStorage.removeItem(key));
+      for (const key of keys) {
+        localStorage.removeItem(key);
+      }
     } else {
-      keys.forEach(key => secureLocalStorage.removeItem(key));
+      for (const key of keys) {
+        secureLocalStorage.removeItem(key);
+      }
     }
   },
 

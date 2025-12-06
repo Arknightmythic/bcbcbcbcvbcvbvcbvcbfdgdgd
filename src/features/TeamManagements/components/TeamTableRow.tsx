@@ -10,10 +10,60 @@ interface TeamTableRowProps {
   onAction: (action: ActionType, team: Team) => void;
 }
 
-const TeamTableRow: React.FC<TeamTableRowProps> = ({ team, onAction }) => {
-  // --- CEK DEFAULT ---
-  const isDefault = team.name.toLowerCase() === 'default';
+interface DropdownContentProps {
+  dropdownRef: React.RefObject<HTMLDivElement | null>;
+  position: { top?: number; bottom?: number; right?: number };
+  team: Team;
+  onAction: (action: ActionType, team: Team) => void;
+  isDefault: boolean;
+  onClose: () => void;
+}
 
+
+const DropdownContent: React.FC<DropdownContentProps> = ({
+  dropdownRef,
+  position,
+  team,
+  onAction,
+  isDefault,
+  onClose
+}) => (
+  <div
+    ref={dropdownRef}
+    className="fixed z-[9999] w-48 bg-white rounded-md shadow-lg border border-gray-200"
+    style={{
+      top: position.top ? `${position.top}px` : 'auto',
+      right: position.right ? `${position.right}px` : 'auto',
+      bottom: position.bottom ? `${position.bottom}px` : 'auto',
+    }}
+    onClick={(e) => e.stopPropagation()}
+  >
+    <div className="flex flex-col py-1">
+      <button
+        onClick={() => { onAction('edit', team); onClose(); }}
+        disabled={isDefault} 
+        className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:text-gray-400 disabled:bg-white disabled:cursor-not-allowed"
+        title={isDefault ? "tidak bisa edit tim 'default'" : "Ubah tim"}
+      >
+        <Edit className="w-4 h-4" />
+        <span>Ubah Tim</span>
+      </button>
+      <button
+        onClick={() => { onAction('delete', team); onClose(); }}
+        disabled={isDefault} 
+        className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 disabled:text-gray-400 disabled:bg-white disabled:cursor-not-allowed"
+        title={isDefault ? "'Tidak bisa hapus tim'" : "Hapus Tim"}
+      >
+        <Trash2 className="w-4 h-4" />
+        <span>Hapus Tim</span>
+      </button>
+    </div>
+  </div>
+);
+
+const TeamTableRow: React.FC<TeamTableRowProps> = ({ team, onAction }) => {
+  
+  const isDefault = team.name.toLowerCase() === 'default';
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [position, setPosition] = useState<{ top?: number, bottom?: number, right?: number }>({});
   const moreButtonRef = useRef<HTMLButtonElement>(null);
@@ -50,40 +100,6 @@ const TeamTableRow: React.FC<TeamTableRowProps> = ({ team, onAction }) => {
     }
   };
 
-  const DropdownContent = () => (
-    <div
-      ref={dropdownRef}
-      className="fixed z-[9999] w-48 bg-white rounded-md shadow-lg border border-gray-200"
-      style={{
-        top: position.top ? `${position.top}px` : 'auto',
-        right: position.right ? `${position.right}px` : 'auto',
-        bottom: position.bottom ? `${position.bottom}px` : 'auto',
-      }}
-      onClick={(e) => e.stopPropagation()}
-    >
-      <div className="flex flex-col py-1">
-        <button
-          onClick={() => { onAction('edit', team); setIsDropdownOpen(false); }}
-          disabled={isDefault} // Disabled jika default
-          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:text-gray-400 disabled:bg-white disabled:cursor-not-allowed"
-          title={isDefault ? "tidak bisa edit tim 'default'" : "Ubah tim"}
-        >
-          <Edit className="w-4 h-4" />
-          <span>Ubah Tim</span>
-        </button>
-        <button
-          onClick={() => { onAction('delete', team); setIsDropdownOpen(false); }}
-          disabled={isDefault} // Disabled jika default
-          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 disabled:text-gray-400 disabled:bg-white disabled:cursor-not-allowed"
-          title={isDefault ? "'Tidak bisa hapus tim'" : "Hapus Tim"}
-        >
-          <Trash2 className="w-4 h-4" />
-          <span>Hapus Tim</span>
-        </button>
-      </div>
-    </div>
-  );
-
   return (
     <tr className="group hover:bg-gray-50 text-[10px] text-gray-700">
       <td className="px-4 py-3 font-medium text-gray-900 capitalize">{team.name}</td>
@@ -92,7 +108,7 @@ const TeamTableRow: React.FC<TeamTableRowProps> = ({ team, onAction }) => {
       </td>
       <td className="px-4 py-3 text-center sticky right-0 bg-white group-hover:bg-gray-50 z-10 border-l border-gray-200">
         
-        {/* Layout Desktop */}
+        
         <div className="hidden md:flex items-center justify-center gap-x-3">
           <button 
             onClick={() => onAction('edit', team)} 
@@ -112,7 +128,7 @@ const TeamTableRow: React.FC<TeamTableRowProps> = ({ team, onAction }) => {
           </button>
         </div>
 
-        {/* Layout Mobile */}
+        
         <div className="md:hidden">
           <button
             ref={moreButtonRef}
@@ -123,7 +139,17 @@ const TeamTableRow: React.FC<TeamTableRowProps> = ({ team, onAction }) => {
           </button>
         </div>
 
-        {isDropdownOpen && createPortal(<DropdownContent />, document.body)}
+        {isDropdownOpen && createPortal(
+          <DropdownContent 
+            dropdownRef={dropdownRef}
+            position={position}
+            team={team}
+            onAction={onAction}
+            isDefault={isDefault}
+            onClose={() => setIsDropdownOpen(false)}
+          />, 
+          document.body
+        )}
       </td>
     </tr>
   );

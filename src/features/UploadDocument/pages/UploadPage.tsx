@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from "react";
 import toast from "react-hot-toast";
-// Hapus useQueryClient yang tidak digunakan
-// import { useQueryClient } from "@tanstack/react-query";
+
+
 
 import {
   useGetDocuments,
@@ -30,7 +30,7 @@ import TableControls, {
 
 type ModalAction = "upload" | "deleteSingle" | "deleteMultiple";
 
-// Update Interface Filters untuk mendukung date range
+
 export interface Filters extends Record<string, any> {
   type: string;
   category: DocumentCategory | "";
@@ -75,7 +75,7 @@ const filterConfig: FilterConfig<Filters>[] = [
     type: "select",
     options: [
       { value: "", label: "Semua Proses" },
-      { value: "null", label: "Menunggu" }, // Backend handle string "null" sebagai IS NULL
+      { value: "null", label: "Menunggu" }, 
       { value: "processing", label: "Sedang Diproses" },
       { value: "finished", label: "Selesai" },
       { value: "failed", label: "Gagal" },
@@ -137,8 +137,8 @@ const UploadPage: React.FC = () => {
   const [viewableTitle, setViewableTitle] = useState<string>("");
   const [isGeneratingUrl, setIsGeneratingUrl] = useState(false);
 
-  // Hapus queryClient yang tidak digunakan
-  // const queryClient = useQueryClient();
+  
+  
 
   const searchParams = useMemo(() => {
     const params = new URLSearchParams();
@@ -180,15 +180,15 @@ const UploadPage: React.FC = () => {
     currentDocumentIdForDetails
   );
 
-  // [UPDATE] Rename isPending single delete agar tidak bentrok
+  
   const { mutate: deleteDocument, isPending: isDeletingSingle } =
     useDeleteDocument();
 
-  // [BARU] Panggil hook batch delete
+  
   const { mutate: batchDelete, isPending: isDeletingBatch } =
     useBatchDeleteDocuments();
 
-  // Gabungkan status loading delete
+  
   const isDeleting = isDeletingSingle || isDeletingBatch;
 
   const documents = useMemo(
@@ -256,16 +256,16 @@ const UploadPage: React.FC = () => {
         return;
       }
 
-      // Panggil API Batch Delete
+      
       batchDelete(selectedDocs, {
         onSuccess: (response: any) => {
-          // Tampilkan pesan sukses dari backend atau default
+          
           const message =
             response?.message ||
             `Successfully deleted ${selectedDocs.length} document(s).`;
           toast.success(message);
 
-          setSelectedDocs([]); // Reset seleksi
+          setSelectedDocs([]); 
           handleCloseModal();
         },
         onError: (err: any) => {
@@ -281,7 +281,7 @@ const UploadPage: React.FC = () => {
   const getModalContent = () => {
     const { action, data } = modalState;
     switch (action) {
-      case "upload":
+      case "upload": { 
         const displayCategory = data.category === 'qna' 
           ? 'Tanya Jawab' : data.category;
         return {
@@ -290,6 +290,7 @@ const UploadPage: React.FC = () => {
           confirmText: "Unggah",
           confirmColor: "bg-blue-600 hover:bg-blue-700",
         };
+      }
 
       case "deleteSingle":
         return {
@@ -343,13 +344,13 @@ const UploadPage: React.FC = () => {
     handleOpenModal("upload", { category: selectedCategory });
   };
 
-  const handleFileSelect = useCallback((selectedFiles: FileList) => {
-    const allowedTypes = ["application/pdf", "text/plain"];
+ const handleFileSelect = useCallback((selectedFiles: FileList) => {
+    const allowedTypes = new Set(["application/pdf", "text/plain"]);
     const validFiles: File[] = [];
     const invalidFiles: string[] = [];
 
     Array.from(selectedFiles).forEach((file) => {
-      if (allowedTypes.includes(file.type)) {
+      if (allowedTypes.has(file.type)) {
         validFiles.push(file);
       } else {
         invalidFiles.push(file.name);
@@ -372,7 +373,7 @@ const UploadPage: React.FC = () => {
     setFilesToUpload((prev) => prev.filter((_, index) => index !== fileIndex));
   }, []);
 
-  // PERBAIKAN: Ubah tipe parameter filterName menjadi keyof Filters
+  
   const handleFilterChange = (filterName: keyof Filters, value: any) => {
     setFilters((prev) => ({ ...prev, [filterName]: value }));
     setCurrentPage(1);

@@ -1,11 +1,10 @@
-// [UPDATE: src/features/KnowledgeBase/components/DocumentsTable.tsx]
-
 import React from "react";
 import { Loader2, Trash2, ArrowUp, ArrowDown } from "lucide-react";
 import DocumentRow from "./DocumentRow";
 import type { UploadedDocument, SortOrder } from "../types/types";
 import TablePagination from "../../../shared/components/TablePagination";
 
+// --- Interfaces ---
 
 interface DocumentsTableProps {
   documents: UploadedDocument[];
@@ -27,16 +26,54 @@ interface DocumentsTableProps {
   itemsPerPage: number;
   totalItems: number;
   onPageChange: (page: number) => void;
-  onItemsPerPageChange: (items: number) => void;
-  // --- TAMBAHAN: Props Sorting ---
+  onItemsPerPageChange: (items: number) => void;  
   sortColumn: string;
   sortDirection: SortOrder;
   onSort: (column: string) => void;
 }
 
+interface SortableHeaderProps {
+  label: string; 
+  columnKey: string; 
+  className?: string;
+  sortColumn: string;
+  sortDirection: SortOrder;
+  onSort: (column: string) => void;
+}
 
-const DocumentsTable: React.FC<DocumentsTableProps> = (props) => {
+// --- Sub-Component (Moved Outside) ---
+
+const SortableHeader: React.FC<SortableHeaderProps> = ({ 
+  label, 
+  columnKey, 
+  className = "",
+  sortColumn,
+  sortDirection,
+  onSort
+}) => {
+  const isActive = sortColumn === columnKey;
   
+  return (
+    <th 
+      className={`px-6 py-4 cursor-pointer hover:bg-gray-200 transition-colors ${className}`}
+      onClick={() => onSort(columnKey)}
+    >
+      <div className="flex items-center gap-1">
+        {label}
+        {isActive && (
+          sortDirection === 'asc' 
+            ? <ArrowUp className="w-3 h-3 text-blue-600" /> 
+            : <ArrowDown className="w-3 h-3 text-blue-600" />
+        )}
+        {!isActive && <div className="w-3 h-3" />} 
+      </div>
+    </th>
+  );
+};
+
+// --- Main Component ---
+
+const DocumentsTable: React.FC<DocumentsTableProps> = (props) => {  
   const {
     documents,
     selectedDocs,
@@ -55,44 +92,59 @@ const DocumentsTable: React.FC<DocumentsTableProps> = (props) => {
     totalItems,
     onPageChange,
     onItemsPerPageChange,
-    // Props Sorting
     sortColumn,
     sortDirection,
     onSort,
   } = props;
 
- 
   const allSelected =
     documents.length > 0 && selectedDocs.length === documents.length;
 
-  // Helper Component untuk Header yang bisa di-sort
-  const SortableHeader = ({ 
-    label, 
-    columnKey, 
-    className = "" 
-  }: { 
-    label: string; 
-    columnKey: string; 
-    className?: string; 
-  }) => {
-    const isActive = sortColumn === columnKey;
-    
-    return (
-      <th 
-        className={`px-6 py-4 cursor-pointer hover:bg-gray-200 transition-colors ${className}`}
-        onClick={() => onSort(columnKey)}
-      >
-        <div className="flex items-center gap-1">
-          {label}
-          {isActive && (
-            sortDirection === 'asc' 
-              ? <ArrowUp className="w-3 h-3 text-blue-600" /> 
-              : <ArrowDown className="w-3 h-3 text-blue-600" />
-          )}
-          {!isActive && <div className="w-3 h-3" />} {/* Spacer agar tidak lompat */}
-        </div>
-      </th>
-    );
+  // Helper function to handle table content rendering logic (Replacing Nested Ternary)
+  const renderTableContent = () => {
+    if (isLoading) {
+      return (
+        <tr>
+          <td colSpan={9} className="text-center py-10">
+            <Loader2 className="animate-spin inline-block" />
+          </td>
+        </tr>
+      );
+    }
+
+    if (isError) {
+      return (
+        <tr>
+          <td colSpan={9} className="text-center py-10 text-red-500">
+            gagal menampilkan data.
+          </td>
+        </tr>
+      );
+    }
+
+    if (documents.length === 0) {
+      return (
+        <tr>
+          <td colSpan={9} className="text-center py-10">
+            tidak ada data ditemukan.
+          </td>
+        </tr>
+      );
+    }
+
+    // Default case: Render list of documents
+    return documents.map((doc) => (
+      <DocumentRow
+        key={doc.id}
+        document={doc}
+        isSelected={selectedDocs.includes(doc.id)}
+        onSelect={onSelectOne}
+        onDelete={onDeleteSingle} 
+        onNewVersion={onNewVersion}
+        onViewVersions={onViewVersions}
+        onViewFile={onViewFile}
+      />
+    ));
   };
 
   return (
@@ -127,53 +179,37 @@ const DocumentsTable: React.FC<DocumentsTableProps> = (props) => {
                   className="h-3 w-3"
                 />
               </th>
-              <SortableHeader label="Tanggal Unggah" columnKey="created_at" />
-              <SortableHeader label="Nama Dokumen" columnKey="document_name" />
-              <SortableHeader label="Staff" columnKey="staff" />
-              
-              {/* Kolom di bawah ini mungkin belum didukung sort backend, jadi tetap th biasa */}
+              <SortableHeader 
+                label="Tanggal Unggah" 
+                columnKey="created_at" 
+                sortColumn={sortColumn}
+                sortDirection={sortDirection}
+                onSort={onSort}
+              />
+              <SortableHeader 
+                label="Nama Dokumen" 
+                columnKey="document_name" 
+                sortColumn={sortColumn}
+                sortDirection={sortDirection}
+                onSort={onSort}
+              />
+              <SortableHeader 
+                label="Staff" 
+                columnKey="staff" 
+                sortColumn={sortColumn}
+                sortDirection={sortDirection}
+                onSort={onSort}
+              />
               <th className="px-6 py-4">Tipe</th>
               <th className="px-6 py-4">Kategori</th>
               <th className="px-6 py-4">Tim</th>
               <th className="px-6 py-4">Status Proses</th>
               <th className="px-6 py-4">Status Izin</th>
-              
               <th className="px-6 py-4 text-center sticky right-0 bg-gray-100 z-10">Aksi</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {isLoading ? (
-              <tr>
-                <td colSpan={9} className="text-center py-10">
-                  <Loader2 className="animate-spin inline-block" />
-                </td>
-              </tr>
-            ) : isError ? (
-              <tr>
-                <td colSpan={9} className="text-center py-10 text-red-500">
-                  gagal menampilkan data.
-                </td>
-              </tr>
-            ) : documents.length > 0 ? (
-              documents.map((doc) => (
-                <DocumentRow
-                  key={doc.id}
-                  document={doc}
-                  isSelected={selectedDocs.includes(doc.id)}
-                  onSelect={onSelectOne}
-                  onDelete={onDeleteSingle} 
-                  onNewVersion={onNewVersion}
-                  onViewVersions={onViewVersions}
-                  onViewFile={onViewFile}
-                />
-              ))
-            ) : (
-              <tr>
-                <td colSpan={9} className="text-center py-10">
-                  tidak ada data ditemukan.
-                </td>
-              </tr>
-            )}
+            {renderTableContent()}
           </tbody>
         </table>
       </div>

@@ -4,6 +4,8 @@ import CustomSelect from '../../../shared/components/CustomSelect';
 import type { Role, Permission, Team, RoleModalData } from '../utils/types';
 import toast from 'react-hot-toast';
 
+// --- HELPER FUNCTIONS (Diluar Component) ---
+
 const shouldShowPermission = (permissionName: string): boolean => {
   return permissionName.endsWith(':read');
 };
@@ -11,6 +13,138 @@ const shouldShowPermission = (permissionName: string): boolean => {
 const formatPermissionLabel = (permissionName: string): string => {
   return permissionName.replace(':read', ':access');
 };
+
+const formatGroupName = (name: string) => {
+  return name
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
+// --- SUB-COMPONENTS (Untuk Mengurangi Nesting Depth) ---
+
+interface PermissionGroupCardProps {
+  groupName: string;
+  perms: Permission[];
+  selectedPermissions: Set<string>;
+  onToggleGroup: (perms: Permission[]) => void;
+  onCheckboxChange: (permissionId: string) => void;
+}
+
+const PermissionGroupCard: React.FC<PermissionGroupCardProps> = ({
+  groupName,
+  perms,
+  selectedPermissions,
+  onToggleGroup,
+  onCheckboxChange
+}) => {
+  const allSelected = perms.every(p => selectedPermissions.has(String(p.id)));
+
+  return (
+    <div className="border border-gray-200 rounded-lg overflow-hidden">
+      <div className="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
+        <h3 className="font-semibold text-gray-700 text-sm uppercase tracking-wide">
+          {formatGroupName(groupName)}
+        </h3>
+        <button
+          type="button"
+          onClick={() => onToggleGroup(perms)}
+          className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+        >
+          {allSelected ? (
+            <>
+              <CheckSquare className="w-3 h-3" /> Batal Pilih Semua
+            </>
+          ) : (
+            <>
+              <Square className="w-3 h-3" /> Pilih Semua
+            </>
+          )}
+        </button>
+      </div>
+
+      <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3 bg-white">
+        {perms.map(permission => (
+          <label
+            key={permission.id}
+            className={`flex items-center p-2 rounded-md border transition-all cursor-pointer hover:bg-blue-50 ${
+              selectedPermissions.has(String(permission.id))
+                ? 'border-blue-200 bg-blue-50'
+                : 'border-gray-100'
+            }`}
+          >
+            <div className="relative flex items-center">
+              <input
+                type="checkbox"
+                checked={selectedPermissions.has(String(permission.id))}
+                onChange={() => onCheckboxChange(String(permission.id))}
+                className="peer h-4 w-4 cursor-pointer appearance-none rounded border border-gray-300 shadow-sm checked:border-blue-600 checked:bg-blue-600 focus:ring-2 focus:ring-blue-500/20"
+              />
+              <Check className="pointer-events-none absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 peer-checked:opacity-100" />
+            </div>
+            <span className="ml-3 text-sm text-gray-700 select-none">
+              {formatPermissionLabel(permission.name)}
+            </span>
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+interface PermissionsContentProps {
+  teamId: string;
+  groupedPermissions: Record<string, Permission[]>;
+  selectedPermissions: Set<string>;
+  onToggleGroup: (perms: Permission[]) => void;
+  onCheckboxChange: (permissionId: string) => void;
+}
+
+const PermissionsContent: React.FC<PermissionsContentProps> = ({
+  teamId,
+  groupedPermissions,
+  selectedPermissions,
+  onToggleGroup,
+  onCheckboxChange
+}) => {
+  // Kondisi 1: Tim belum dipilih
+  if (!teamId) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-200 rounded-lg bg-gray-50 text-gray-400">
+        <p>Silakan pilih Tim terlebih dahulu untuk melihat izin yang tersedia</p>
+      </div>
+    );
+  }
+
+  // Kondisi 2: Izin kosong
+  if (Object.keys(groupedPermissions).length === 0) {
+    return (
+      <div className="p-4 bg-yellow-50 text-yellow-700 rounded-md text-sm">
+        Tidak ada izin yang ditemukan yang cocok dengan Hak Akses tim ini.
+        <br />
+        <span className="text-xs opacity-75">Periksa apakah tim memiliki 'Hak Akses' yang ditetapkan di Manajemen Tim.</span>
+      </div>
+    );
+  }
+
+  // Kondisi 3: Tampilkan daftar izin
+  return (
+    <div className="space-y-6">
+      {Object.entries(groupedPermissions).map(([groupName, perms]) => (
+        <PermissionGroupCard
+          key={groupName}
+          groupName={groupName}
+          perms={perms}
+          selectedPermissions={selectedPermissions}
+          onToggleGroup={onToggleGroup}
+          onCheckboxChange={onCheckboxChange}
+        />
+      ))}
+    </div>
+  );
+};
+
+// --- MAIN COMPONENT ---
 
 interface RoleManagementModalProps {
   isOpen: boolean;
@@ -57,7 +191,6 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
     const groups: Record<string, Permission[]> = {};
 
     permissions.forEach((perm) => {
-      
       if (!shouldShowPermission(perm.name)) {
         return;
       }
@@ -104,12 +237,10 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    
     if (name.trim().toLowerCase() === 'default') {
         toast.error("tidak dapat menggunakan nama 'default' untuk peran.");
         return;
     }
-    
 
     if (!teamId) {
         toast.error("silakan pilih tim untuk peran ini."); 
@@ -123,13 +254,6 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
     };
 
     onSave(modalData, role?.id);
-  };
-
-  const formatGroupName = (name: string) => {
-    return name
-      .split('-')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
   };
 
   if (!isOpen) return null;
@@ -189,75 +313,15 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
                 )}
               </label>
               
-              {!teamId ? (
-                <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-200 rounded-lg bg-gray-50 text-gray-400">
-                   <p>Silakan pilih Tim terlebih dahulu untuk melihat izin yang tersedia</p>
-                </div>
-              ) : Object.keys(groupedPermissions).length === 0 ? (
-                <div className="p-4 bg-yellow-50 text-yellow-700 rounded-md text-sm">
-                  Tidak ada izin yang ditemukan yang cocok dengan Hak Akses tim ini.
-                  <br/>
-                  <span className="text-xs opacity-75">Periksa apakah tim memiliki 'Hak Akses' yang ditetapkan di Manajemen Tim.</span>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {Object.entries(groupedPermissions).map(([groupName, perms]) => {
-                    const allSelected = perms.every(p => selectedPermissions.has(String(p.id)));
+              {/* Component Render yang sudah di-ekstrak */}
+              <PermissionsContent 
+                teamId={teamId}
+                groupedPermissions={groupedPermissions}
+                selectedPermissions={selectedPermissions}
+                onToggleGroup={toggleGroup}
+                onCheckboxChange={handleCheckboxChange}
+              />
 
-                    return (
-                      <div key={groupName} className="border border-gray-200 rounded-lg overflow-hidden">
-                        <div className="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
-                          <h3 className="font-semibold text-gray-700 text-sm uppercase tracking-wide">
-                            {formatGroupName(groupName)}
-                          </h3>
-                          <button
-                            type="button"
-                            onClick={() => toggleGroup(perms)}
-                            className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
-                          >
-                            {allSelected ? (
-                                <>
-                                    <CheckSquare className="w-3 h-3" /> Batal Pilih Semua
-                                </>
-                            ) : (
-                                <>
-                                    <Square className="w-3 h-3" /> Pilih Semua
-                                </>
-                            )}
-                          </button>
-                        </div>
-                        
-                        <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3 bg-white">
-                          {perms.map(permission => (
-                            <label 
-                              key={permission.id} 
-                              className={`flex items-center p-2 rounded-md border transition-all cursor-pointer hover:bg-blue-50 ${
-                                selectedPermissions.has(String(permission.id)) 
-                                  ? 'border-blue-200 bg-blue-50' 
-                                  : 'border-gray-100'
-                              }`}
-                            >
-                              <div className="relative flex items-center">
-                                <input
-                                  type="checkbox"
-                                  checked={selectedPermissions.has(String(permission.id))}
-                                  onChange={() => handleCheckboxChange(String(permission.id))}
-                                  className="peer h-4 w-4 cursor-pointer appearance-none rounded border border-gray-300 shadow-sm checked:border-blue-600 checked:bg-blue-600 focus:ring-2 focus:ring-blue-500/20"
-                                />
-                                <Check className="pointer-events-none absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 peer-checked:opacity-100" />
-                              </div>
-                              {/* PERUBAHAN DI SINI: Gunakan helper formatPermissionLabel */}
-                              <span className="ml-3 text-sm text-gray-700 select-none">
-                                {formatPermissionLabel(permission.name)}
-                              </span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
             </div>
           </form>
         </div>

@@ -1,14 +1,14 @@
-import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
-import { createPortal } from 'react-dom';
-import { ChevronDown } from 'lucide-react';
+import React, { useState, useRef, useLayoutEffect, useEffect } from "react";
+import { createPortal } from "react-dom";
+import { ChevronDown } from "lucide-react";
 
 interface SelectOption {
   value: string;
   label: string;
 }
 
-type SelectOptionType = 'default' | 'pagerow';
-type SelectDirection = 'up' | 'down';
+type SelectOptionType = "default" | "pagerow";
+type SelectDirection = "up" | "down";
 
 interface CustomSelectProps {
   options: SelectOption[];
@@ -20,20 +20,21 @@ interface CustomSelectProps {
   disabled?: boolean;
 }
 
-const CustomSelect: React.FC<CustomSelectProps> = ({ 
-  options, 
-  value, 
-  onChange, 
-  placeholder = "Pilih...", 
+const CustomSelect: React.FC<CustomSelectProps> = ({
+  options,
+  value,
+  onChange,
+  placeholder = "Pilih...",
   selectedType,
-  direction = 'down',
-  disabled = false 
+  direction = "down",
+  disabled = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [buttonRect, setButtonRect] = useState<DOMRect | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  const selectedLabel = options.find(opt => opt.value === value)?.label || placeholder;
+  const selectedLabel =
+    options.find((opt) => opt.value === value)?.label || placeholder;
 
   const updateCoords = () => {
     if (buttonRef.current) {
@@ -45,7 +46,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
   useLayoutEffect(() => {
     if (isOpen) {
       updateCoords();
-      
+
       window.addEventListener("scroll", updateCoords, true);
       window.addEventListener("resize", updateCoords);
 
@@ -58,18 +59,23 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (buttonRef.current && buttonRef.current.contains(event.target as Node)) {
+      if (buttonRef.current?.contains(event.target as Node)) {
         return;
       }
 
       if (isOpen) {
-        const dropdownElement = document.getElementById('custom-select-dropdown');
-        if (dropdownElement && !dropdownElement.contains(event.target as Node)) {
+        const dropdownElement = document.getElementById(
+          "custom-select-dropdown"
+        );
+        if (
+          dropdownElement &&
+          !dropdownElement.contains(event.target as Node)
+        ) {
           setIsOpen(false);
         }
       }
     };
-    
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
@@ -89,14 +95,14 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
     const commonStyle: React.CSSProperties = {
       left: buttonRect.left + scrollX,
       width: buttonRect.width,
-      maxHeight: '240px',
+      maxHeight: "240px",
     };
 
-    if (direction === 'up') {
+    if (direction === "up") {
       return {
         ...commonStyle,
-        top: buttonRect.top + scrollY - gap, 
-        transform: 'translateY(-100%)', 
+        top: buttonRect.top + scrollY - gap,
+        transform: "translateY(-100%)",
       };
     }
 
@@ -114,39 +120,56 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
         className={`flex items-center justify-between px-2.5 
-          ${selectedType === 'default' ? 'w-full py-2.5' : 'py-[6px] min-w-[70px]'} 
+          ${
+            selectedType === "default"
+              ? "w-full py-2.5"
+              : "py-[6px] min-w-[70px]"
+          } 
           bg-white border border-gray-300 text-gray-900 text-xs rounded-lg 
           focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
           disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors`}
       >
         <span className="truncate mr-2">{selectedLabel}</span>
-        <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown
+          className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${
+            isOpen ? "rotate-180" : ""
+          }`}
+        />
       </button>
 
-     
-      {isOpen && !disabled && buttonRect && createPortal(
-        <div 
-          id="custom-select-dropdown"
-          className={`absolute z-[9999] bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden animate-fade-in
-            ${direction === 'up' ? 'origin-bottom' : 'origin-top'}
+      {isOpen &&
+        !disabled &&
+        buttonRect &&
+        createPortal(
+          <div
+            id="custom-select-dropdown"
+            className={`absolute z-[9999] bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden animate-fade-in
+            ${direction === "up" ? "origin-bottom" : "origin-top"}
           `}
-          style={getDropdownStyle()}
-        >
-          <ul className="py-1 overflow-y-auto max-h-[240px] custom-scrollbar">
-            {options.map((option) => (
-              <li
-                key={option.value}
-                onClick={() => handleOptionClick(option.value)}
-                className={`px-4 py-2 text-xs cursor-pointer transition-colors hover:bg-blue-50 
-                  ${value === option.value ? 'font-semibold bg-blue-50 text-blue-700' : 'text-gray-700'}`}
-              >
-                {option.label}
-              </li>
-            ))}
-          </ul>
-        </div>,
-        document.body
-      )}
+            style={getDropdownStyle()}
+          >
+            <ul className="py-1 overflow-y-auto max-h-[240px] custom-scrollbar">
+              {options.map((option) => (
+                <li key={option.value}>
+                  <button
+                    type="button"
+                    onClick={() => handleOptionClick(option.value)}
+                    className={`w-full text-left px-4 py-2 text-xs transition-colors hover:bg-blue-50 cursor-pointer
+                      ${
+                        value === option.value
+                          ? "font-semibold bg-blue-50 text-blue-700"
+                          : "text-gray-700"
+                      }
+                    `}
+                  >
+                    {option.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>,
+          document.body
+        )}
     </>
   );
 };

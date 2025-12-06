@@ -1,5 +1,3 @@
-
-
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -10,7 +8,6 @@ import type {
   ChatMessage,
   Citation,
   OpenCitationsState,
-  ChatMode,
   BackendChatHistory,
   AskResponse,
   ChatSession,
@@ -75,17 +72,26 @@ const mapBackendHistoryToFrontend = (
       const sender = determineSender(msg);
       const isHumanAgent = checkIsHumanAgent(sender, msg);
       const messageId = `${sender}-${msg.id}`;
+
+      
+      let feedbackStatus: "like" | "dislike" | null = null;
+      if (msg.feedback === true) {
+        feedbackStatus = "like";
+      } else if (msg.feedback === false) {
+        feedbackStatus = "dislike";
+      }
+
       const chatMessage: ChatMessage = {
         id: messageId,
         dbId: msg.id, 
         sender: sender,
         text: text,
         timestamp: msg.created_at,
-        feedback: msg.feedback === true ? "like" : msg.feedback === false ? "dislike" : null,
+        feedback: feedbackStatus, 
         is_answered: msg.is_cannot_answer === null ? null : !msg.is_cannot_answer,
         isHumanAgent: isHumanAgent,
         isHelpdesk: false, 
-        questionId: msg.id, // Placeholder non-zero
+        questionId: msg.id, 
         answerId: msg.id,  
       };
       
@@ -152,7 +158,6 @@ export const useServicePublicChat = () => {
   
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState<string>("");
-  const [chatMode, setChatMode] = useState<ChatMode>("bot");
   const [citations, setCitations] = useState<Citation[]>([]);
   const [isHistoryLoaded, setIsHistoryLoaded] = useState(false);
   const [openCitations, setOpenCitations] = useState<OpenCitationsState>({}); 
@@ -177,15 +182,12 @@ export const useServicePublicChat = () => {
   const currentConversationIdRef = useRef<string | null>(null);
   const wsEnabledRef = useRef(false);
 
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const hasLoadedHistoryRef = useRef(false);
 
   
   const {
     data: historyData,
     isLoading: isLoadingHistory,
-    isError: isHistoryError,
-    error: historyError,
   } = useQuery({
     queryKey: ["conversation", sessionId],
     queryFn: () => getConversationById(sessionId!),
@@ -314,9 +316,12 @@ export const useServicePublicChat = () => {
         new Map(mappedHistory.map(msg => [msg.id, msg])).values()
       );
       
-      const sortedMessages = uniqueMessages.sort((a, b) => {
+      
+      uniqueMessages.sort((a, b) => {
         return new Date(a.timestamp || 0).getTime() - new Date(b.timestamp || 0).getTime();
       });
+
+      const sortedMessages = uniqueMessages;
       
       sortedMessages.forEach(msg => {
         processedMessageIdsRef.current.add(msg.id);
@@ -328,7 +333,6 @@ export const useServicePublicChat = () => {
       hasLoadedHistoryRef.current = true;
       
       setTimeout(() => {
-        setIsInitialLoad(false);
         wsEnabledRef.current = true;
       }, 500);
     }
@@ -339,7 +343,6 @@ export const useServicePublicChat = () => {
     if (sessionId === "new") {
       processedMessageIdsRef.current.clear();
       hasLoadedHistoryRef.current = false;
-      setIsInitialLoad(true);
       setIsHistoryLoaded(false);
       setMessages([]);
       setCitations([]);
@@ -347,7 +350,6 @@ export const useServicePublicChat = () => {
     }
   }, [sessionId]);
 
-  
   useEffect(() => {
     if (sessionId === "new" && !isHistoryLoaded) {
       const initialMessageId = "msg-initial";
@@ -367,7 +369,7 @@ export const useServicePublicChat = () => {
     }
   }, [sessionId, isHistoryLoaded]);
 
-  
+
   const showLoadingToast = () => {
     loadingTimerRef.current = setTimeout(() => {
       loadingToastRef.current = toast.loading(
@@ -423,10 +425,10 @@ export const useServicePublicChat = () => {
       
       const isGenericResponse = data.answer_id === 0;
       const botMessageId = isGenericResponse 
-        ? `agent-api-gen-${Date.now()}` // Gunakan timestamp sebagai unique key
+        ? `agent-api-gen-${Date.now()}` 
         : `agent-api-${data.answer_id}`;
 
-      // Cek duplikasi (Penting untuk WebSocket race condition, tapi sekarang aman untuk ID 0)
+      
       if (processedMessageIdsRef.current.has(botMessageId)) {
          return; 
       }
@@ -508,7 +510,8 @@ export const useServicePublicChat = () => {
   const handleFeedbackUpdate = useCallback(async (messageId: string, feedback: 'like' | 'dislike' | null) => {
     const targetMsg = messages.find(m => m.id === messageId);
     
-    if (!targetMsg || !targetMsg.dbId) {
+    
+    if (!targetMsg?.dbId) {
       console.warn("Cannot send feedback: Message DB ID missing");
       return;
     }
@@ -521,17 +524,15 @@ export const useServicePublicChat = () => {
     );
     let booleanToSend: boolean;
 
+    
     if (feedback !== null) {
       booleanToSend = feedback === 'like';
+    } else if (previousFeedback === 'like') {
+       booleanToSend = true; 
+    } else if (previousFeedback === 'dislike') {
+       booleanToSend = false; 
     } else {
-      if (previousFeedback === 'like') {
-         booleanToSend = true; 
-      } else if (previousFeedback === 'dislike') {
-         booleanToSend = false; 
-      } else {
-         
-         return; 
-      }
+       return; 
     }
 
     try {
@@ -548,8 +549,6 @@ export const useServicePublicChat = () => {
     } catch (error) {
       console.error("Feedback error:", error);
       toast.error("Gagal mengirim feedback");
-      
-      
       setMessages(prevMessages => 
         prevMessages.map(msg => 
           msg.id === messageId ? { ...msg, feedback: previousFeedback } : msg
@@ -624,7 +623,6 @@ export const useServicePublicChat = () => {
     messages,
     input,
     setInput,
-    chatMode,
     isBotLoading,
     citations,
     openCitations,

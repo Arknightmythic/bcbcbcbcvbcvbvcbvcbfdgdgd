@@ -12,6 +12,58 @@ import PdfViewModal from "../../../shared/components/PDFViewModal";
 
 
 
+const MarkdownLink = ({ node, ...props }: any) => (
+  <a {...props} target="_blank" rel="noopener noreferrer" />
+);
+
+interface CitationListProps {
+  citations: Citation[];
+  isOpen: boolean;
+  onToggle: () => void;
+  onOpenCitation: (citation: Citation) => void;
+}
+
+const CitationList: React.FC<CitationListProps> = ({ citations, isOpen, onToggle, onOpenCitation }) => {
+  if (citations.length === 0) return null;
+
+  return (
+    <div className="mt-3 pt-2 border-t text-xs border-gray-200">
+      <button
+        onClick={onToggle}
+        className="w-full flex justify-between items-center text-left font-semibold text-gray-800 mb-1 focus:outline-none hover:bg-black/5 p-1 rounded transition-colors"
+      >
+        <span>Sumber ({citations.length})</span>
+        <span
+          className={`transform transition-transform duration-200 ${
+            isOpen ? "rotate-180" : "rotate-0"
+          }`}
+        >
+          ▼
+        </span>
+      </button>
+      <div
+        className={`overflow-hidden transition-all ease-in-out duration-300 ${
+          isOpen ? "max-h-60 pt-1" : "max-h-0"
+        }`}
+      >
+        <div className="flex flex-col gap-1.5 mt-1">
+          {citations.map((citation, index) => (
+            <div
+              
+              key={`${citation.documentName}-${index}`} 
+              onClick={() => onOpenCitation(citation)} 
+              className="bg-white/50 border border-gray-200 text-gray-700 px-2 py-1.5 rounded cursor-pointer hover:bg-white hover:shadow-sm transition-all truncate flex items-center gap-2"
+              title={citation.documentName}
+            >
+              <span className="text-xs">📄</span>
+              <span className="truncate">{citation.documentName}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 interface MessageBubbleProps {
   message: ChatMessage;
@@ -96,7 +148,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
   if (!message.text && message.sender !== "system") {
     return null;
   }
-
   
   if (message.sender === "system") {
     return (
@@ -117,6 +168,11 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
     !isHelpdesk &&
     !isZeroIds;
 
+  
+  let avatarLabel = userInitial;
+  if (message.sender !== "user") {
+      avatarLabel = message.isHumanAgent ? "A" : "AI";
+  }
 
   return (
     <div
@@ -124,20 +180,17 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
         message.sender === "user" ? "flex-row-reverse" : ""
       }`}
     >
-      {/* Avatar */}
+      
       <div
         className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 text-white shadow-sm ${
           message.sender === "user" ? "bg-bOss-blue" : "bg-bOss-red"
         }`}
       >
-        {message.sender === "user" 
-          ? userInitial 
-          : (message.isHumanAgent ? "A" : "AI")
-        }
+        {avatarLabel}
       </div>
 
       <div className="flex flex-col max-w-[85%] md:max-w-[75%] items-start">
-        {/* Bubble Chat */}
+        
         <div
           className={`relative p-3 rounded-lg leading-relaxed shadow-sm w-fit ${
             message.sender === "user"
@@ -151,9 +204,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   components={{
-                    a: ({ node, ...props }) => (
-                      <a {...props} target="_blank" rel="noopener noreferrer" />
-                    ),
+                    a: MarkdownLink, 
                   }}
                 >
                   {normalizeMarkdown(displayedLines.join("\n"))}
@@ -163,7 +214,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
               <div className="whitespace-pre-wrap">
                 {displayedLines.map((line, index) => (
                   <p
-                    key={index}
+                    
+                    key={`${index}-${line.substring(0, 10)}`}
                     className={isLastMessage ? "animate-fade-in-up" : ""}
                   >
                     {line || "\u200B"}
@@ -173,51 +225,21 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
             )}
           </div>
 
-          {/* Section Citation (Dropdown) */}
           <div
             className={`transition-opacity duration-300 ${
               isCitationVisible ? "opacity-100" : "opacity-0"
             }`}
           >
             {message.sender === "agent" && hasCitations && (
-              <div className="mt-3 pt-2 border-t text-xs border-gray-200">
-                <button
-                  onClick={() => onToggleCitation(message.id)}
-                  className="w-full flex justify-between items-center text-left font-semibold text-gray-800 mb-1 focus:outline-none hover:bg-black/5 p-1 rounded transition-colors"
-                >
-                  <span>Sumber ({messageCitations.length})</span>
-                  <span
-                    className={`transform transition-transform duration-200 ${
-                      isOpen ? "rotate-180" : "rotate-0"
-                    }`}
-                  >
-                    ▼
-                  </span>
-                </button>
-                <div
-                  className={`overflow-hidden transition-all ease-in-out duration-300 ${
-                    isOpen ? "max-h-60 pt-1" : "max-h-0"
-                  }`}
-                >
-                  <div className="flex flex-col gap-1.5 mt-1">
-                    {messageCitations.map((citation, index) => (
-                      <div
-                        key={index}
-                        onClick={() => onOpenCitation(citation)} 
-                        className="bg-white/50 border border-gray-200 text-gray-700 px-2 py-1.5 rounded cursor-pointer hover:bg-white hover:shadow-sm transition-all truncate flex items-center gap-2"
-                        title={citation.documentName}
-                      >
-                        <span className="text-xs">📄</span>
-                        <span className="truncate">{citation.documentName}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+               <CitationList 
+                  citations={messageCitations}
+                  isOpen={isOpen}
+                  onToggle={() => onToggleCitation(message.id)}
+                  onOpenCitation={onOpenCitation}
+               />
             )}
           </div>
 
-          {/* Tombol Copy */}
           <button
             onClick={handleCopyClick}
             className={`absolute top-0 z-10 p-1 text-gray-400 bg-white border border-gray-200 rounded-full shadow-sm
@@ -234,7 +256,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
           </button>
         </div>
 
-        {/* Action Buttons (Feedback & Banner) */}
         <div
           className={`transition-opacity duration-300 w-full ${
             isActionVisible ? "opacity-100" : "opacity-0"
@@ -269,7 +290,6 @@ const PublicServiceChatPage: React.FC = () => {
     messages,
     input,
     setInput,
-    chatMode,
     isBotLoading,
     citations,
     openCitations,
@@ -305,7 +325,6 @@ const PublicServiceChatPage: React.FC = () => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
     }
-    // setIsBannerVisible(false);
   };
 
   const handleCopy = (question?: ChatMessage, answer?: ChatMessage) => {
@@ -324,7 +343,6 @@ const PublicServiceChatPage: React.FC = () => {
         toast.success("Pesan berhasil disalin!");
       })
       .catch(() => {
-        
         try {
           const textArea = document.createElement("textarea");
           textArea.value = textToCopy;
@@ -334,7 +352,8 @@ const PublicServiceChatPage: React.FC = () => {
           textArea.focus();
           textArea.select();
           document.execCommand("copy");
-          document.body.removeChild(textArea);
+          
+          textArea.remove();
           toast.success("Pesan berhasil disalin!");
         } catch (err) {
           toast.error("Gagal menyalin pesan.");
@@ -354,7 +373,7 @@ const PublicServiceChatPage: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col mx-auto w-full bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden relative">
-      {/* Header */}
+      
       <div className="p-3 border-b border-gray-200 flex items-center bg-gray-50 z-10">
         <button
           onClick={handleGoBackToIntro}
@@ -366,7 +385,7 @@ const PublicServiceChatPage: React.FC = () => {
         <h2 className="text-md font-semibold text-gray-800">Sesi Chatbot</h2>
       </div>
 
-      {/* Chat Area */}
+      
       <div className="flex-1 p-4 overflow-y-auto custom-scrollbar bg-white scroll-smooth">
         {messages.map((msg, index) => {
           const previousMsg =
@@ -393,7 +412,7 @@ const PublicServiceChatPage: React.FC = () => {
           );
         })}
 
-        {/* Loading Indicator */}
+        
         {isBotLoading && (
           <div className="mb-4 flex gap-3 animate-pulse">
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 bg-bOss-red text-white">
@@ -411,7 +430,7 @@ const PublicServiceChatPage: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area */}
+      
       <div className="p-4 bg-white border-t border-gray-200 z-10">
         <form onSubmit={handleSendMessage} className="flex gap-3 items-end">
           <textarea
@@ -424,11 +443,7 @@ const PublicServiceChatPage: React.FC = () => {
               }
             }}
             className="flex-1 py-2.5 px-4 border border-gray-300 rounded-lg text-sm resize-none min-h-[44px] overflow-y-auto focus:outline-none focus:ring-2 focus:ring-bOss-blue focus:border-transparent custom-scrollbar transition-all"
-            placeholder={
-              chatMode === "bot"
-                ? "Ketik pertanyaan Anda..."
-                : "Ketik balasan untuk agen..."
-            }
+            placeholder="Ketik pertanyaan Anda..."
             rows={1}
             style={{ height: "44px" }}
             disabled={isBotLoading}
@@ -448,7 +463,6 @@ const PublicServiceChatPage: React.FC = () => {
         </form>
       </div>
 
-      {/* Modal PDF Viewer */}
       <PdfViewModal
         isOpen={isPdfModalOpen} 
         onClose={handleClosePdfModal} 
@@ -457,7 +471,7 @@ const PublicServiceChatPage: React.FC = () => {
         title={pdfTitle} 
       />
 
-      {/* Styles */}
+      
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; }

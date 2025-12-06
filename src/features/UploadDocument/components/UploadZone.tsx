@@ -31,10 +31,8 @@ const UploadZone: React.FC<UploadZoneProps> = ({
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
   const handleDragOver = useCallback((e: React.DragEvent) => { e.preventDefault(); setIsDragging(true); }, []);
   const handleDragLeave = useCallback(() => setIsDragging(false), []);
-  
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
@@ -96,12 +94,17 @@ const UploadZone: React.FC<UploadZoneProps> = ({
           <h3 className="font-semibold text-gray-700">dokumen siap diunggah:</h3>
           <div className="max-h-60 overflow-y-auto pr-2">
              {stagedFiles.map((file, index) => (
-            <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded-md">
+            <div 
+                
+                
+                key={`${file.name}-${file.size}-${file.lastModified}`} 
+                className="flex items-center justify-between bg-gray-50 p-2 rounded-md"
+            >
               <div className="flex items-center space-x-2">
                 {getFileIcon(file.name)} 
                 <span className="text-sm text-gray-800">{file.name}</span>
               </div>
-              {/* UBAH: Kirim index saat tombol X diklik */}
+              
               <button 
                 onClick={() => onRemoveFile(index)} 
                 className="text-gray-500 hover:text-red-600"

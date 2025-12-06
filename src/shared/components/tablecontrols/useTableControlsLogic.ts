@@ -269,9 +269,7 @@ export const useTableControlsLogic = <T extends Record<string, any>>({
     const formatDisplayDate = (isoString: string) => {
       if (!isoString) return "";
       const date = new Date(isoString);
-      
-      if (isNaN(date.getTime())) return isoString; 
-
+      if (Number.isNaN(date.getTime())) return isoString;
       return date.toLocaleDateString("id-ID", {
         day: "2-digit",
         month: "short",

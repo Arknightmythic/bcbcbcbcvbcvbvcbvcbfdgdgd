@@ -9,8 +9,56 @@ interface UserActionsProps {
   onAction: (action: ActionType, user: User) => void;
 }
 
+
+interface DropdownContentProps {
+  dropdownRef: React.RefObject<HTMLDivElement | null>;
+  position: { top?: number; bottom?: number; right?: number };
+  user: User;
+  onAction: (action: ActionType, user: User) => void;
+  onClose: () => void;
+}
+
+
+const DropdownContent: React.FC<DropdownContentProps> = ({
+  dropdownRef,
+  position,
+  user,
+  onAction,
+  onClose
+}) => (
+  <div
+    ref={dropdownRef}
+    className="fixed z-[9999] w-48 bg-white rounded-md shadow-lg border border-gray-200"
+    style={{
+      top: position.top ? `${position.top}px` : 'auto',
+      right: position.right ? `${position.right}px` : 'auto',
+      bottom: position.bottom ? `${position.bottom}px` : 'auto',
+    }}
+    onClick={(e) => e.stopPropagation()}
+  >
+    <div className="flex flex-col py-1">
+      <button
+        onClick={() => { onAction('edit', user); onClose(); }}
+        className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+        title="Ubah Akun"
+      >
+        <Edit className="w-4 h-4" />
+        <span>Ubah Akun</span>
+      </button>
+      <button
+        onClick={() => { onAction('delete', user); onClose(); }}
+        className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+        title="Hapus Akun"
+      >
+        <Trash2 className="w-4 h-4" />
+        <span>Hapus Akun</span>
+      </button>
+    </div>
+  </div>
+);
+
 const UserActions: React.FC<UserActionsProps> = ({ user, onAction }) => {
-  // --- State & Ref untuk Dropdown Portal ---
+  
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [position, setPosition] = useState<{ top?: number, bottom?: number, right?: number }>({});
   const moreButtonRef = useRef<HTMLButtonElement>(null);
@@ -19,7 +67,6 @@ const UserActions: React.FC<UserActionsProps> = ({ user, onAction }) => {
     setIsDropdownOpen(false);
   });
 
-  // Handler untuk membuka/menutup dan menghitung posisi dropdown
   const handleDropdownToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isDropdownOpen) {
@@ -29,12 +76,12 @@ const UserActions: React.FC<UserActionsProps> = ({ user, onAction }) => {
 
     if (moreButtonRef.current) {
       const rect = moreButtonRef.current.getBoundingClientRect();
-      const dropdownHeight = 90; // Perkiraan tinggi: 2 item * 44px
+      const dropdownHeight = 90; 
       const spaceBelow = window.innerHeight - rect.bottom;
       const spaceAbove = rect.top;
 
       let newPos: { top?: number, bottom?: number, right?: number } = {
-        right: window.innerWidth - rect.right + 8, // 8px dari kanan tombol
+        right: window.innerWidth - rect.right + 8, 
       };
 
       if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
@@ -47,39 +94,6 @@ const UserActions: React.FC<UserActionsProps> = ({ user, onAction }) => {
       setIsDropdownOpen(true);
     }
   };
-
-  // --- Komponen Konten Dropdown (untuk Portal) ---
-  const DropdownContent = () => (
-    <div
-      ref={dropdownRef}
-      className="fixed z-[9999] w-48 bg-white rounded-md shadow-lg border border-gray-200"
-      style={{
-        top: position.top ? `${position.top}px` : 'auto',
-        right: position.right ? `${position.right}px` : 'auto',
-        bottom: position.bottom ? `${position.bottom}px` : 'auto',
-      }}
-      onClick={(e) => e.stopPropagation()}
-    >
-      <div className="flex flex-col py-1">
-        <button
-          onClick={() => { onAction('edit', user); setIsDropdownOpen(false); }}
-          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-          title="Ubah Akun"
-        >
-          <Edit className="w-4 h-4" />
-          <span>Ubah Akun</span>
-        </button>
-        <button
-          onClick={() => { onAction('delete', user); setIsDropdownOpen(false); }}
-          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
-          title="Hapus Akun"
-        >
-          <Trash2 className="w-4 h-4" />
-          <span>Hapus Akun</span>
-        </button>
-      </div>
-    </div>
-  );
 
   return (
     <>
@@ -112,8 +126,17 @@ const UserActions: React.FC<UserActionsProps> = ({ user, onAction }) => {
         </button>
       </div>
 
-      {/* Render Portal untuk Dropdown */}
-      {isDropdownOpen && createPortal(<DropdownContent />, document.body)}
+      {/* Render Portal untuk Dropdown dengan Passing Props */}
+      {isDropdownOpen && createPortal(
+        <DropdownContent 
+          dropdownRef={dropdownRef}
+          position={position}
+          user={user}
+          onAction={onAction}
+          onClose={() => setIsDropdownOpen(false)}
+        />, 
+        document.body
+      )}
     </>
   );
 };

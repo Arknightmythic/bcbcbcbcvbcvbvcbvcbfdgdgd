@@ -19,18 +19,16 @@ interface DocumentTableProps {
   onSort: (column: string) => void;
 }
 
-
 interface SortableHeaderProps {
   label: string;
   columnKey: string;
   className?: string;
-  
   sortColumn: string;
   sortDirection: SortOrder;
   onSort: (column: string) => void;
 }
 
-
+// Fixed: Component definition is explicitly kept outside the parent component
 const SortableHeader: React.FC<SortableHeaderProps> = ({ 
   label, 
   columnKey, 
@@ -57,7 +55,6 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({
   );
 };
 
-
 const DocumentTable: React.FC<DocumentTableProps> = ({
   documents,
   hasManagerAccess,
@@ -72,6 +69,32 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
   sortDirection,
   onSort,
 }) => {
+
+  // Fixed: Extract nested ternary/logic into an independent statement (Helper Function)
+  // Ini menyelesaikan masalah "Extract this nested ternary operation"
+  const renderTableContent = () => {
+    // Jika nanti Anda punya prop isError, tambahkan if (isError) di sini return <tr>Error...</tr>
+
+    if (documents.length === 0) {
+      return (
+        <tr>
+          <td colSpan={8} className="text-center py-10 text-gray-500"> 
+            <p>Tidak ada dokumen ditemukan</p>
+          </td>
+        </tr>
+      );
+    }
+
+    return documents.map((doc) => (
+      <DocumentTableRow
+        key={doc.id}
+        document={doc}
+        hasManagerAccess={hasManagerAccess}
+        onAction={onAction}
+        onViewFile={onViewFile}
+      />
+    ));
+  };
   
   return (
     <div className="bg-white p-6 rounded-b-lg shadow-md">
@@ -109,23 +132,8 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {documents.length > 0 ? (
-              documents.map((doc) => (
-                <DocumentTableRow
-                  key={doc.id}
-                  document={doc}
-                  hasManagerAccess={hasManagerAccess}
-                  onAction={onAction}
-                  onViewFile={onViewFile}
-                />
-              ))
-            ) : (
-              <tr>
-                <td colSpan={8} className="text-center py-10 text-gray-500"> 
-                  <p>Tidak ada dokumen ditemukan</p>
-                </td>
-              </tr>
-            )}
+            {/* Pemanggilan fungsi render yang bersih */}
+            {renderTableContent()}
           </tbody>
         </table>
       </div>

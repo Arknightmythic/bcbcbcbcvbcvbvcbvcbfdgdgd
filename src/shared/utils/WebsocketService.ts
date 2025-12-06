@@ -58,9 +58,9 @@ class WebSocketService {
           this.isConnecting = false;
           
           
-          this.subscribedChannels.forEach(channel => {
+         for (const channel of this.subscribedChannels) {
             this.subscribe(channel, '$');
-          });
+          }
           
           resolve();
         };
@@ -123,13 +123,14 @@ class WebSocketService {
     if (event === 'message' && channel) {
       const handlers = this.messageHandlers.get(channel);
       if (handlers) {
-        handlers.forEach((handler) => {
+        
+        for (const handler of handlers) {
           try {
             handler(data);
           } catch (error) {
             console.error('Error in message handler:', error);
           }
-        });
+        }
       }
     } else if (message.status) {
       console.log(`WebSocket status: ${message.status} - ${message.message}`);
@@ -159,7 +160,7 @@ class WebSocketService {
       return;
     }
 
-    // Perbaikan 1: Gunakan crypto.getRandomValues alih-alih Math.random()
+    
     const array = new Uint32Array(1);
     crypto.getRandomValues(array);
     const randomPart = array[0].toString(36);
@@ -226,7 +227,7 @@ let wsServiceInstance: WebSocketService | null = null;
 
 export const getWebSocketService = (): WebSocketService => {
   if (!wsServiceInstance) {
-    const wsUrl = import.meta.env.VITE_WEBSOCKET_URL || 'wss://dev-bkpm.cloud-ioh.com/ws';
+    const wsUrl = import.meta.env.VITE_WEBSOCKET_URL || 'wss://dev-bkpm.cloud-ioh.com/ws'
     const wsToken = import.meta.env.VITE_WEBSOCKET_SECRET_KEY || 'bkpm-secret445566';
     wsServiceInstance = new WebSocketService(wsUrl, wsToken);
   }

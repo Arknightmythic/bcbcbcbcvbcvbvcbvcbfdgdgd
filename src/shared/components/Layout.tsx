@@ -53,6 +53,11 @@ function Layout() {
 
   const isContentBlurred = isMobileSidebarOpen && !isDesktop;
 
+  let mainContentMargin = "ml-0";
+  if (isDesktop) {
+    mainContentMargin = isSidebarCollapsed ? "lg:ml-25" : "lg:ml-50";
+  }
+  
   return (
     <div className="flex h-screen relative overflow-hidden">
       {isContentBlurred && (
@@ -69,9 +74,7 @@ function Layout() {
         isDesktop={isDesktop}
       />
       <div
-        className={`flex flex-col flex-1 transition-all duration-300 ${
-          isDesktop ? (isSidebarCollapsed ? "lg:ml-25" : "lg:ml-50") : "ml-0"
-        } w-0`}
+        className={`flex flex-col flex-1 transition-all duration-300 ${mainContentMargin} w-0`}
       >
         <Header toggleSidebar={toggleSidebar} />
         <main

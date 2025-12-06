@@ -1,4 +1,4 @@
-// [UPDATE: src/features/KnowledgeBase/components/DocumentRow.tsx]
+
 
 import React, { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
@@ -27,6 +27,93 @@ interface DocumentRowProps {
   onViewFile: (doc: UploadedDocument) => void;
 }
 
+interface DocumentActionMenuProps {
+  dropdownRef: React.RefObject<HTMLDivElement | null>;  position: { top?: number; bottom?: number; right?: number };
+  doc: UploadedDocument;
+  isActionDisabled: boolean;
+  isDeleteDisabled: boolean;
+  tooltips: {
+    view: string;
+    newVersion: string;
+    history: string;
+    delete: string;
+  };
+  actions: {
+    onViewFile: (doc: UploadedDocument) => void;
+    onNewVersion: (doc: UploadedDocument) => void;
+    onViewVersions: (doc: UploadedDocument) => void;
+    onDelete: (doc: UploadedDocument) => void;
+    closeDropdown: () => void;
+  };
+}
+
+
+
+const DocumentActionMenu: React.FC<DocumentActionMenuProps> = ({
+  dropdownRef,
+  position,
+  doc,
+  isActionDisabled,
+  isDeleteDisabled,
+  tooltips,
+  actions,
+}) => (
+  <div
+    ref={dropdownRef}
+    className="fixed z-[9999] w-48 bg-white rounded-md shadow-lg border border-gray-200"
+    style={{
+      top: position.top ? `${position.top}px` : 'auto',
+      right: position.right ? `${position.right}px` : 'auto',
+      bottom: position.bottom ? `${position.bottom}px` : 'auto',
+    }}
+    onClick={(e) => e.stopPropagation()}
+  >
+    <div className="flex flex-col py-1">
+      <button
+        onClick={() => { actions.onViewFile(doc); actions.closeDropdown(); }}
+        disabled={isActionDisabled}
+        title={tooltips.view}
+        className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:text-gray-400 disabled:bg-transparent"
+      >
+        <Eye className="w-4 h-4" />
+        <span>Lihat Dokumen</span>
+      </button>
+
+      <button
+        onClick={() => { actions.onNewVersion(doc); actions.closeDropdown(); }}
+        disabled={isActionDisabled}
+        className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:text-gray-400 disabled:bg-transparent"
+        title={tooltips.newVersion}
+      >
+        <UploadIcon className="w-4 h-4" />
+        <span>Versi Baru</span>
+      </button>
+
+      <button
+        onClick={() => { actions.onViewVersions(doc); actions.closeDropdown(); }}
+        disabled={isActionDisabled}
+        className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:text-gray-400 disabled:bg-transparent"
+        title={tooltips.history}
+      >
+        <Info className="w-4 h-4" />
+        <span>Lihat Histori</span>
+      </button>
+
+      <button
+        onClick={() => { actions.onDelete(doc); actions.closeDropdown(); }}
+        disabled={isDeleteDisabled}
+        className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 disabled:text-gray-400 disabled:bg-transparent"
+        title={tooltips.delete}
+      >
+        <Trash2 className="w-4 h-4" />
+        <span>Hapus</span>
+      </button>
+    </div>
+  </div>
+);
+
+
+
 const DocumentRow: React.FC<DocumentRowProps> = ({
   document: doc,
   isSelected,
@@ -40,24 +127,49 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [position, setPosition] = useState<{ top?: number, bottom?: number, right?: number }>({});
   const moreButtonRef = useRef<HTMLButtonElement>(null);
-  
   const dropdownRef = useClickOutside<HTMLDivElement>(() => {
     setIsDropdownOpen(false);
   });
   
-  // --- DEFINISI STATUS ---
+  
   const isPending = doc.status === "Pending";
   const isRejected = doc.status === "Rejected";
   const isIngestFailed = doc.ingest_status === "failed";
-  const isProcessing = doc.ingest_status === "processing"; // [BARU]
+  const isProcessing = doc.ingest_status === "processing"; 
 
-  // Logic Action Disabled (View, Versioning, Info)
-  // Ditambah isProcessing agar tombol-tombol ini mati saat sedang diproses
   const isActionDisabled = isPending || isRejected || isIngestFailed || isProcessing;
-
-  // Logic Delete Disabled
-  // Hapus HANYA mati jika sedang Processing. (Failed/Rejected/Pending boleh dihapus)
   const isDeleteDisabled = isProcessing;
+
+  
+  
+  const getViewFileTooltipMobile = () => {
+    if (isProcessing) return "Dokumen sedang diproses";
+    if (isIngestFailed) return "Dokumen gagal diproses";
+    if (isRejected) return "Dokumen ditolak";
+    return "Lihat Dokumen";
+  };
+
+  const getViewFileTooltipDesktop = () => {
+    if (isProcessing) return "Dokumen sedang diproses";
+    if (isIngestFailed) return "Gagal diproses AI";
+    return "Lihat Dokumen";
+  };
+
+  const getNewVersionTooltip = () => {
+    if (isProcessing) return "Tunggu proses selesai";
+    if (isIngestFailed) return "Proses gagal, harap hapus dokumen";
+    return "Upload Versi Baru";
+  };
+
+  const getHistoryTooltip = () => {
+    return isProcessing ? "Tunggu proses selesai" : "Lihat Histori";
+  };
+
+  const getDeleteTooltip = () => {
+    return isDeleteDisabled ? "Sedang diproses, tidak dapat dihapus" : "Hapus Dokumen";
+  };
+
+  
 
   const getApprovalStatusComponent = () => {
     if (doc.status === "Approved") {
@@ -135,61 +247,6 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
     }
   };
 
-  const DropdownContent = () => (
-    <div
-      ref={dropdownRef}
-      className="fixed z-[9999] w-48 bg-white rounded-md shadow-lg border border-gray-200"
-      style={{
-        top: position.top ? `${position.top}px` : 'auto',
-        right: position.right ? `${position.right}px` : 'auto',
-        bottom: position.bottom ? `${position.bottom}px` : 'auto',
-      }}
-      onClick={(e) => e.stopPropagation()}
-    >
-      <div className="flex flex-col py-1">
-        <button
-          onClick={() => { onViewFile(doc); setIsDropdownOpen(false); }}
-          disabled={isActionDisabled}
-          title={isProcessing ? "Dokumen sedang diproses" : isIngestFailed ? "Dokumen gagal diproses" : isRejected ? "Dokumen ditolak" : "Lihat Dokumen"}
-          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:text-gray-400 disabled:bg-transparent"
-        >
-          <Eye className="w-4 h-4" />
-          <span>Lihat Dokumen</span>
-        </button>
-
-        <button
-          onClick={() => { onNewVersion(doc); setIsDropdownOpen(false); }}
-          disabled={isActionDisabled}
-          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:text-gray-400 disabled:bg-transparent"
-          title={isProcessing ? "Tunggu proses selesai" : isIngestFailed ? "Proses gagal, harap hapus dokumen" : "Upload Versi Baru"}
-        >
-          <UploadIcon className="w-4 h-4" />
-          <span>Versi Baru</span>
-        </button>
-
-        <button
-          onClick={() => { onViewVersions(doc); setIsDropdownOpen(false); }}
-          disabled={isActionDisabled}
-          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:text-gray-400 disabled:bg-transparent"
-          title={isProcessing ? "Tunggu proses selesai" : "Lihat Histori"}
-        >
-          <Info className="w-4 h-4" />
-          <span>Lihat Histori</span>
-        </button>
-
-        <button
-          onClick={() => { onDelete(doc); setIsDropdownOpen(false); }}
-          disabled={isDeleteDisabled} // [UPDATE] Tambah disabled
-          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 disabled:text-gray-400 disabled:bg-transparent"
-          title={isDeleteDisabled ? "Sedang diproses, tidak dapat dihapus" : "Hapus Dokumen"}
-        >
-          <Trash2 className="w-4 h-4" />
-          <span>Hapus</span>
-        </button>
-      </div>
-    </div>
-  );
-
   return (
     <tr className="group bg-white hover:bg-gray-50 text-[10px]">
       <td className="px-4 py-4">
@@ -197,7 +254,7 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
           type="checkbox"
           onChange={(e) => onSelect(e, doc.id)}
           checked={isSelected}
-          disabled={isDeleteDisabled} // Checkbox juga sebaiknya disable jika tidak boleh dihapus
+          disabled={isDeleteDisabled}
           className="w-3 h-3 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 disabled:bg-gray-200 disabled:cursor-not-allowed"
         />
       </td>
@@ -226,7 +283,7 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
           <button
             onClick={() => onViewFile(doc)} 
             disabled={isActionDisabled}
-            title={isProcessing ? "Dokumen sedang diproses" : isIngestFailed ? "Gagal diproses AI" : "Lihat Dokumen"}
+            title={getViewFileTooltipDesktop()}
             className={`font-medium ${isActionDisabled ? "text-gray-400 cursor-not-allowed" : "text-blue-600 hover:underline"}`}
           >
             <Eye className="w-4 h-4" />
@@ -235,17 +292,16 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
             onClick={() => onNewVersion(doc)}
             disabled={isActionDisabled}
             className={`font-medium cursor-pointer ${isActionDisabled ? "text-gray-400 cursor-not-allowed" : "text-yellow-600 hover:underline"}`}
-            title={isProcessing ? "Tunggu proses selesai" : "Versi Baru"}
+            title={getNewVersionTooltip()} 
           >
             <UploadIcon className="w-4 h-4" />
           </button>
           
-          {/* [UPDATE] Tombol Hapus sekarang bisa disabled */}
           <button
             onClick={() => onDelete(doc)} 
             disabled={isDeleteDisabled}
             className={`font-medium cursor-pointer ${isDeleteDisabled ? "text-gray-400 cursor-not-allowed" : "text-red-600 hover:underline"}`}
-            title={isDeleteDisabled ? "Sedang diproses, tidak dapat dihapus" : "Hapus Dokumen"}
+            title={getDeleteTooltip()}
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -254,7 +310,7 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
             onClick={() => onViewVersions(doc)}
             disabled={isActionDisabled}
             className={`font-medium cursor-pointer ${isActionDisabled ? "text-gray-400 cursor-not-allowed" : "text-blue-600 hover:underline"}`}
-            title={isProcessing ? "Tunggu proses selesai" : "Lihat Histori"}
+            title={getHistoryTooltip()}
           >
             <Info className="w-4 h-4" />
           </button>
@@ -271,7 +327,29 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
           </button>
         </div>
 
-        {isDropdownOpen && createPortal(<DropdownContent />, document.body)}
+        {isDropdownOpen && createPortal(
+          <DocumentActionMenu
+            dropdownRef={dropdownRef}
+            position={position}
+            doc={doc}
+            isActionDisabled={isActionDisabled}
+            isDeleteDisabled={isDeleteDisabled}
+            tooltips={{
+                view: getViewFileTooltipMobile(),
+                newVersion: getNewVersionTooltip(),
+                history: getHistoryTooltip(),
+                delete: getDeleteTooltip(),
+            }}
+            actions={{
+                onViewFile,
+                onNewVersion,
+                onViewVersions,
+                onDelete,
+                closeDropdown: () => setIsDropdownOpen(false),
+            }}
+          />, 
+          document.body
+        )}
       </td>
     </tr>
   );

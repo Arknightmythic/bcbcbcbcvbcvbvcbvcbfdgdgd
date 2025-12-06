@@ -13,6 +13,66 @@ interface RoleTableRowProps {
 const shouldShowPermission = (name: string) => name.endsWith(':read');
 const formatPermissionLabel = (name: string) => name.replace(':read', ':access');
 
+// PERBAIKAN 1: Buat interface props untuk komponen yang diekstrak
+interface DropdownContentProps {
+  dropdownRef: React.RefObject<HTMLDivElement | null>;
+  position: { top?: number; bottom?: number; right?: number };
+  role: Role;
+  onAction: (action: ActionType, role: Role) => void;
+  isDefault: boolean;
+  onClose: () => void;
+}
+
+// PERBAIKAN 2: Pindahkan komponen DropdownContent keluar dari Parent
+const DropdownContent: React.FC<DropdownContentProps> = ({
+  dropdownRef,
+  position,
+  role,
+  onAction,
+  isDefault,
+  onClose
+}) => (
+  <div
+    ref={dropdownRef}
+    className="fixed z-[9999] w-48 bg-white rounded-md shadow-lg border border-gray-200"
+    style={{
+      top: position.top ? `${position.top}px` : 'auto',
+      right: position.right ? `${position.right}px` : 'auto',
+      bottom: position.bottom ? `${position.bottom}px` : 'auto',
+    }}
+    onClick={(e) => e.stopPropagation()}
+  >
+    <div className="flex flex-col py-1">
+      <button
+        onClick={() => { onAction('view', role); onClose(); }}
+        className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+        title="Lihat Detail"
+      >
+        <Eye className="w-4 h-4" />
+        <span>Lihat Detail</span>
+      </button>
+      <button
+        onClick={() => { onAction('edit', role); onClose(); }}
+        disabled={isDefault}
+        className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:text-gray-400 disabled:bg-white disabled:cursor-not-allowed"
+        title={isDefault ? "Tidak dapat mengedit peran default" : "Ubah Peran"}
+      >
+        <Edit className="w-4 h-4" />
+        <span>Ubah Peran</span>
+      </button>
+      <button
+        onClick={() => { onAction('delete', role); onClose(); }}
+        disabled={isDefault}
+        className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 disabled:text-gray-400 disabled:bg-white disabled:cursor-not-allowed"
+        title={isDefault ? "Tidak dapat menghapus peran default" : "Hapus Peran"}
+      >
+        <Trash2 className="w-4 h-4" />
+        <span>Hapus Peran</span>
+      </button>
+    </div>
+  </div>
+);
+
 const RoleTableRow: React.FC<RoleTableRowProps> = ({ role, onAction }) => {
   // --- CEK DEFAULT ---
   const isDefault = role.name.toLowerCase() === 'default';
@@ -52,48 +112,6 @@ const RoleTableRow: React.FC<RoleTableRowProps> = ({ role, onAction }) => {
       setIsDropdownOpen(true);
     }
   };
-
-  const DropdownContent = () => (
-    <div
-      ref={dropdownRef}
-      className="fixed z-[9999] w-48 bg-white rounded-md shadow-lg border border-gray-200"
-      style={{
-        top: position.top ? `${position.top}px` : 'auto',
-        right: position.right ? `${position.right}px` : 'auto',
-        bottom: position.bottom ? `${position.bottom}px` : 'auto',
-      }}
-      onClick={(e) => e.stopPropagation()}
-    >
-      <div className="flex flex-col py-1">
-        <button
-          onClick={() => { onAction('view', role); setIsDropdownOpen(false); }}
-          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-          title="Lihat Detail"
-        >
-          <Eye className="w-4 h-4" />
-          <span>Lihat Detail</span>
-        </button>
-        <button
-          onClick={() => { onAction('edit', role); setIsDropdownOpen(false); }}
-          disabled={isDefault}
-          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:text-gray-400 disabled:bg-white disabled:cursor-not-allowed"
-          title={isDefault ? "Tidak dapat mengedit peran default" : "Ubah Peran"}
-        >
-          <Edit className="w-4 h-4" />
-          <span>Ubah Peran</span>
-        </button>
-        <button
-          onClick={() => { onAction('delete', role); setIsDropdownOpen(false); }}
-          disabled={isDefault}
-          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 disabled:text-gray-400 disabled:bg-white disabled:cursor-not-allowed"
-          title={isDefault ? "Tidak dapat menghapus peran default" : "Hapus Peran"}
-        >
-          <Trash2 className="w-4 h-4" />
-          <span>Hapus Peran</span>
-        </button>
-      </div>
-    </div>
-  );
 
   const allPermissions = role.permissions || [];
   const visiblePermissions = allPermissions.filter(p => shouldShowPermission(p.name));
@@ -157,7 +175,18 @@ const RoleTableRow: React.FC<RoleTableRowProps> = ({ role, onAction }) => {
           </button>
         </div>
 
-        {isDropdownOpen && createPortal(<DropdownContent />, document.body)}
+        {/* PERBAIKAN 3: Render komponen dengan passing props */}
+        {isDropdownOpen && createPortal(
+          <DropdownContent 
+            dropdownRef={dropdownRef}
+            position={position}
+            role={role}
+            onAction={onAction}
+            isDefault={isDefault}
+            onClose={() => setIsDropdownOpen(false)}
+          />, 
+          document.body
+        )}
       </td>
     </tr>
   );
