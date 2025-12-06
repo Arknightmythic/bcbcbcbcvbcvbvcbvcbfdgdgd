@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { X, CheckCircle, Loader2 } from 'lucide-react';
 import type { ValidationHistoryItem } from '../../features/HistoryValidation/utils/types';
 
-
 interface ApproveWithCorrectionModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -19,9 +18,11 @@ const ApproveWithCorrectionModal: React.FC<ApproveWithCorrectionModalProps> = ({
   isConfirming,
 }) => {
   const [correctionText, setCorrectionText] = useState('');
+  
   if (!isOpen || !history) {
     return null;
   }
+  
   const handleConfirm = () => {
     onConfirm(history, correctionText);
   };
@@ -37,8 +38,25 @@ const ApproveWithCorrectionModal: React.FC<ApproveWithCorrectionModalProps> = ({
     : "Ya, Setuju (Dengan Koreksi)";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-sm" onClick={handleClose}>
-      <div className="relative w-full max-w-2xl p-6 mx-4 bg-white rounded-lg shadow-xl" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* PERBAIKAN 1: Gunakan <button> untuk backdrop (Native Interactive Element) */}
+      <button
+        type="button"
+        className="absolute inset-0 w-full h-full bg-white/30 backdrop-blur-sm border-none cursor-default"
+        onClick={handleClose}
+        aria-label="Tutup modal"
+        tabIndex={-1} // Mencegah user melakukan tab focus ke background
+      />
+
+      {/* PERBAIKAN 2: 
+          - Gunakan <dialog> untuk semantik yang benar.
+          - Hapus onClick={stopPropagation} karena backdrop sekarang adalah sibling.
+      */}
+      <dialog
+        open
+        aria-modal="true"
+        className="relative w-full max-w-2xl bg-white rounded-lg shadow-xl border-none m-0 p-6 flex flex-col"
+      >
         <div className="flex items-start justify-between pb-4 border-b border-gray-200">
           <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
             <CheckCircle className="w-6 h-6 text-green-600" />
@@ -96,7 +114,7 @@ const ApproveWithCorrectionModal: React.FC<ApproveWithCorrectionModalProps> = ({
             {isConfirming ? 'Memproses...' : confirmText}
           </button>
         </div>
-      </div>
+      </dialog>
     </div>
   );
 };

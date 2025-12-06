@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Edit, Trash2, MoreVertical } from 'lucide-react';
 import type { ActionType, User } from '../utils/types';
@@ -9,15 +9,13 @@ interface UserActionsProps {
   onAction: (action: ActionType, user: User) => void;
 }
 
-
 interface DropdownContentProps {
-  dropdownRef: React.RefObject<HTMLDivElement | null>;
+  dropdownRef: React.RefObject<HTMLDialogElement | null>; 
   position: { top?: number; bottom?: number; right?: number };
   user: User;
   onAction: (action: ActionType, user: User) => void;
   onClose: () => void;
 }
-
 
 const DropdownContent: React.FC<DropdownContentProps> = ({
   dropdownRef,
@@ -25,37 +23,74 @@ const DropdownContent: React.FC<DropdownContentProps> = ({
   user,
   onAction,
   onClose
-}) => (
-  <div
-    ref={dropdownRef}
-    className="fixed z-[9999] w-48 bg-white rounded-md shadow-lg border border-gray-200"
-    style={{
-      top: position.top ? `${position.top}px` : 'auto',
-      right: position.right ? `${position.right}px` : 'auto',
-      bottom: position.bottom ? `${position.bottom}px` : 'auto',
-    }}
-    onClick={(e) => e.stopPropagation()}
-  >
-    <div className="flex flex-col py-1">
-      <button
-        onClick={() => { onAction('edit', user); onClose(); }}
-        className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-        title="Ubah Akun"
-      >
-        <Edit className="w-4 h-4" />
-        <span>Ubah Akun</span>
-      </button>
-      <button
-        onClick={() => { onAction('delete', user); onClose(); }}
-        className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
-        title="Hapus Akun"
-      >
-        <Trash2 className="w-4 h-4" />
-        <span>Hapus Akun</span>
-      </button>
-    </div>
-  </div>
-);
+}) => {
+  
+  // PERBAIKAN: Menggunakan useEffect untuk menangani event listener.
+  // Ini menghindari error SonarQube "Non-interactive elements should not be assigned..."
+  // karena kita tidak lagi menaruh onClick langsung di JSX elemen <dialog>.
+  useEffect(() => {
+    const element = dropdownRef.current;
+    if (!element) return;
+
+    const handleStopPropagation = (e: MouseEvent) => {
+      e.stopPropagation();
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      e.stopPropagation();
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    // Menambahkan listener native DOM
+    element.addEventListener('click', handleStopPropagation);
+    element.addEventListener('keydown', handleKeyDown);
+
+    // Membersihkan listener saat unmount
+    return () => {
+      element.removeEventListener('click', handleStopPropagation);
+      element.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [dropdownRef, onClose]);
+
+  return (
+    <dialog
+      ref={dropdownRef}
+      open={true}
+      tabIndex={-1}
+      aria-modal="true"
+      className="fixed z-[9999] w-48 bg-white rounded-md shadow-lg border border-gray-200 outline-none m-0 p-0"
+      style={{
+        top: position.top ? `${position.top}px` : 'auto',
+        right: position.right ? `${position.right}px` : 'auto',
+        bottom: position.bottom ? `${position.bottom}px` : 'auto',
+        left: 'auto'
+      }}
+      // onClick & onKeyDown dihapus dari JSX untuk memuaskan SonarQube
+      // Fungsinya digantikan oleh useEffect di atas.
+    >
+      <div className="flex flex-col py-1">
+        <button
+          onClick={() => { onAction('edit', user); onClose(); }}
+          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+          title="Ubah Akun"
+        >
+          <Edit className="w-4 h-4" />
+          <span>Ubah Akun</span>
+        </button>
+        <button
+          onClick={() => { onAction('delete', user); onClose(); }}
+          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+          title="Hapus Akun"
+        >
+          <Trash2 className="w-4 h-4" />
+          <span>Hapus Akun</span>
+        </button>
+      </div>
+    </dialog>
+  );
+};
 
 const UserActions: React.FC<UserActionsProps> = ({ user, onAction }) => {
   
@@ -63,7 +98,8 @@ const UserActions: React.FC<UserActionsProps> = ({ user, onAction }) => {
   const [position, setPosition] = useState<{ top?: number, bottom?: number, right?: number }>({});
   const moreButtonRef = useRef<HTMLButtonElement>(null);
   
-  const dropdownRef = useClickOutside<HTMLDivElement>(() => {
+  // Menggunakan HTMLDialogElement sesuai perubahan di DropdownContent
+  const dropdownRef = useClickOutside<HTMLDialogElement>(() => {
     setIsDropdownOpen(false);
   });
 

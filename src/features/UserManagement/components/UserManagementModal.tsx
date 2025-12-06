@@ -36,8 +36,6 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
   const isEditMode = !!user;
   const isMicrosoftAccount = user?.account_type === "microsoft";
 
-  // PERBAIKAN: Ganti nama variabel 'passwordPlaceholder' menjadi 'placeholderText'
-  // untuk menghindari deteksi false-positive "Hard-coded password" dari SonarQube.
   let placeholderText = "Masukkan kata sandi (min. 8 karakter)";
   if (isMicrosoftAccount) {
     placeholderText = "Dikelola oleh Microsoft SSO";
@@ -94,24 +92,28 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
     onSave(modalData, user?.id);
   };
 
-  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
   if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-sm p-4"
-      onClick={handleBackdropClick}
-    >
-      <div
-        className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md animate-fade-in-up max-h-[90vh] flex flex-col"
-        onClick={(e) => e.stopPropagation()}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* PERBAIKAN 1: Backdrop menggunakan <button> (Native Interactive Element) */}
+      <button
+        type="button"
+        className="absolute inset-0 w-full h-full bg-white/30 backdrop-blur-sm border-none cursor-default"
+        onClick={onClose}
+        aria-label="Tutup modal"
+        tabIndex={-1}
+      />
+
+      {/* PERBAIKAN 2:
+          - Menggunakan <dialog> untuk semantik.
+          - Menghapus onClick={stopPropagation} karena tidak diperlukan lagi (sibling structure).
+      */}
+      <dialog
+        open
+        aria-modal="true"
+        className="relative bg-white rounded-lg shadow-xl p-6 w-full max-w-md animate-fade-in-up max-h-[90vh] flex flex-col border-none m-0"
       >
-        
         <div className="flex justify-between items-center pb-4 border-b flex-shrink-0">
           <h2 className="text-2xl font-bold">
             {isEditMode ? "Ubah Pengguna" : "Buat Pengguna Baru"}
@@ -124,10 +126,8 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
           </button>
         </div>
 
-       
         <div className="overflow-y-auto flex-grow mt-6 p-2 custom-scrollbar">
           <form id="user-form" onSubmit={handleSubmit} autoComplete="off">
-            
             <input type="text" style={{ display: "none" }} />
             <input type="password" style={{ display: "none" }} />
 
@@ -183,7 +183,6 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
                 <div className="relative mt-1">
                   <input
                     type={showPassword ? "text" : "password"}
-                    // Update penggunaan variabel di sini
                     placeholder={placeholderText}
                     value={formData.password}
                     onChange={(e) =>
@@ -194,16 +193,13 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
                         ? "bg-gray-100 text-gray-500 cursor-not-allowed"
                         : ""
                     }`}
-                    
                     required={!isEditMode && !isMicrosoftAccount}
                     minLength={8}
                     autoComplete="new-password"
                     name="user_password_custom"
-                    
                     disabled={isMicrosoftAccount}
                   />
 
-                  
                   {!isMicrosoftAccount && (
                     <button
                       type="button"
@@ -219,7 +215,6 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
                   )}
                 </div>
 
-                
                 {isMicrosoftAccount ? (
                   <p className="text-xs text-orange-500 mt-1">
                     Tidak bisa diganti
@@ -281,7 +276,7 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
           </button>
           <button
             type="submit"
-            form="user-form" 
+            form="user-form"
             disabled={isLoading}
             className="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 flex items-center"
           >
@@ -289,9 +284,8 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
             {isEditMode ? "Simpan Perubahan" : "Simpan"}
           </button>
         </div>
-      </div>
+      </dialog>
 
-      
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }

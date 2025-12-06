@@ -39,7 +39,7 @@ const FilterDropdownPortal = <T extends Record<string, any>>({
 
         <div className="space-y-4 max-h-[300px] p-1">
           {dropdownFilters.map((config) => (
-            <div key={config.key as string}>
+            <div key={config.key}>
               <label className="block text-xs font-medium text-gray-700 mb-1.5">
                 {config.options?.[0]?.label
                   .replace("All ", "")

@@ -196,11 +196,11 @@ export const useTableControlsLogic = <T extends Record<string, any>>({
   }, []);
 
   const handleApplyFilters = useCallback(() => {
-    dropdownFilters.forEach((config) => {
+    for (const config of dropdownFilters) {
       if (tempFilters[config.key] !== filters[config.key]) {
         onFilterChange(config.key, tempFilters[config.key]);
       }
-    });
+    }
     setActiveDropdown(null);
     setCoords(null);
   }, [dropdownFilters, tempFilters, filters, onFilterChange]);

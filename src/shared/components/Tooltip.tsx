@@ -7,7 +7,6 @@ interface TooltipProps {
 }
 
 const portalRoot = document.body;
-
 const Tooltip = ({ text, children }: TooltipProps) => {
   const [isVisible, setIsVisible] = useState(false);
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
@@ -42,6 +41,7 @@ const Tooltip = ({ text, children }: TooltipProps) => {
   return (
     <div
       ref={ref}
+      role="none"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className="relative flex justify-center items-center"

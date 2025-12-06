@@ -27,8 +27,19 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-sm" onClick={onClose}>
-      <div className="relative w-full max-w-md p-6 mx-4 bg-white rounded-lg shadow-xl" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <button
+        type="button"
+        className="absolute inset-0 w-full h-full bg-white/30 backdrop-blur-sm border-none cursor-default"
+        onClick={onClose}
+        aria-label="Close modal backdrop"
+        tabIndex={-1} 
+      />
+      <dialog
+        open
+        aria-modal="true"
+        className="relative w-full max-w-md p-6 mx-4 bg-white rounded-lg shadow-xl border-none m-0"
+      >
         <div className="flex items-start justify-between pb-4 border-b border-gray-200">
           <h3 className="text-xl font-semibold text-gray-900">{title}</h3>
           <button type="button" className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center" onClick={onClose}>
@@ -51,7 +62,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
             {isConfirming ? 'memproses...' : confirmText}
           </button>
         </div>
-      </div>
+      </dialog>
     </div>
   );
 };

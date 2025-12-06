@@ -104,6 +104,7 @@ const DropdownContent: React.FC<DropdownContentProps> = ({
       top: position.top ? `${position.top}px` : 'auto',
       right: position.right ? `${position.right}px` : 'auto',
       bottom: position.bottom ? `${position.bottom}px` : 'auto',
+      left: 'auto'
     }}
     
     

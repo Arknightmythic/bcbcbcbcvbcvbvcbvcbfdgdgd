@@ -6,7 +6,6 @@ const PdfViewModal: React.FC<PdfViewModalProps> = ({ isOpen, onClose, url, isLoa
   
   const [isMobile, setIsMobile] = useState(false);
   
-  
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState(false);
@@ -70,9 +69,6 @@ const PdfViewModal: React.FC<PdfViewModalProps> = ({ isOpen, onClose, url, isLoa
 
   
   const renderContent = () => {
-    
-    
-    
     if (!isMobile) {
       return (
         <div className="flex-1 mt-4 rounded-lg overflow-hidden relative">
@@ -101,10 +97,6 @@ const PdfViewModal: React.FC<PdfViewModalProps> = ({ isOpen, onClose, url, isLoa
       );
     }
 
-    
-    
-    
-    
     const isBusyMobile = isLoading || isDownloading;
 
     const renderMobileInnerContent = () => {
@@ -128,14 +120,11 @@ const PdfViewModal: React.FC<PdfViewModalProps> = ({ isOpen, onClose, url, isLoa
       if (blobUrl) {
         return (
           <>
-             
              <iframe
                src={blobUrl}
                title="Mobile Pratinjau Dokumen"
                className="w-full h-full border-0"
              />
-             
-             
              <div className="absolute bottom-4 left-0 right-0 flex justify-center z-10 pointer-events-none">
                 <a 
                   href={blobUrl} 
@@ -150,7 +139,6 @@ const PdfViewModal: React.FC<PdfViewModalProps> = ({ isOpen, onClose, url, isLoa
           </>
         );
       }
-
       
       return (
         <div className="flex items-center justify-center h-full text-gray-400">
@@ -167,17 +155,26 @@ const PdfViewModal: React.FC<PdfViewModalProps> = ({ isOpen, onClose, url, isLoa
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-sm p-4" 
-      onClick={onClose}
-    >
-      <div 
-        className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[95vh] h-[90vh] p-4 md:p-6 flex flex-col" 
-        onClick={(e) => e.stopPropagation()}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop tetap menggunakan button untuk aksesibilitas dan menghindari onClick pada div */}
+      <button
+        type="button"
+        className="absolute inset-0 w-full h-full bg-white/30 backdrop-blur-sm border-none cursor-default"
+        onClick={onClose}
+        aria-label="Close modal backdrop"
+        tabIndex={-1}
+      />
+
+      {/* PERBAIKAN: Mengganti <div> dengan <dialog> */}
+      <dialog
+        open
+        aria-modal="true"
+        aria-labelledby="modal-title"
+        // Menambahkan border-none dan m-0 untuk mereset gaya default browser pada elemen dialog
+        className="relative bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[95vh] h-[90vh] p-4 md:p-6 flex flex-col z-10 border-none m-0"
       >
-        
         <div className="flex justify-between items-center pb-4 border-b">
-          <h2 className="text-md font-bold text-gray-800 truncate" title={title}>
+          <h2 id="modal-title" className="text-md font-bold text-gray-800 truncate" title={title}>
             {title}
           </h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-800">
@@ -185,9 +182,8 @@ const PdfViewModal: React.FC<PdfViewModalProps> = ({ isOpen, onClose, url, isLoa
           </button>
         </div>
 
-        
         {renderContent()}
-      </div>
+      </dialog>
     </div>
   );
 };
