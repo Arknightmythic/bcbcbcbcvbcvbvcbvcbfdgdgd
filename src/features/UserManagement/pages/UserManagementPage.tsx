@@ -44,15 +44,11 @@ const UserManagementPage = () => {
     roleId: '',
   });
 
-  
-  const [isUserModalOpen, setUserModalOpen] = useState(false);
-  const [isConfirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);  
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
-  
-
-  
   const searchParams = useMemo(() => {
     const params = new URLSearchParams();
     params.set('limit', String(itemsPerPage));
@@ -86,11 +82,6 @@ const UserManagementPage = () => {
   const roles = useMemo(() => rolesData || [], [rolesData]);
 
   
-  
-
-  
-
-  
   const handleFilterChange = (filterName: keyof Filters, value: string) => {
     setFilters(prev => ({ ...prev, [filterName]: value }));
     setCurrentPage(1); 
@@ -106,10 +97,10 @@ const UserManagementPage = () => {
   const handleOpenModal = (action: ActionType, user: User) => {
     if (action === 'edit') {
       setSelectedUser(user);
-      setUserModalOpen(true);
+      setIsUserModalOpen(true); 
     } else if (action === 'delete') {
       setUserToDelete(user);
-      setConfirmModalOpen(true);
+      setIsConfirmModalOpen(true); 
     }
   };
 
@@ -132,11 +123,11 @@ const UserManagementPage = () => {
 
     if (id) {
       updateUser({ id, data: payload }, {
-        onSuccess: () => setUserModalOpen(false),
+        onSuccess: () => setIsUserModalOpen(false), 
       });
     } else {
       createUser(payload, {
-        onSuccess: () => setUserModalOpen(false),
+        onSuccess: () => setIsUserModalOpen(false), 
       });
     }
   };
@@ -145,7 +136,7 @@ const UserManagementPage = () => {
     if (userToDelete) {
       deleteUser(userToDelete.id, {
         onSuccess: () => {
-          setConfirmModalOpen(false);
+          setIsConfirmModalOpen(false); 
           setUserToDelete(null);
         }
       });
@@ -188,7 +179,6 @@ const UserManagementPage = () => {
     <>
      <div className="flex flex-col flex-1 min-h-0">
         <div className="px-4 bg-gray-50 rounded-t-lg shadow-md">
-            {/* --- PERUBAHAN DI SINI: Bungkus dengan flex container --- */}
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                  <div className="flex-grow">
                     <TableControls
@@ -201,11 +191,9 @@ const UserManagementPage = () => {
                         filterConfig={filterConfig}
                     />
                  </div>
-                {/* --- PERUBAHAN DI SINI: Atur lebar tombol --- */}
                 <div className="w-full lg:w-auto flex-shrink-0 text-xs">
                     <button
-                        onClick={() => { setSelectedUser(null); setUserModalOpen(true); }}
-                        /* Tambahkan w-full lg:w-auto dan justify-center */
+                        onClick={() => { setSelectedUser(null); setIsUserModalOpen(true); }} 
                         className="bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 flex items-center justify-center w-full lg:w-auto"
                     >
                         <Plus className="w-3 h-3 mr-2" />
@@ -215,7 +203,6 @@ const UserManagementPage = () => {
             </div>
         </div>
         
-        {/* --- PERUBAHAN 9: Gunakan 'users' dari server --- */}
         <UserTable
           users={users} 
           onAction={handleOpenModal}
@@ -229,7 +216,7 @@ const UserManagementPage = () => {
 
       <UserManagementModal
         isOpen={isUserModalOpen}
-        onClose={() => setUserModalOpen(false)}
+        onClose={() => setIsUserModalOpen(false)} 
         onSave={handleSaveUser}
         user={selectedUser}
         teams={teams}
@@ -239,7 +226,7 @@ const UserManagementPage = () => {
 
       <ConfirmationModal
         isOpen={isConfirmModalOpen}
-        onClose={() => setConfirmModalOpen(false)}
+        onClose={() => setIsConfirmModalOpen(false)} 
         onConfirm={handleConfirmDelete}
         title="Konfirmasi Penghapusan"
         confirmText="Hapus"

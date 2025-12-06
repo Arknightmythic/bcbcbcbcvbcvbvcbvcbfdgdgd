@@ -1,10 +1,10 @@
 import React from "react";
-import { Loader2, Trash2, ArrowUp, ArrowDown } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react"; // ArrowUp & ArrowDown dihapus karena sudah tidak dipakai di sini
 import DocumentRow from "./DocumentRow";
 import type { UploadedDocument, SortOrder } from "../types/types";
 import TablePagination from "../../../shared/components/TablePagination";
+import { SortableHeader } from "./SortableHeader";
 
-// --- Interfaces ---
 
 interface DocumentsTableProps {
   documents: UploadedDocument[];
@@ -32,46 +32,7 @@ interface DocumentsTableProps {
   onSort: (column: string) => void;
 }
 
-interface SortableHeaderProps {
-  label: string; 
-  columnKey: string; 
-  className?: string;
-  sortColumn: string;
-  sortDirection: SortOrder;
-  onSort: (column: string) => void;
-}
-
-// --- Sub-Component (Moved Outside) ---
-
-const SortableHeader: React.FC<SortableHeaderProps> = ({ 
-  label, 
-  columnKey, 
-  className = "",
-  sortColumn,
-  sortDirection,
-  onSort
-}) => {
-  const isActive = sortColumn === columnKey;
-  
-  return (
-    <th 
-      className={`px-6 py-4 cursor-pointer hover:bg-gray-200 transition-colors ${className}`}
-      onClick={() => onSort(columnKey)}
-    >
-      <div className="flex items-center gap-1">
-        {label}
-        {isActive && (
-          sortDirection === 'asc' 
-            ? <ArrowUp className="w-3 h-3 text-blue-600" /> 
-            : <ArrowDown className="w-3 h-3 text-blue-600" />
-        )}
-        {!isActive && <div className="w-3 h-3" />} 
-      </div>
-    </th>
-  );
-};
-
-// --- Main Component ---
+// Interface SortableHeaderProps dan Const SortableHeader DIHAPUS dari sini
 
 const DocumentsTable: React.FC<DocumentsTableProps> = (props) => {  
   const {
@@ -100,7 +61,6 @@ const DocumentsTable: React.FC<DocumentsTableProps> = (props) => {
   const allSelected =
     documents.length > 0 && selectedDocs.length === documents.length;
 
-  // Helper function to handle table content rendering logic (Replacing Nested Ternary)
   const renderTableContent = () => {
     if (isLoading) {
       return (
@@ -132,7 +92,6 @@ const DocumentsTable: React.FC<DocumentsTableProps> = (props) => {
       );
     }
 
-    // Default case: Render list of documents
     return documents.map((doc) => (
       <DocumentRow
         key={doc.id}
@@ -179,6 +138,7 @@ const DocumentsTable: React.FC<DocumentsTableProps> = (props) => {
                   className="h-3 w-3"
                 />
               </th>
+              {/* Menggunakan Shared Component */}
               <SortableHeader 
                 label="Tanggal Unggah" 
                 columnKey="created_at" 

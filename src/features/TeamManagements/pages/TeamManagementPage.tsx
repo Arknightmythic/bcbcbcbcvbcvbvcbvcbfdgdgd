@@ -21,8 +21,8 @@ const TeamManagementPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  const [isTeamModalOpen, setTeamModalOpen] = useState(false);
-  const [isConfirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
 
@@ -53,10 +53,10 @@ const TeamManagementPage = () => {
   const handleAction = (action: ActionType, team: Team) => {
     if (action === "edit") {
       setSelectedTeam(team);
-      setTeamModalOpen(true);
+      setIsTeamModalOpen(true);
     } else if (action === "delete") {
       setTeamToDelete(team);
-      setConfirmModalOpen(true);
+      setIsConfirmModalOpen(true);
     }
   };
 
@@ -65,12 +65,12 @@ const TeamManagementPage = () => {
       updateTeam(
         { id, data: teamData },
         {
-          onSuccess: () => setTeamModalOpen(false),
+          onSuccess: () => setIsTeamModalOpen(false),
         }
       );
     } else {
       createTeam(teamData, {
-        onSuccess: () => setTeamModalOpen(false),
+        onSuccess: () => setIsTeamModalOpen(false),
       });
     }
   };
@@ -79,7 +79,7 @@ const TeamManagementPage = () => {
     if (teamToDelete) {
       deleteTeam(teamToDelete.id, {
         onSuccess: () => {
-          setConfirmModalOpen(false);
+          setIsConfirmModalOpen(false);
           setTeamToDelete(null);
         },
       });
@@ -108,7 +108,7 @@ const TeamManagementPage = () => {
               <button
                 onClick={() => {
                   setSelectedTeam(null);
-                  setTeamModalOpen(true);
+                  setIsTeamModalOpen(true);
                 }}
                 /* Tambahkan w-full lg:w-auto dan justify-center */
                 className="bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 flex items-center justify-center w-full lg:w-auto"
@@ -139,7 +139,7 @@ const TeamManagementPage = () => {
 
       <TeamManagementModal
         isOpen={isTeamModalOpen}
-        onClose={() => setTeamModalOpen(false)}
+        onClose={() => setIsTeamModalOpen(false)}
         onSave={handleSaveTeam}
         team={selectedTeam}
         isLoading={isSaving}
@@ -147,7 +147,7 @@ const TeamManagementPage = () => {
 
       <ConfirmationModal
         isOpen={isConfirmModalOpen}
-        onClose={() => setConfirmModalOpen(false)}
+        onClose={() => setIsConfirmModalOpen(false)}
         onConfirm={handleConfirmDelete}
         title="Konfirmasi Penghapusan"
         confirmText="Hapus"

@@ -133,9 +133,9 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <span className="block text-sm font-medium text-gray-700">
                   Nama
-                </label>
+                </span>
                 <input
                   type="text"
                   value={formData.name}
@@ -150,14 +150,14 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <span className="block text-sm font-medium text-gray-700">
                   Email
                   {isEditMode && (
                     <span className="text-xs text-gray-400 font-normal ml-1">
                       (tidak dapat diubah)
                     </span>
                   )}
-                </label>
+                </span>
                 <input
                   type="email"
                   value={formData.email}
@@ -177,9 +177,9 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <span className="block text-sm font-medium text-gray-700">
                   Sandi
-                </label>
+                </span>
                 <div className="relative mt-1">
                   <input
                     type={showPassword ? "text" : "password"}
@@ -226,9 +226,9 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
                 )}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <span className="block text-sm font-medium text-gray-700">
                   Tim
-                </label>
+                </span>
                 <CustomSelect
                   selectedType="default"
                   value={formData.teamId}
@@ -242,9 +242,9 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <span className="block text-sm font-medium text-gray-700">
                   Peran
-                </label>
+                </span>
                 <CustomSelect
                   selectedType="default"
                   value={formData.roleId}

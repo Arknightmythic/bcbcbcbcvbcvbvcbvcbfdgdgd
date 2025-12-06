@@ -190,9 +190,10 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
     const allowedPages = new Set(currentTeam.pages || []);
     const groups: Record<string, Permission[]> = {};
 
-    permissions.forEach((perm) => {
+    // PERBAIKAN 1: Menggunakan for...of alih-alih forEach
+    for (const perm of permissions) {
       if (!shouldShowPermission(perm.name)) {
-        return;
+        continue;
       }
 
       const [category] = perm.name.split(':');
@@ -202,7 +203,7 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
         }
         groups[category].push(perm);
       }
-    });
+    }
 
     return groups;
   }, [permissions, teams, teamId]);
@@ -226,9 +227,15 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
     setSelectedPermissions(prev => {
       const newSet = new Set(prev);
       if (allSelected) {
-        allIds.forEach(id => newSet.delete(id));
+        // PERBAIKAN 2: Menggunakan for...of alih-alih forEach
+        for (const id of allIds) {
+          newSet.delete(id);
+        }
       } else {
-        allIds.forEach(id => newSet.add(id));
+        // PERBAIKAN 3: Menggunakan for...of alih-alih forEach
+        for (const id of allIds) {
+          newSet.add(id);
+        }
       }
       return newSet;
     });
@@ -259,9 +266,23 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-sm p-4" onClick={onClose}>
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl animate-fade-in-up max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
-        
+    // PERBAIKAN 4: Struktur Modal Aksesibel (Backdrop Button + Dialog Sibling)
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop menggunakan Button Native */}
+      <button
+        type="button"
+        className="absolute inset-0 w-full h-full bg-white/30 backdrop-blur-sm border-none cursor-default"
+        onClick={onClose}
+        aria-label="Tutup modal"
+        tabIndex={-1}
+      />
+
+      {/* Konten Modal menggunakan Dialog */}
+      <dialog
+        open
+        aria-modal="true"
+        className="relative bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl animate-fade-in-up max-h-[90vh] flex flex-col border-none m-0"
+      >
         <div className="flex justify-between items-center pb-4 border-b flex-shrink-0">
             <h2 className="text-2xl font-bold">{isEditMode ? 'Ubah Peran' : 'Buat Peran Baru'}</h2>
             <button onClick={onClose} className="text-gray-500 hover:text-gray-800 transition-colors">
@@ -286,7 +307,7 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Daftakan ke tim</label>
+                <span className="block text-sm font-medium text-gray-700 mb-1">Daftakan ke tim</span>
                 <div className="w-full"> 
                   <CustomSelect
                     options={teams.map(t => ({ value: String(t.id), label: t.name }))}
@@ -344,7 +365,7 @@ const RoleManagementModal: React.FC<RoleManagementModalProps> = ({
               {isEditMode ? 'Simpan Perubahan' : 'Buat Role'}
             </button>
         </div>
-      </div>
+      </dialog>
     </div>
   );
 };

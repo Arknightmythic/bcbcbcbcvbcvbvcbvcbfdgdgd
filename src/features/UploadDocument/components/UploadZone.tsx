@@ -31,6 +31,7 @@ const UploadZone: React.FC<UploadZoneProps> = ({
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const handleDragOver = useCallback((e: React.DragEvent) => { e.preventDefault(); setIsDragging(true); }, []);
   const handleDragLeave = useCallback(() => setIsDragging(false), []);
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -59,11 +60,19 @@ const UploadZone: React.FC<UploadZoneProps> = ({
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
       
-      <div
+      {/* PERBAIKAN SONARQUBE:
+         1. Menggunakan <button type="button"> (Semantic HTML).
+         2. Menghapus role="button", tabIndex, dan onKeyDown (sudah native).
+         3. Menambahkan 'w-full' agar lebarnya seperti div block.
+      */}
+      <button
+        type="button"
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`p-4 md:p-8 border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-center transition-colors ${ isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300' }`}
+        onClick={handleChooseFileClick}
+        aria-label="Area unggah file, tarik file ke sini atau klik untuk memilih"
+        className={`w-full p-4 md:p-8 border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-center transition-colors cursor-pointer outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${ isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300' }`}
       >
         <input 
             type="file" 
@@ -79,15 +88,12 @@ const UploadZone: React.FC<UploadZoneProps> = ({
         
         <p className="text-sm md:text-base text-gray-600">
             Tarik dokumen ke sini, atau{' '}
-            <span 
-                onClick={handleChooseFileClick} 
-                className="text-blue-600 font-semibold cursor-pointer hover:underline"
-            >
+            <span className="text-blue-600 font-semibold hover:underline">
                 pilih file
             </span>
         </p>
         <p className="text-xs text-gray-400 mt-2">mendukung format: PDF & txt.</p>
-      </div>
+      </button>
 
      {stagedFiles.length > 0 && (
         <div className="mt-4 space-y-2">
@@ -95,8 +101,6 @@ const UploadZone: React.FC<UploadZoneProps> = ({
           <div className="max-h-60 overflow-y-auto pr-2">
              {stagedFiles.map((file, index) => (
             <div 
-                
-                
                 key={`${file.name}-${file.size}-${file.lastModified}`} 
                 className="flex items-center justify-between bg-gray-50 p-2 rounded-md"
             >

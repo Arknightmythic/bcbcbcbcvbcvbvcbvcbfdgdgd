@@ -24,8 +24,25 @@ const ViewPermissionsModal: React.FC<ViewPermissionsModalProps> = ({ isOpen, onC
   const visiblePermissions = allPermissions.filter(p => shouldShowPermission(p.name));
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-sm p-4" onClick={onClose}>
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md animate-fade-in-up" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* PERBAIKAN 1: Gunakan <button> untuk backdrop (Native Interactive Element) */}
+      <button
+        type="button"
+        className="absolute inset-0 w-full h-full bg-white/30 backdrop-blur-sm border-none cursor-default"
+        onClick={onClose}
+        aria-label="Tutup modal"
+        tabIndex={-1} // Mencegah user melakukan tab focus ke background
+      />
+
+      {/* PERBAIKAN 2: 
+          - Gunakan <dialog> untuk semantik yang benar.
+          - Hapus onClick={stopPropagation} karena backdrop sekarang adalah sibling.
+      */}
+      <dialog
+        open
+        aria-modal="true"
+        className="relative bg-white rounded-lg shadow-xl p-6 w-full max-w-md animate-fade-in-up m-0 border-none outline-none"
+      >
         <div className="flex justify-between items-center mb-4 pb-4 border-b">
           <h2 className="text-2xl font-bold text-gray-800">Detail Peran</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
@@ -68,7 +85,7 @@ const ViewPermissionsModal: React.FC<ViewPermissionsModalProps> = ({ isOpen, onC
             Tutup
           </button>
         </div>
-      </div>
+      </dialog>
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }

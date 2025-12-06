@@ -1,8 +1,6 @@
 import React, { useState, useMemo, useCallback } from "react";
 import toast from "react-hot-toast";
 
-
-
 import {
   useGetDocuments,
   useUploadDocument,
@@ -112,12 +110,10 @@ const UploadPage: React.FC = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-
   const [sortColumn, setSortColumn] = useState<string>("created_at");
   const [sortDirection, setSortDirection] = useState<SortOrder>("desc");
-
-  const [isReplaceModalOpen, setReplaceModalOpen] = useState(false);
-  const [isVersioningModalOpen, setVersioningModalOpen] = useState(false);
+  const [isReplaceModalOpen, setIsReplaceModalOpen] = useState(false);
+  const [isVersioningModalOpen, setIsVersioningModalOpen] = useState(false);
   const [currentDocument, setCurrentDocument] =
     useState<UploadedDocument | null>(null);
   const [currentDocumentIdForDetails, setCurrentDocumentIdForDetails] =
@@ -222,7 +218,10 @@ const UploadPage: React.FC = () => {
 
     if (action === "upload") {
       const formData = new FormData();
-      filesToUpload.forEach((file) => formData.append("files", file));
+      // PERBAIKAN 1: Menggunakan for...of
+      for (const file of filesToUpload) {
+        formData.append("files", file);
+      }
       formData.append("category", selectedCategory as DocumentCategory);
 
       uploadFiles(formData, {
@@ -349,13 +348,14 @@ const UploadPage: React.FC = () => {
     const validFiles: File[] = [];
     const invalidFiles: string[] = [];
 
-    Array.from(selectedFiles).forEach((file) => {
+    // PERBAIKAN 2: Menggunakan for...of
+    for (const file of Array.from(selectedFiles)) {
       if (allowedTypes.has(file.type)) {
         validFiles.push(file);
       } else {
         invalidFiles.push(file.name);
       }
-    });
+    }
 
     if (invalidFiles.length > 0) {
       toast.error(
@@ -398,21 +398,21 @@ const UploadPage: React.FC = () => {
   };
 
   const handleCloseModals = () => {
-    setReplaceModalOpen(false);
-    setVersioningModalOpen(false);
+    setIsReplaceModalOpen(false);
+    setIsVersioningModalOpen(false);
     setCurrentDocument(null);
     setCurrentDocumentIdForDetails(null);
   };
 
   const handleOpenNewVersionModal = (doc: UploadedDocument) => {
     setCurrentDocument(doc);
-    setReplaceModalOpen(true);
+    setIsReplaceModalOpen(true);
   };
 
   const handleOpenVersioningModal = (doc: UploadedDocument) => {
     setCurrentDocument(doc);
     setCurrentDocumentIdForDetails(doc.id);
-    setVersioningModalOpen(true);
+    setIsVersioningModalOpen(true);
   };
 
   const handleConfirmNewVersion = async (newFile: File) => {

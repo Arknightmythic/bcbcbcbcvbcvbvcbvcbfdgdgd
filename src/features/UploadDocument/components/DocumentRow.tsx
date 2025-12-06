@@ -1,6 +1,4 @@
-
-
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Eye,
@@ -28,7 +26,8 @@ interface DocumentRowProps {
 }
 
 interface DocumentActionMenuProps {
-  dropdownRef: React.RefObject<HTMLDivElement | null>;  position: { top?: number; bottom?: number; right?: number };
+  dropdownRef: React.RefObject<HTMLDialogElement | null>;
+  position: { top?: number; bottom?: number; right?: number };
   doc: UploadedDocument;
   isActionDisabled: boolean;
   isDeleteDisabled: boolean;
@@ -48,7 +47,6 @@ interface DocumentActionMenuProps {
 }
 
 
-
 const DocumentActionMenu: React.FC<DocumentActionMenuProps> = ({
   dropdownRef,
   position,
@@ -57,62 +55,92 @@ const DocumentActionMenu: React.FC<DocumentActionMenuProps> = ({
   isDeleteDisabled,
   tooltips,
   actions,
-}) => (
-  <div
-    ref={dropdownRef}
-    className="fixed z-[9999] w-48 bg-white rounded-md shadow-lg border border-gray-200"
-    style={{
-      top: position.top ? `${position.top}px` : 'auto',
-      right: position.right ? `${position.right}px` : 'auto',
-      bottom: position.bottom ? `${position.bottom}px` : 'auto',
-      left: 'auto'
-    }}
-    onClick={(e) => e.stopPropagation()}
-  >
-    <div className="flex flex-col py-1">
-      <button
-        onClick={() => { actions.onViewFile(doc); actions.closeDropdown(); }}
-        disabled={isActionDisabled}
-        title={tooltips.view}
-        className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:text-gray-400 disabled:bg-transparent"
-      >
-        <Eye className="w-4 h-4" />
-        <span>Lihat Dokumen</span>
-      </button>
+}) => {
+  
+  
+  useEffect(() => {
+    const element = dropdownRef.current;
+    if (!element) return;
 
-      <button
-        onClick={() => { actions.onNewVersion(doc); actions.closeDropdown(); }}
-        disabled={isActionDisabled}
-        className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:text-gray-400 disabled:bg-transparent"
-        title={tooltips.newVersion}
-      >
-        <UploadIcon className="w-4 h-4" />
-        <span>Versi Baru</span>
-      </button>
+    const handleStopPropagation = (e: MouseEvent) => {
+      e.stopPropagation();
+    };
 
-      <button
-        onClick={() => { actions.onViewVersions(doc); actions.closeDropdown(); }}
-        disabled={isActionDisabled}
-        className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:text-gray-400 disabled:bg-transparent"
-        title={tooltips.history}
-      >
-        <Info className="w-4 h-4" />
-        <span>Lihat Histori</span>
-      </button>
+    const handleKeyDown = (e: KeyboardEvent) => {
+       e.stopPropagation();
+       if (e.key === 'Escape') {
+          actions.closeDropdown();
+       }
+    };
 
-      <button
-        onClick={() => { actions.onDelete(doc); actions.closeDropdown(); }}
-        disabled={isDeleteDisabled}
-        className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 disabled:text-gray-400 disabled:bg-transparent"
-        title={tooltips.delete}
-      >
-        <Trash2 className="w-4 h-4" />
-        <span>Hapus</span>
-      </button>
-    </div>
-  </div>
-);
+    element.addEventListener('click', handleStopPropagation);
+    element.addEventListener('keydown', handleKeyDown);
 
+    return () => {
+      element.removeEventListener('click', handleStopPropagation);
+      element.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [dropdownRef, actions]);
+
+  return (
+    
+    <dialog
+      ref={dropdownRef}
+      open={true}
+      tabIndex={-1}
+      aria-modal="true"
+      className="fixed z-[9999] w-48 bg-white rounded-md shadow-lg border border-gray-200 m-0 p-0 outline-none"
+      style={{
+        top: position.top ? `${position.top}px` : 'auto',
+        right: position.right ? `${position.right}px` : 'auto',
+        bottom: position.bottom ? `${position.bottom}px` : 'auto',
+        left: 'auto' 
+      }}
+    >
+      <div className="flex flex-col py-1">
+        <button
+          onClick={() => { actions.onViewFile(doc); actions.closeDropdown(); }}
+          disabled={isActionDisabled}
+          title={tooltips.view}
+          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:text-gray-400 disabled:bg-transparent"
+        >
+          <Eye className="w-4 h-4" />
+          <span>Lihat Dokumen</span>
+        </button>
+
+        <button
+          onClick={() => { actions.onNewVersion(doc); actions.closeDropdown(); }}
+          disabled={isActionDisabled}
+          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:text-gray-400 disabled:bg-transparent"
+          title={tooltips.newVersion}
+        >
+          <UploadIcon className="w-4 h-4" />
+          <span>Versi Baru</span>
+        </button>
+
+        <button
+          onClick={() => { actions.onViewVersions(doc); actions.closeDropdown(); }}
+          disabled={isActionDisabled}
+          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:text-gray-400 disabled:bg-transparent"
+          title={tooltips.history}
+        >
+          <Info className="w-4 h-4" />
+          <span>Lihat Histori</span>
+        </button>
+
+        <button
+          onClick={() => { actions.onDelete(doc); actions.closeDropdown(); }}
+          disabled={isDeleteDisabled}
+          className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 disabled:text-gray-400 disabled:bg-transparent"
+          title={tooltips.delete}
+        >
+          <Trash2 className="w-4 h-4" />
+          <span>Hapus</span>
+        </button>
+      </div>
+    </dialog>
+  );
+};
 
 
 const DocumentRow: React.FC<DocumentRowProps> = ({
@@ -128,7 +156,9 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [position, setPosition] = useState<{ top?: number, bottom?: number, right?: number }>({});
   const moreButtonRef = useRef<HTMLButtonElement>(null);
-  const dropdownRef = useClickOutside<HTMLDivElement>(() => {
+  
+  
+  const dropdownRef = useClickOutside<HTMLDialogElement>(() => {
     setIsDropdownOpen(false);
   });
   
@@ -279,7 +309,7 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
       
       <td className="px-6 py-4 text-center sticky right-0 bg-white group-hover:bg-gray-50 z-10 border-l border-gray-200">
         
-        {/* Layout Desktop */}
+        
         <div className="hidden md:flex justify-center gap-3">
           <button
             onClick={() => onViewFile(doc)} 
@@ -317,7 +347,7 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
           </button>
         </div>
 
-        {/* Layout Mobile */}
+        
         <div className="md:hidden">
           <button
             ref={moreButtonRef}

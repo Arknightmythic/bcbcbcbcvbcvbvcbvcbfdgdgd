@@ -48,7 +48,7 @@ const VersioningDocumentModal: React.FC<VersioningDocumentModalProps> = ({
     }
   };
 
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDragOver = (e: React.DragEvent<HTMLElement>) => {
     e.preventDefault();
     setIsDragging(true);
   };
@@ -57,7 +57,7 @@ const VersioningDocumentModal: React.FC<VersioningDocumentModalProps> = ({
     setIsDragging(false);
   };
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDrop = (e: React.DragEvent<HTMLElement>) => {
     e.preventDefault();
     setIsDragging(false);
 
@@ -85,38 +85,46 @@ const VersioningDocumentModal: React.FC<VersioningDocumentModalProps> = ({
     }
   };
 
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+
+  
   const getStatusComponent = (status?: string) => {
-    switch (status?.toLowerCase()) {
-      case "pending":
-        return (
-          <span className="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-            <Clock className="w-3 h-3 mr-1" /> Pending
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
-            {status}
-          </span>
-        );
+    if (status?.toLowerCase() === "pending") {
+      return (
+        <span className="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+          <Clock className="w-3 h-3 mr-1" /> Pending
+        </span>
+      );
     }
+    return (
+      <span className="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+        {status}
+      </span>
+    );
   };
 
   if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex justify-center items-center bg-white/30 backdrop-blur-sm p-4"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white rounded-lg shadow-xl w-full max-w-lg p-4 md:p-6 max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
+    <div className="fixed inset-0 z-50 flex justify-center items-center p-4">
+      <button
+        type="button"
+        className="absolute inset-0 w-full h-full bg-white/30 backdrop-blur-sm border-none cursor-default"
+        onClick={onClose}
+        tabIndex={-1}
+        aria-label="Tutup modal"
+      />
+
+      
+      <dialog
+        open
+        aria-modal="true"
+        className="relative bg-white rounded-lg shadow-xl w-full max-w-lg p-4 md:p-6 max-h-[90vh] overflow-y-auto border-none m-0"
       >
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-md font-bold text-gray-800">
-            Versi Dokumen
-          </h2>
+          <h2 className="text-md font-bold text-gray-800">Versi Dokumen</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-800"
@@ -135,15 +143,20 @@ const VersioningDocumentModal: React.FC<VersioningDocumentModalProps> = ({
           </div>
         ) : (
           <>
-            <div
+            
+            <button
+              type="button"
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              className={`p-6 border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-center transition-colors duration-300 ${
+              onClick={triggerFileInput}
+              disabled={hasPending}
+              className={`w-full p-6 border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-center transition-colors duration-300 cursor-pointer outline-none focus:ring-2 focus:ring-blue-500 ${
                 isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300"
               } ${
-                hasPending &&
-                "bg-gray-100 border-gray-200 cursor-not-allowed opacity-60"
+                hasPending
+                  ? "bg-gray-100 border-gray-200 cursor-not-allowed opacity-60"
+                  : ""
               }`}
             >
               <input
@@ -158,21 +171,21 @@ const VersioningDocumentModal: React.FC<VersioningDocumentModalProps> = ({
               <UploadCloud className="w-10 h-10 text-gray-400 mb-3" />
               <p className="text-gray-600">
                 Tarik dokumen, atau{" "}
-                <label
-                  htmlFor="versioning-file-input"
+                
+                <span
                   className={`font-semibold ${
                     hasPending
                       ? "text-gray-500"
-                      : "text-blue-600 cursor-pointer hover:underline"
+                      : "text-blue-600 hover:underline"
                   }`}
                 >
                   pilih dokumen
-                </label>
+                </span>
               </p>
               <p className="text-xs text-gray-400 mt-1">
                 hanya 1 dokumen pdf atau txt yang diizinkan.
               </p>
-            </div>
+            </button>
 
             {hasPending && pendingDocument && (
               <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -235,7 +248,7 @@ const VersioningDocumentModal: React.FC<VersioningDocumentModalProps> = ({
             </div>
           </>
         )}
-      </div>
+      </dialog>
     </div>
   );
 };

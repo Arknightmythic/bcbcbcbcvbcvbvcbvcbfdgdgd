@@ -1,7 +1,7 @@
 import React from 'react';
 import { X, FileText, Eye } from 'lucide-react';
 import type { DocumentVersion } from '../types/types';
-import Tooltip from '../../../shared/components/Tooltip'; // <-- 1. Impor Tooltip
+import Tooltip from '../../../shared/components/Tooltip'; 
 
 interface VersioningModalProps {
   isOpen: boolean;
@@ -13,10 +13,29 @@ interface VersioningModalProps {
 
 const VersioningModal: React.FC<VersioningModalProps> = ({ isOpen, onClose, versions, documentTitle, onViewVersion }) => {
   if (!isOpen) return null;
+  
   const sortedVersions = [...versions].filter(v => v.status === 'Approved').sort((a, b) => b.id - a.id);
+  
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-sm p-4" onClick={onClose}>
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl p-4 md:p-6 max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* PERBAIKAN 1: Backdrop menggunakan <button> (Native Interactive Element) */}
+      <button
+        type="button"
+        className="absolute inset-0 w-full h-full bg-white/30 backdrop-blur-sm border-none cursor-default"
+        onClick={onClose}
+        aria-label="Tutup modal"
+        tabIndex={-1}
+      />
+
+      {/* PERBAIKAN 2: 
+          - Menggunakan <dialog> untuk semantik.
+          - Menghapus onClick={stopPropagation} karena tidak diperlukan lagi.
+      */}
+      <dialog
+        open
+        aria-modal="true"
+        className="relative bg-white rounded-lg shadow-xl w-full max-w-4xl p-4 md:p-6 max-h-[90vh] flex flex-col border-none m-0"
+      >
         <div className="flex justify-between items-center pb-4 border-b">
           <h2 className="text-md font-bold text-gray-800">Versi Histori untuk "{documentTitle}"</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-800"><X className="w-6 h-6" /></button>
@@ -37,7 +56,7 @@ const VersioningModal: React.FC<VersioningModalProps> = ({ isOpen, onClose, vers
                   <div key={version.id} className="group grid grid-cols-[1fr_4fr_2fr_2fr_1fr] gap-4 items-center px-4 py-3 hover:bg-gray-50">
                     <div className="text-gray-900 font-medium">v{sortedVersions.length - index}</div>
                     
-                    <div className="flex items-center gap-2 overflow-hidden"> {/* Tambah overflow-hidden untuk truncate */}
+                    <div className="flex items-center gap-2 overflow-hidden"> 
                        <FileText className="w-4 h-4 text-gray-400 flex-shrink-0" />
                        <Tooltip text={version.document_name}>
                          <span className="truncate">
@@ -68,7 +87,7 @@ const VersioningModal: React.FC<VersioningModalProps> = ({ isOpen, onClose, vers
         <div className="flex justify-end mt-6 pt-4 border-t">
           <button onClick={onClose} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Tutup</button>
         </div>
-      </div>
+      </dialog>
     </div>
   );
 };

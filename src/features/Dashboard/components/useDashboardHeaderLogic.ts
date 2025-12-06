@@ -1,6 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
-import type { Period } from '../utils/types';
 
+import { useCurrentTime } from '../hooks/useCurrentTime';
+import { useDateFilterLogic } from '../hooks/useDateFilterLogic';
+import type { Period } from '../utils/types';
 
 interface UseDashboardHeaderLogicProps {
   onPeriodChange: (period: Period) => void;
@@ -10,91 +11,40 @@ interface UseDashboardHeaderLogicProps {
   defaultEndDate: string;
 }
 
-interface UseDashboardHeaderLogicResult {
-  currentTime: Date;
-  activePeriod: Period;
-  isCustomDateVisible: boolean;
-  startDate: string;
-  endDate: string;
-  formattedTime: string;
-  handlePeriodClick: (period: Period) => void;
-  handleApplyClick: () => void;
-  handleRangeChange: (start: string, end: string) => void;
-  buttonBaseClasses: string;
-  buttonInactiveClasses: string;
-  buttonActiveClasses: string;
-}
+// Extracted styles to constant to reduce cognitive load inside hook
+const BUTTON_STYLES = {
+  base: 'py-2 px-3 md:py-1.5 md:px-5 rounded font-medium transition-all duration-300 text-xs flex-1 whitespace-nowrap',
+  inactive: 'bg-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-200',
+  active: 'bg-blue-600 text-white shadow-md',
+};
 
-export const useDashboardHeaderLogic = ({
-  onPeriodChange,
-  onCustomDateApply,
-  defaultPeriod,
-  defaultStartDate,
-  defaultEndDate,
-}: UseDashboardHeaderLogicProps): UseDashboardHeaderLogicResult => {
-  const [currentTime, setCurrentTime] = useState(new Date());
-  
-  const [activePeriod, setActivePeriod] = useState<Period>(defaultPeriod);
-  const [isCustomDateVisible, setIsCustomDateVisible] = useState(defaultPeriod === 'custom');
-  
-  const [startDate, setStartDate] = useState(defaultStartDate);
-  const [endDate, setEndDate] = useState(defaultEndDate);
+export const useDashboardHeaderLogic = (props: UseDashboardHeaderLogicProps) => {
+  // 1. Gunakan Shared Hook untuk Waktu
+  const { currentTime, formattedTime } = useCurrentTime('id-ID');
 
-  useEffect(() => {
-    setActivePeriod(defaultPeriod);
-    setStartDate(defaultStartDate);
-    setEndDate(defaultEndDate);
-    setIsCustomDateVisible(defaultPeriod === 'custom');
-  }, [defaultPeriod, defaultStartDate, defaultEndDate]);
-
-  useEffect(() => {
-    const timerId = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timerId);
-  }, []);
-
-  const formattedTime = useMemo(() => currentTime.toLocaleString('id-ID', {
-    year: 'numeric', month: 'long', day: 'numeric',
-    hour: '2-digit', minute: '2-digit', second: '2-digit',
-  }), [currentTime]);
-
-  const handlePeriodClick = (period: Period) => {
-    setActivePeriod(period);
-    if (period === 'custom') {
-      setIsCustomDateVisible(true);
-    } else {
-      setIsCustomDateVisible(false);
-      onPeriodChange(period);
-    }
-  };
-
-  const handleApplyClick = () => {
-    if (startDate && endDate) {
-      onCustomDateApply({ startDate, endDate });
-      onPeriodChange('custom');
-    }
-  };
-
-  const handleRangeChange = (start: string, end: string) => {
-    setStartDate(start);
-    setEndDate(end);
-  };
-  
-  const buttonBaseClasses = 'py-2 px-3 md:py-1.5 md:px-5 rounded font-medium transition-all duration-300 text-xs flex-1 whitespace-nowrap';
-  const buttonInactiveClasses = 'bg-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-200';
-  const buttonActiveClasses = 'bg-blue-600 text-white shadow-md';
-
-  return {
-    currentTime,
+  // 2. Gunakan Shared Hook untuk Logika Filter Tanggal
+  const {
     activePeriod,
     isCustomDateVisible,
     startDate,
     endDate,
+    handlePeriodClick,
+    handleApplyClick,
+    handleRangeChange
+  } = useDateFilterLogic(props);
+
+  return {
+    currentTime,
     formattedTime,
+    activePeriod,
+    isCustomDateVisible,
+    startDate,
+    endDate,
     handlePeriodClick,
     handleApplyClick,
     handleRangeChange,
-    buttonBaseClasses,
-    buttonInactiveClasses,
-    buttonActiveClasses,
+    buttonBaseClasses: BUTTON_STYLES.base,
+    buttonInactiveClasses: BUTTON_STYLES.inactive,
+    buttonActiveClasses: BUTTON_STYLES.active,
   };
 };

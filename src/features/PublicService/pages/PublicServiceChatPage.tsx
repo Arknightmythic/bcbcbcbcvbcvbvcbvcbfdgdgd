@@ -11,9 +11,10 @@ import { normalizeMarkdown } from "../utils/helper";
 import PdfViewModal from "../../../shared/components/PDFViewModal";
 
 
-
-const MarkdownLink = ({ node, ...props }: any) => (
-  <a {...props} target="_blank" rel="noopener noreferrer" />
+const MarkdownLink = ({ node, children, ...props }: any) => (
+  <a {...props} target="_blank" rel="noopener noreferrer">
+    {children}
+  </a>
 );
 
 interface CitationListProps {
@@ -48,16 +49,18 @@ const CitationList: React.FC<CitationListProps> = ({ citations, isOpen, onToggle
       >
         <div className="flex flex-col gap-1.5 mt-1">
           {citations.map((citation, index) => (
-            <div
-              
+            
+            
+            <button
+              type="button"
               key={`${citation.documentName}-${index}`} 
               onClick={() => onOpenCitation(citation)} 
-              className="bg-white/50 border border-gray-200 text-gray-700 px-2 py-1.5 rounded cursor-pointer hover:bg-white hover:shadow-sm transition-all truncate flex items-center gap-2"
+              className="w-full text-left bg-white/50 border border-gray-200 text-gray-700 px-2 py-1.5 rounded cursor-pointer hover:bg-white hover:shadow-sm transition-all truncate flex items-center gap-2"
               title={citation.documentName}
             >
               <span className="text-xs">📄</span>
               <span className="truncate">{citation.documentName}</span>
-            </div>
+            </button>
           ))}
         </div>
       </div>
@@ -327,6 +330,7 @@ const PublicServiceChatPage: React.FC = () => {
     }
   };
 
+  
   const handleCopy = (question?: ChatMessage, answer?: ChatMessage) => {
     let textToCopy = "";
     if (question && answer) {
@@ -337,29 +341,22 @@ const PublicServiceChatPage: React.FC = () => {
       return;
     }
 
-    navigator.clipboard
-      .writeText(textToCopy)
-      .then(() => {
-        toast.success("Pesan berhasil disalin!");
-      })
-      .catch(() => {
-        try {
-          const textArea = document.createElement("textarea");
-          textArea.value = textToCopy;
-          textArea.style.position = "fixed";
-          textArea.style.top = "-9999px";
-          document.body.appendChild(textArea);
-          textArea.focus();
-          textArea.select();
-          document.execCommand("copy");
-          
-          textArea.remove();
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard
+        .writeText(textToCopy)
+        .then(() => {
           toast.success("Pesan berhasil disalin!");
-        } catch (err) {
+        })
+        .catch((err) => {
+          console.error("Copy failed:", err);
           toast.error("Gagal menyalin pesan.");
-        }
-      });
+        });
+    } else {
+      
+      toast.error("Fitur salin tidak didukung di browser ini.");
+    }
   };
+
   const userInitial =
     useAuthStore((state) => state.user?.name.charAt(0).toUpperCase()) || "U";
 

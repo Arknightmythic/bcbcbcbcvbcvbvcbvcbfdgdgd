@@ -51,12 +51,10 @@ const TeamManagementModal: React.FC<TeamManagementModalProps> = ({ isOpen, onClo
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    
     if (name.trim().toLowerCase() === 'default') {
       toast.error("tidak dapat menggunakan nama 'default' untuk tim.");
       return;
     }
-    
 
     onSave({ name, pages: Array.from(pages) }, team?.id);
   };
@@ -64,8 +62,20 @@ const TeamManagementModal: React.FC<TeamManagementModalProps> = ({ isOpen, onClo
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-sm p-4" onClick={onClose}>
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg animate-fade-in-up" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <button
+        type="button"
+        className="absolute inset-0 w-full h-full bg-white/30 backdrop-blur-sm border-none cursor-default"
+        onClick={onClose}
+        aria-label="Tutup modal"
+        tabIndex={-1} 
+      />
+
+      <dialog
+        open
+        aria-modal="true"
+        className="relative bg-white rounded-lg shadow-xl p-6 w-full max-w-lg animate-fade-in-up border-none m-0"
+      >
         <div className="flex justify-between items-center pb-4 border-b">
             <h2 className="text-2xl font-bold">{isEditMode ? 'Ubah Tim' : 'Buat Tim Baru'}</h2>
             <button onClick={onClose} className="text-gray-500 hover:text-gray-800"><X className="w-6 h-6" /></button>
@@ -84,7 +94,7 @@ const TeamManagementModal: React.FC<TeamManagementModalProps> = ({ isOpen, onClo
           </div>
 
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700">Hak Akses Halaman</label>
+            <span className="block text-sm font-medium text-gray-700">Hak Akses Halaman</span>
             <div className="mt-2 grid grid-cols-2 gap-2 border p-3 rounded-md max-h-48 overflow-y-auto">
               {VALID_PAGES.map(page => (
                 <label key={page} className="flex items-center space-x-2">
@@ -107,7 +117,7 @@ const TeamManagementModal: React.FC<TeamManagementModalProps> = ({ isOpen, onClo
             </button>
           </div>
         </form>
-      </div>
+      </dialog>
     </div>
   );
 };

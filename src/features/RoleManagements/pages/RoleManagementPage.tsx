@@ -31,9 +31,9 @@ const RoleManagementPage = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
   
-    const [isModalOpen, setModalOpen] = useState(false);
-    const [isViewModalOpen, setViewModalOpen] = useState(false);
-    const [isConfirmModalOpen, setConfirmModalOpen] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
     const [selectedRole, setSelectedRole] = useState<Role | null>(null);
     const [roleToDelete, setRoleToDelete] = useState<Role | null>(null);
@@ -77,13 +77,13 @@ const RoleManagementPage = () => {
     const handleAction = (action: ActionType, role: Role) => {
         if (action === 'view') {
             setSelectedRole(role);
-            setViewModalOpen(true);
+            setIsViewModalOpen(true);
         } else if (action === 'edit') {
             setSelectedRole(role);
-            setModalOpen(true);
+            setIsModalOpen(true);
         } else if (action === 'delete') {
             setRoleToDelete(role);
-            setConfirmModalOpen(true);
+            setIsConfirmModalOpen(true);
         }
     };
     
@@ -96,11 +96,11 @@ const RoleManagementPage = () => {
 
         if (id) {
             updateRole({ id, data: payload }, {
-                onSuccess: () => setModalOpen(false)
+                onSuccess: () => setIsModalOpen(false)
             });
         } else {
             createRole(payload, {
-                onSuccess: () => setModalOpen(false)
+                onSuccess: () => setIsModalOpen(false)
             });
         }
     };
@@ -109,7 +109,7 @@ const RoleManagementPage = () => {
         if (roleToDelete) {
             deleteRole(roleToDelete.id, {
                 onSuccess: () => {
-                    setConfirmModalOpen(false);
+                    setIsConfirmModalOpen(false);
                     setRoleToDelete(null);
                 }
             });
@@ -150,7 +150,7 @@ const RoleManagementPage = () => {
                     />
                 </div>
                 <div className="w-full lg:w-auto flex-shrink-0 text-xs">
-                    <button onClick={() => { setSelectedRole(null); setModalOpen(true); }} 
+                    <button onClick={() => { setSelectedRole(null); setIsModalOpen(true); }} 
                         className="bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 flex items-center justify-center w-full lg:w-auto"
                     >
                         <Plus className="w-4 h-4 mr-2" />
@@ -179,7 +179,7 @@ const RoleManagementPage = () => {
   
         <RoleManagementModal 
             isOpen={isModalOpen} 
-            onClose={() => setModalOpen(false)} 
+            onClose={() => setIsModalOpen(false)} 
             onSave={handleSaveRole} 
             role={selectedRole} 
             teams={teams} 
@@ -188,12 +188,12 @@ const RoleManagementPage = () => {
         />
         <ViewPermissionsModal 
             isOpen={isViewModalOpen} 
-            onClose={() => setViewModalOpen(false)} 
+            onClose={() => setIsViewModalOpen(false)} 
             role={selectedRole} 
         />
         <ConfirmationModal 
             isOpen={isConfirmModalOpen} 
-            onClose={() => setConfirmModalOpen(false)} 
+            onClose={() => setIsConfirmModalOpen(false)} 
             onConfirm={handleConfirmDelete} 
             title="Konfirmasi Penghapusan" 
             confirmText="Hapus" 

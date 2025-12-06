@@ -131,10 +131,15 @@ const addMessageOrdered = (prevMessages: ChatMessage[], newMessage: ChatMessage)
   
   
   if (prevMessages.length > 0) {
-    const lastMsg = prevMessages[prevMessages.length - 1];
-    const lastTime = new Date(lastMsg.timestamp || 0).getTime();
-    if (finalTimestamp <= lastTime) {
-      finalTimestamp = lastTime + 1;
+    // [FIX 1] Prefer .at(...) over [length - 1]
+    const lastMsg = prevMessages.at(-1);
+    
+    // Perlu pengecekan existence karena .at bisa return undefined secara type
+    if (lastMsg) {
+      const lastTime = new Date(lastMsg.timestamp || 0).getTime();
+      if (finalTimestamp <= lastTime) {
+        finalTimestamp = lastTime + 1;
+      }
     }
   }
 
@@ -323,9 +328,10 @@ export const useServicePublicChat = () => {
 
       const sortedMessages = uniqueMessages;
       
-      sortedMessages.forEach(msg => {
+      // [FIX 2] Use for...of instead of .forEach
+      for (const msg of sortedMessages) {
         processedMessageIdsRef.current.add(msg.id);
-      });
+      }
       
       setMessages(sortedMessages);
       setCitations([]); 
@@ -570,7 +576,8 @@ export const useServicePublicChat = () => {
     setIsLoadingPdf(true);
 
     try {
-      const url = await generateViewUrlByDocId(parseInt(citation.fileId));
+      // [FIX 3] Prefer Number.parseInt over parseInt
+      const url = await generateViewUrlByDocId(Number.parseInt(citation.fileId));
       setPdfUrl(url);
     } catch (error) {
       console.error("Error fetching PDF URL:", error);
@@ -637,7 +644,6 @@ export const useServicePublicChat = () => {
     messagesEndRef,
     textareaRef,
     currentSessionId: sessionId,
-    
     isPdfModalOpen,
     pdfUrl,
     pdfTitle,

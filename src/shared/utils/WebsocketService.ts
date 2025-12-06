@@ -74,10 +74,11 @@ class WebSocketService {
           }
         };
 
-        this.ws.onerror = (error) => {
-          console.error('WebSocket error:', error);
+        // PERBAIKAN: Mengembalikan instance Error, bukan Event object
+        this.ws.onerror = (event) => {
+          console.error('WebSocket error:', event);
           this.isConnecting = false;
-          reject(error);
+          reject(new Error('WebSocket connection failed'));
         };
 
         this.ws.onclose = () => {
@@ -88,7 +89,8 @@ class WebSocketService {
         };
       } catch (error) {
         this.isConnecting = false;
-        reject(error);
+        // Opsional: Memastikan error di catch block juga bertipe Error
+        reject(error instanceof Error ? error : new Error(String(error)));
       }
     });
   }
