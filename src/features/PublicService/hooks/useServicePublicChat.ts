@@ -221,91 +221,120 @@ export const useServicePublicChat = () => {
 
   
   useEffect(() => {
+    // 1. Pastikan syarat dasar terpenuhi
     if (!wsEnabledRef.current || !sessionId || sessionId === "new") return;
 
-    if (unsubscribeRef.current) {
-      unsubscribeRef.current();
-      unsubscribeRef.current = null;
-    }
-
-    if (!wsService.current.isConnected()) return;
-
-    currentConversationIdRef.current = sessionId;
-
+    const ws = wsService.current;
     
-    const handleWsAnswer = (data: any) => {
-      const botMessageId = `agent-${data.chat_history_id}`;
-      
-      if (processedMessageIdsRef.current.has(botMessageId)) return;
-      processedMessageIdsRef.current.add(botMessageId);
-      
-      const cleanedAnswer = cleanText(data.answer);
-      if (!cleanedAnswer) return;
-      
-      const botMessage: ChatMessage = {
-        id: botMessageId,
-        dbId: data.answer_id, 
-        sender: "agent",
-        text: cleanedAnswer,
-        timestamp: new Date().toISOString(),
-        feedback: null,
-        is_answered: data.is_answered,
-        isHelpdesk: false, 
-        questionId: data.question_id,
-        answerId: data.answer_id,
-      };
-      
-      setMessages((prev) => addMessageOrdered(prev, botMessage));
-    };
+    // Gunakan ref untuk melacak apakah komponen masih mount saat async berjalan
+    let isMounted = true; 
 
-    
-    const handleWsAgentMessage = (data: any) => {
-      const agentMessageId = data.chat_history_id 
-        ? `agent-${data.chat_history_id}` 
-        : `agent-ws-${Date.now()}`;
-      
-      if (processedMessageIdsRef.current.has(agentMessageId)) return;
-      processedMessageIdsRef.current.add(agentMessageId);
-      
-      const cleanedMessage = cleanText(data.message);
-      if (!cleanedMessage) return;
-      
-      const agentMessage: ChatMessage = {
-        id: agentMessageId,
-        dbId: data.chat_history_id,
-        sender: "agent",
-        text: cleanedMessage,
-        timestamp: data.timestamp 
-          ? new Date(data.timestamp * 1000).toISOString() 
-          : new Date().toISOString(),
-        feedback: null,
-        isHumanAgent: true,
-      };
-      
-      setMessages((prev) => addMessageOrdered(prev, agentMessage));
-    };
+    const initWebSocketSubscription = async () => {
+      try {
+        // 2. TUNGGU sampai koneksi benar-benar OPEN
+        if (!ws.isConnected()) {
+          console.log("[User] ⏳ Waiting for WebSocket connection...");
+          await ws.connect();
+        }
 
-    
-    const unsubscribe = wsService.current.onMessage(sessionId, (data) => {
-      console.log('📨 WebSocket message received:', data);
-      
-      if (data.answer && data.chat_history_id) {
-        handleWsAnswer(data);
-      } else if (data.user_type === 'agent' && data.message) {
-        handleWsAgentMessage(data);
+        // Cek lagi apakah komponen masih mounted setelah await
+        if (!isMounted) return;
+
+        // 3. Setup Handler (User & Agent Messages)
+        currentConversationIdRef.current = sessionId;
+
+        const handleWsAnswer = (data: any) => {
+          const botMessageId = `agent-api-${data.answer_id}`; // Samakan format ID dengan HTTP success
+          // Fallback ID jika answer_id 0 atau tidak ada
+          const finalId = data.answer_id ? botMessageId : `agent-${data.chat_history_id}`;
+
+          if (processedMessageIdsRef.current.has(finalId)) return;
+          processedMessageIdsRef.current.add(finalId);
+          
+          const cleanedAnswer = cleanText(data.answer);
+          if (!cleanedAnswer) return;
+          
+          const botMessage: ChatMessage = {
+            id: finalId,
+            dbId: data.answer_id, 
+            sender: "agent",
+            text: cleanedAnswer,
+            timestamp: new Date().toISOString(),
+            feedback: null,
+            is_answered: data.is_answered,
+            isHelpdesk: false, 
+            questionId: data.question_id,
+            answerId: data.answer_id,
+          };
+          
+          setMessages((prev) => addMessageOrdered(prev, botMessage));
+        };
+
+        const handleWsAgentMessage = (data: any) => {
+          const agentMessageId = data.chat_history_id 
+            ? `agent-${data.chat_history_id}` 
+            : `agent-ws-${Date.now()}`;
+          
+          if (processedMessageIdsRef.current.has(agentMessageId)) return;
+          processedMessageIdsRef.current.add(agentMessageId);
+          
+          const cleanedMessage = cleanText(data.message);
+          if (!cleanedMessage) return;
+          
+          const agentMessage: ChatMessage = {
+            id: agentMessageId,
+            dbId: data.chat_history_id,
+            sender: "agent",
+            text: cleanedMessage,
+            timestamp: data.timestamp 
+              ? new Date(data.timestamp * 1000).toISOString() 
+              : new Date().toISOString(),
+            feedback: null,
+            isHumanAgent: true,
+          };
+          
+          setMessages((prev) => addMessageOrdered(prev, agentMessage));
+        };
+
+        // Hapus listener lama jika ada (defensive)
+        if (unsubscribeRef.current) {
+          unsubscribeRef.current();
+        }
+
+        // Register listener baru
+        const unsubscribe = ws.onMessage(sessionId, (data) => {
+          console.log('[User] 📨 WebSocket message received:', data);
+          
+          if (data.answer && (data.chat_history_id || data.answer_id)) {
+            handleWsAnswer(data);
+          } else if (data.user_type === 'agent' && data.message) {
+            handleWsAgentMessage(data);
+          }
+        });
+
+        unsubscribeRef.current = unsubscribe;
+
+        // 4. Lakukan Subscribe SETELAH handler siap
+        ws.subscribe(sessionId, '$');
+        console.log(`[User] ✅ Subscribed to conversation: ${sessionId}`);
+
+      } catch (error) {
+        console.error("[User] ❌ WebSocket subscription failed:", error);
       }
-    });
+    };
 
-    unsubscribeRef.current = unsubscribe;
-    wsService.current.subscribe(sessionId, '$');
+    initWebSocketSubscription();
 
+    // Cleanup function
     return () => {
+      isMounted = false;
       if (unsubscribeRef.current) {
+        console.log(`[User] 🔌 Unsubscribing from: ${sessionId}`);
         unsubscribeRef.current();
         unsubscribeRef.current = null;
       }
     };
-  }, [sessionId, wsEnabledRef.current]);
+  }, [sessionId, wsEnabledRef.current]); // Dependency tetap sama
 
   
   useEffect(() => {

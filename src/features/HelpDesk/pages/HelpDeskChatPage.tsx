@@ -11,6 +11,7 @@ import {
   useAcceptHelpDesk,
 } from "../hooks/useHelpDesk";
 import { getWebSocketService } from "../../../shared/utils/WebsocketService";
+import { useQueryClient } from "@tanstack/react-query";
 
 const QuickResponseButton = ({
   text,
@@ -31,6 +32,7 @@ const HelpDeskChatPage: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
   const [input, setInput] = useState("");
+  const queryClient = useQueryClient();
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -83,36 +85,58 @@ const HelpDeskChatPage: React.FC = () => {
     statusColorClass = "bg-green-500";
   }
   // --- WEBSOCKET ---
-  useEffect(() => {
+ useEffect(() => {
     if (!sessionId) return;
 
     const ws = wsService.current;
-
-    if (!ws.isConnected()) {
-      ws.connect().catch((error) => {
-        console.error("Failed to connect to WebSocket:", error);
-      });
-    }
-
     const agentChannel = `${sessionId}-agent`;
 
-    const unsubscribe = ws.onMessage(agentChannel, (data: any) => {
-      console.log("📨 Received WebSocket message:", data);
-      refetchChatHistory();
-      if (data?.type === "status_update") {
-        refetchInfo();
+    // Fungsi wrapper untuk memastikan koneksi siap sebelum subscribe
+    const initWebSocket = async () => {
+      try {
+        // 1. Cek status, jika belum connect, tunggu sampai connect selesai
+        if (!ws.isConnected()) {
+          console.log("⏳ Connecting to WebSocket...");
+          await ws.connect();
+        }
+
+        // 2. Registrasi Handler untuk menerima pesan
+        // Handler ini yang akan mengupdate data secara otomatis
+        const unsubscribe = ws.onMessage(agentChannel, (data: any) => {
+          console.log("📨 Received WebSocket message:", data);
+          
+          // Trigger refetch data chat history
+          queryClient.invalidateQueries({ queryKey: ["chatHistory", sessionId] });
+
+          // Jika ada update status (misal user menutup chat), refresh info helpdesk
+          if (data?.type === "status_update") {
+            queryClient.invalidateQueries({ queryKey: ["helpdesks", "session", sessionId] });
+          }
+        });
+
+        // 3. Simpan fungsi cleanup ke ref agar bisa dibersihkan saat unmount
+        // (Kita simpan manual karena onMessage di service Anda mengembalikan func unsubscribe)
+        (ws as any)._tempUnsubscribe = unsubscribe; 
+
+        // 4. Lakukan Subscribe SETELAH dipastikan koneksi aman
+        ws.subscribe(agentChannel, "$");
+        console.log(`✅ Subscribed to channel: ${agentChannel}`);
+
+      } catch (error) {
+        console.error("❌ Failed to initialize WebSocket:", error);
       }
-    });
+    };
 
-    ws.subscribe(agentChannel, "$");
-    console.log(`✅ Subscribed to channel: ${agentChannel}`);
+    initWebSocket();
 
+    // Cleanup saat agent meninggalkan halaman
     return () => {
       console.log(`🔌 Unsubscribing from channel: ${agentChannel}`);
-      unsubscribe();
+      if ((ws as any)._tempUnsubscribe) {
+        (ws as any)._tempUnsubscribe();
+      }
     };
-  }, [sessionId, refetchChatHistory, refetchInfo]);
-
+  }, [sessionId, queryClient])
   // --- MEMOIZED MESSAGES ---
   const messages: HelpDeskMessage[] = useMemo(() => {
     if (!chatHistory) return [];
