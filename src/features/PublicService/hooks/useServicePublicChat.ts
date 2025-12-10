@@ -246,10 +246,10 @@ export const useServicePublicChat = () => {
         const handleWsAnswer = (data: any) => {
           const botMessageId = `agent-api-${data.answer_id}`; // Samakan format ID dengan HTTP success
           // Fallback ID jika answer_id 0 atau tidak ada
+          const historyMsgId = `agent-${data.answer_id}`;
           const finalId = data.answer_id ? botMessageId : `agent-${data.chat_history_id}`;
 
-          if (processedMessageIdsRef.current.has(finalId)) return;
-          processedMessageIdsRef.current.add(finalId);
+          if (processedMessageIdsRef.current.has(finalId) || processedMessageIdsRef.current.has(historyMsgId)) return;          processedMessageIdsRef.current.add(finalId);
           
           const cleanedAnswer = cleanText(data.answer);
           if (!cleanedAnswer) return;
@@ -463,9 +463,12 @@ export const useServicePublicChat = () => {
         ? `agent-api-gen-${Date.now()}` 
         : `agent-api-${data.answer_id}`;
 
-      
-      if (processedMessageIdsRef.current.has(botMessageId)) {
-         return; 
+      // [FIX] Tambahkan pengecekan format ID History
+      const historyMsgId = `agent-${data.answer_id}`;
+
+      // [FIX] Cek kedua format ID
+      if (processedMessageIdsRef.current.has(botMessageId) || (!isGenericResponse && processedMessageIdsRef.current.has(historyMsgId))) {
+        return; 
       }
       processedMessageIdsRef.current.add(botMessageId);
       
