@@ -282,6 +282,8 @@ const HelpDeskChatPage: React.FC = () => {
         "Saya sedang memeriksa informasi yang Anda butuhkan. Mohon tunggu sebentar.",
       Followup: // Sebelumnya "Tindak Lanjut"
         "Apakah ada hal lain yang bisa saya bantu?",
+      Done: // Sebelumnya "Tindak Lanjut"
+        "Terima kasih telah menghubungi Kementerian Investasi dan Hilirisasi/BKPM. Semoga Bapak/Ibu selalu diberikan kesehatan dan sukses dalam menjalankan usaha",
     };
     setInput(quickResponses[template] || "");
     textareaRef.current?.focus();
@@ -472,6 +474,10 @@ const HelpDeskChatPage: React.FC = () => {
             <QuickResponseButton
               text="Bertanya"
               onClick={() => handleQuickResponse("Followup")}
+            />
+            <QuickResponseButton
+              text="Selesai"
+              onClick={() => handleQuickResponse("Done")}
             />
           </div>
           <div className="flex gap-3 items-end">
