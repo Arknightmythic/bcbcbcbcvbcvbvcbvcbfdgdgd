@@ -95,9 +95,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
 }) => {
   const messageCitations = citations.filter((c) => c.messageId === message.id);
   const hasCitations = messageCitations.length > 0;
-
-  const [displayedLines, setDisplayedLines] = useState<string[]>([]);
-  const [isTextComplete, setIsTextComplete] = useState(false);
+  const [displayContent, setDisplayContent] = useState<string>("");
   const [isCitationVisible, setIsCitationVisible] = useState(false);
   const [isActionVisible, setIsActionVisible] = useState(false);
 
@@ -109,38 +107,33 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
     }
   };
     
-  useEffect(() => {
+ useEffect(() => {
     const textToDisplay = message.text || "";
+
+    // Jika bukan agent atau bukan pesan terakhir, tampilkan langsung
     if (message.sender !== "agent" || !isLastMessage) {
-      setDisplayedLines(textToDisplay.split("\n"));
-      setIsTextComplete(true);
+      setDisplayContent(textToDisplay);
       setIsCitationVisible(true);
       setIsActionVisible(true);
       return;
     }
 
-    setDisplayedLines([]);
-    setIsTextComplete(false);
+    // Jika pesan agent terakhir:
+    // 1. Reset visibility
     setIsCitationVisible(false);
     setIsActionVisible(false);
+    
+    // 2. Set Content
+    setDisplayContent(textToDisplay);
+
+    // 3. Trigger visibility ON setelah render
     const timer = setTimeout(() => {
-      setDisplayedLines(textToDisplay.split("\n"));
-      setIsTextComplete(true);
-    }, 100);
+        setIsCitationVisible(true);
+    }, 150);
 
     return () => clearTimeout(timer);
+
   }, [message.id, message.text, message.sender, isLastMessage]);
-
-  
-  useEffect(() => {
-    if (isTextComplete) {
-      const delay = hasCitations ? 200 : 0;
-      const timer = setTimeout(() => setIsCitationVisible(true), delay);
-      return () => clearTimeout(timer);
-    }
-  }, [isTextComplete, hasCitations]);
-
-  
   useEffect(() => {
     if (isCitationVisible) {
       const timer = setTimeout(() => setIsActionVisible(true), 200);
@@ -210,20 +203,12 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
                     a: MarkdownLink, 
                   }}
                 >
-                  {normalizeMarkdown(displayedLines.join("\n"))}
+                  {normalizeMarkdown(displayContent)}
                 </ReactMarkdown>
               </div>
             ) : (
               <div className="whitespace-pre-wrap">
-                {displayedLines.map((line, index) => (
-                  <p
-                    
-                    key={`${index}-${line.substring(0, 10)}`}
-                    className={isLastMessage ? "animate-fade-in-up" : ""}
-                  >
-                    {line || "\u200B"}
-                  </p>
-                ))}
+                {displayContent}
               </div>
             )}
           </div>

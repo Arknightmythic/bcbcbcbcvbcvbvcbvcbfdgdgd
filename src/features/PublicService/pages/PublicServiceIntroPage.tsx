@@ -6,20 +6,38 @@ import { getConversations } from "../api/chatApi";
 import { useServicePublicChat } from "../hooks/useServicePublicChat";
 import { useAuthStore } from "../../../shared/store/authStore";
 
+// --- Helper Function ---
+// Pastikan parameter text menerima string
+const truncateText = (text: string, maxLength: number) => {
+  if (!text) return "";
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength) + "...";
+};
+
 interface SessionCardProps {
   session: ChatSession;
   onSelect: (session: ChatSession) => void;
 }
+
 const SessionCard: React.FC<SessionCardProps> = ({ session, onSelect }) => {
+  const MAX_CONTEXT_LENGTH = 50; 
+
+  // Ambil context dengan fallback string kosong untuk menghindari error TS
+  const contextText = session.cardContext || "";
+
   return (
     <button
       key={session.id}
       onClick={() => onSelect(session)}
-      className="text-left p-4 border border-gray-200 rounded-lg hover:bg-gray-50 flex items-center justify-between transition-colors duration-150 shadow-sm hover:shadow-md"
+      className="text-left p-4 border border-gray-200 rounded-lg hover:bg-gray-50 flex items-center justify-between transition-colors duration-150 shadow-sm hover:shadow-md h-full"
     >
-      <div>
-        <p className="font-semibold text-gray-800 text-sm">
-          {session.cardContext}
+      <div className="flex-1 pr-2">
+        {/* Gunakan contextText yang sudah pasti string */}
+        <p 
+          className="font-semibold text-gray-800 text-sm break-words"
+          title={contextText} 
+        >
+          {truncateText(contextText, MAX_CONTEXT_LENGTH)}
         </p>
         <p className="text-[10px] text-gray-500 mt-1">
           Dibuat :{" "}
@@ -29,7 +47,7 @@ const SessionCard: React.FC<SessionCardProps> = ({ session, onSelect }) => {
           })}
         </p>
       </div>
-      <MessageSquareText className="w-4 h-4 text-blue-500 flex-shrink-0 ml-4" />
+      <MessageSquareText className="w-4 h-4 text-blue-500 flex-shrink-0" />
     </button>
   );
 };
@@ -79,7 +97,8 @@ const PublicServiceIntroPage: React.FC = () => {
           id: convo.id,
           created_at: convo.start_timestamp,
           agent_name: convo.is_helpdesk ? "Agent" : "AI Assistant",
-          cardContext: convo.context || "lanjutkan sesi",
+          // Fallback di sini memastikan data runtime aman, tapi TS tetap butuh validasi di komponen
+          cardContext: convo.context || "lanjutkan sesi", 
         }))
       ) || [],
     [infiniteData]
