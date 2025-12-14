@@ -10,7 +10,6 @@ import remarkGfm from "remark-gfm";
 import { normalizeMarkdown } from "../utils/helper";
 import PdfViewModal from "../../../shared/components/PDFViewModal";
 
-
 const MarkdownLink = ({ node, children, ...props }: any) => (
   <a {...props} target="_blank" rel="noopener noreferrer">
     {children}
@@ -24,7 +23,12 @@ interface CitationListProps {
   onOpenCitation: (citation: Citation) => void;
 }
 
-const CitationList: React.FC<CitationListProps> = ({ citations, isOpen, onToggle, onOpenCitation }) => {
+const CitationList: React.FC<CitationListProps> = ({
+  citations,
+  isOpen,
+  onToggle,
+  onOpenCitation,
+}) => {
   if (citations.length === 0) return null;
 
   return (
@@ -49,12 +53,10 @@ const CitationList: React.FC<CitationListProps> = ({ citations, isOpen, onToggle
       >
         <div className="flex flex-col gap-1.5 mt-1">
           {citations.map((citation, index) => (
-            
-            
             <button
               type="button"
-              key={`${citation.documentName}-${index}`} 
-              onClick={() => onOpenCitation(citation)} 
+              key={`${citation.documentName}-${index}`}
+              onClick={() => onOpenCitation(citation)}
               className="w-full text-left bg-white/50 border border-gray-200 text-gray-700 px-2 py-1.5 rounded cursor-pointer hover:bg-white hover:shadow-sm transition-all truncate flex items-center gap-2"
               title={citation.documentName}
             >
@@ -74,163 +76,161 @@ interface MessageBubbleProps {
   citations: Citation[];
   isOpen: boolean;
   onToggleCitation: (messageId: string) => void;
-  onOpenCitation: (citation: Citation) => void; 
+  onOpenCitation: (citation: Citation) => void;
   onFeedback: (messageId: string, feedback: "like" | "dislike" | null) => void;
   onCopy: (question?: ChatMessage, answer?: ChatMessage) => void;
   userInitial: string;
   isLastMessage: boolean;
 }
 
-const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
-  message,
-  previousMessage,
-  citations,
-  isOpen,
-  onToggleCitation,
-  onOpenCitation,
-  onFeedback,
-  onCopy,
-  userInitial,
-  isLastMessage,
-}) => {
-  const messageCitations = citations.filter((c) => c.messageId === message.id);
-  const hasCitations = messageCitations.length > 0;
-  const [displayContent, setDisplayContent] = useState<string>("");
-  const [isCitationVisible, setIsCitationVisible] = useState(false);
-  const [isActionVisible, setIsActionVisible] = useState(false);
-
-  const handleCopyClick = () => {
-    if (message.sender === "user") {
-      onCopy(undefined, message);
-    } else if (message.sender === "agent") {
-      onCopy(previousMessage, message);
-    }
-  };
-    
- useEffect(() => {
-    const textToDisplay = message.text || "";
-
-    // Jika bukan agent atau bukan pesan terakhir, tampilkan langsung
-    if (message.sender !== "agent" || !isLastMessage) {
-      setDisplayContent(textToDisplay);
-      setIsCitationVisible(true);
-      setIsActionVisible(true);
-      return;
-    }
-
-    // Jika pesan agent terakhir:
-    // 1. Reset visibility
-    setIsCitationVisible(false);
-    setIsActionVisible(false);
-    
-    // 2. Set Content
-    setDisplayContent(textToDisplay);
-
-    // 3. Trigger visibility ON setelah render
-    const timer = setTimeout(() => {
-        setIsCitationVisible(true);
-    }, 150);
-
-    return () => clearTimeout(timer);
-
-  }, [message.id, message.text, message.sender, isLastMessage]);
-  useEffect(() => {
-    if (isCitationVisible) {
-      const timer = setTimeout(() => setIsActionVisible(true), 200);
-      return () => clearTimeout(timer);
-    }
-  }, [isCitationVisible]);
-
-  if (!message.text && message.sender !== "system") {
-    return null;
-  }
-  
-  if (message.sender === "system") {
-    return (
-      <div className="mb-4 flex justify-center">
-        <div className="p-3 rounded-lg bg-gray-100 text-gray-600 text-xs text-center mx-auto shadow-sm">
-          <p className="whitespace-pre-wrap m-0 text-sm">{message.text}</p>
-        </div>
-      </div>
+const MessageBubble: React.FC<MessageBubbleProps> = React.memo(
+  ({
+    message,
+    previousMessage,
+    citations,
+    isOpen,
+    onToggleCitation,
+    onOpenCitation,
+    onFeedback,
+    onCopy,
+    userInitial,
+    isLastMessage,
+  }) => {
+    const messageCitations = citations.filter(
+      (c) => c.messageId === message.id
     );
-  }
+    const hasCitations = messageCitations.length > 0;
+    const [displayContent, setDisplayContent] = useState<string>("");
+    const [isCitationVisible, setIsCitationVisible] = useState(false);
+    const [isActionVisible, setIsActionVisible] = useState(false);
 
-  const isZeroIds = message.questionId === 0 && message.answerId === 0;
-  const isHelpdesk = message.isHelpdesk === true;
-  
-  const showFeedback = 
-    message.sender === "agent" && 
-    !message.isHumanAgent && 
-    !isHelpdesk &&
-    !isZeroIds;
+    const handleCopyClick = () => {
+      if (message.sender === "user") {
+        onCopy(undefined, message);
+      } else if (message.sender === "agent") {
+        onCopy(previousMessage, message);
+      }
+    };
 
-  
-  let avatarLabel = userInitial;
-  if (message.sender !== "user") {
+    useEffect(() => {
+      const textToDisplay = message.text || "";
+
+      // Jika bukan agent atau bukan pesan terakhir, tampilkan langsung
+      if (message.sender !== "agent" || !isLastMessage) {
+        setDisplayContent(textToDisplay);
+        setIsCitationVisible(true);
+        setIsActionVisible(true);
+        return;
+      }
+
+      // Jika pesan agent terakhir:
+      // 1. Reset visibility
+      setIsCitationVisible(false);
+      setIsActionVisible(false);
+
+      // 2. Set Content
+      setDisplayContent(textToDisplay);
+
+      // 3. Trigger visibility ON setelah render
+      const timer = setTimeout(() => {
+        setIsCitationVisible(true);
+      }, 150);
+
+      return () => clearTimeout(timer);
+    }, [message.id, message.text, message.sender, isLastMessage]);
+    useEffect(() => {
+      if (isCitationVisible) {
+        const timer = setTimeout(() => setIsActionVisible(true), 200);
+        return () => clearTimeout(timer);
+      }
+    }, [isCitationVisible]);
+
+    if (!message.text && message.sender !== "system") {
+      return null;
+    }
+
+    if (message.sender === "system") {
+      return (
+        <div className="mb-4 flex justify-center">
+          <div className="p-3 rounded-lg bg-gray-100 text-gray-600 text-xs text-center mx-auto shadow-sm">
+            <p className="whitespace-pre-wrap m-0 text-sm">{message.text}</p>
+          </div>
+        </div>
+      );
+    }
+
+    const isZeroIds = message.questionId === 0 && message.answerId === 0;
+    const isHelpdesk = message.isHelpdesk === true;
+
+    const showFeedback =
+      message.sender === "agent" &&
+      !message.isHumanAgent &&
+      !isHelpdesk &&
+      !isZeroIds;
+
+    let avatarLabel = userInitial;
+    if (message.sender !== "user") {
       avatarLabel = message.isHumanAgent ? "A" : "AI";
-  }
+    }
 
-  return (
-    <div
-      className={`relative group mb-4 flex gap-3 ${
-        message.sender === "user" ? "flex-row-reverse" : ""
-      }`}
-    >
-      
+    return (
       <div
-        className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 text-white shadow-sm ${
-          message.sender === "user" ? "bg-bOss-blue" : "bg-bOss-red"
+        className={`relative group mb-4 flex gap-3 ${
+          message.sender === "user" ? "flex-row-reverse" : ""
         }`}
       >
-        {avatarLabel}
-      </div>
-
-      <div className="flex flex-col max-w-[85%] md:max-w-[75%] items-start">
-        
         <div
-          className={`relative p-3 rounded-lg leading-relaxed shadow-sm w-fit ${
-            message.sender === "user"
-              ? "bg-bOss-blue text-white rounded-bl-none"
-              : "bg-gray-100 text-gray-800 rounded-br-none"
+          className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 text-white shadow-sm ${
+            message.sender === "user" ? "bg-bOss-blue" : "bg-bOss-red"
           }`}
         >
-          <div className="m-0 text-sm">
-            {message.sender === "agent" ? (
-              <div className="prose prose-sm max-w-none prose-ol:list-decimal prose-ol:list-inside prose-ol:pl-4 prose-li:before:hidden hover:prose-a:text-blue-700 hover:prose-a:underline prose-p:my-1 prose-ol:my-1 prose-li:my-0.5 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  components={{
-                    a: MarkdownLink, 
-                  }}
-                >
-                  {normalizeMarkdown(displayContent)}
-                </ReactMarkdown>
-              </div>
-            ) : (
-              <div className="whitespace-pre-wrap">
-                {displayContent}
-              </div>
-            )}
-          </div>
+          {avatarLabel}
+        </div>
 
+        <div className="flex flex-col max-w-[85%] md:max-w-[75%] items-start">
           <div
-            className={`transition-opacity duration-300 ${
-              isCitationVisible ? "opacity-100" : "opacity-0"
+            className={`relative p-3 rounded-lg leading-relaxed shadow-sm w-fit ${
+              message.sender === "user"
+                ? "bg-bOss-blue text-white rounded-bl-none"
+                : "bg-gray-100 text-gray-800 rounded-br-none"
             }`}
           >
-            {message.sender === "agent" && hasCitations && (
-               <CitationList 
+            <div className="m-0 text-sm">
+              {message.sender === "agent" ? (
+                <div className="prose prose-sm max-w-none prose-ol:list-decimal prose-ol:list-inside prose-ol:pl-0 prose-li:pl-0 prose-li:before:hidden hover:prose-a:text-blue-700 hover:prose-a:underline prose-p:my-1 prose-ol:my-1 prose-li:my-0.5 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+                  {" "}
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      a: MarkdownLink,
+                    }}
+                  >
+                    {normalizeMarkdown(displayContent)}
+                  </ReactMarkdown>
+                </div>
+              ) : (
+                <div className="whitespace-pre-wrap">{displayContent}</div>
+              )}
+            </div>
+
+            <div
+              className={`transition-opacity duration-300 ${
+                isCitationVisible ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              {message.sender === "agent" && hasCitations && (
+                <CitationList
                   citations={messageCitations}
                   isOpen={isOpen}
                   onToggle={() => onToggleCitation(message.id)}
                   onOpenCitation={onOpenCitation}
-               />
-            )}
-          </div>
+                />
+              )}
+            </div>
 
-          <button
-            onClick={handleCopyClick}
-            className={`absolute top-0 z-10 p-1 text-gray-400 bg-white border border-gray-200 rounded-full shadow-sm
+            <button
+              onClick={handleCopyClick}
+              className={`absolute top-0 z-10 p-1 text-gray-400 bg-white border border-gray-200 rounded-full shadow-sm
                           opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all duration-200
                           hover:text-blue-600 hover:bg-blue-100 hover:border-blue-200 focus:outline-none focus:ring-1 focus:ring-blue-300
                           ${
@@ -238,40 +238,41 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(({
                               ? "-left-4 -mr-7 transform -translate-y-1/4"
                               : "-right-4 -ml-7 transform -translate-y-1/4"
                           }`}
-            title="Salin pesan"
-          >
-            <Copy className="w-3.5 h-3.5" />
-          </button>
-        </div>
+              title="Salin pesan"
+            >
+              <Copy className="w-3.5 h-3.5" />
+            </button>
+          </div>
 
-        <div
-          className={`transition-opacity duration-300 w-full ${
-            isActionVisible ? "opacity-100" : "opacity-0"
-          }`}
-        >
-          {showFeedback && (
-            <div className="mt-2 w-full">
-              <MessageActions message={message} onFeedback={onFeedback} />
-            </div>
-          )}
+          <div
+            className={`transition-opacity duration-300 w-full ${
+              isActionVisible ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            {showFeedback && (
+              <div className="mt-2 w-full">
+                <MessageActions message={message} onFeedback={onFeedback} />
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  );
-}, (prevProps, nextProps) => {
-  return (
-    prevProps.message.id === nextProps.message.id &&
-    prevProps.message.text === nextProps.message.text &&
-    prevProps.message.feedback === nextProps.message.feedback &&
-    prevProps.isLastMessage === nextProps.isLastMessage &&
-    prevProps.isOpen === nextProps.isOpen &&
-    prevProps.citations.length === nextProps.citations.length &&
-    prevProps.previousMessage?.id === nextProps.previousMessage?.id
-  );
-});
+    );
+  },
+  (prevProps, nextProps) => {
+    return (
+      prevProps.message.id === nextProps.message.id &&
+      prevProps.message.text === nextProps.message.text &&
+      prevProps.message.feedback === nextProps.message.feedback &&
+      prevProps.isLastMessage === nextProps.isLastMessage &&
+      prevProps.isOpen === nextProps.isOpen &&
+      prevProps.citations.length === nextProps.citations.length &&
+      prevProps.previousMessage?.id === nextProps.previousMessage?.id
+    );
+  }
+);
 
-MessageBubble.displayName = 'MessageBubble';
-
+MessageBubble.displayName = "MessageBubble";
 
 const PublicServiceChatPage: React.FC = () => {
   const {
@@ -287,17 +288,16 @@ const PublicServiceChatPage: React.FC = () => {
     messagesEndRef,
     textareaRef,
     isRestoringSession,
-    
+
     handleFeedbackUpdate,
     isPdfModalOpen,
     pdfUrl,
     pdfTitle,
     isLoadingPdf,
     handleOpenCitation,
-    handleClosePdfModal
+    handleClosePdfModal,
   } = useServicePublicChat();
 
- 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const textarea = e.target;
     setInput(textarea.value);
@@ -315,7 +315,6 @@ const PublicServiceChatPage: React.FC = () => {
     }
   };
 
-  
   const handleCopy = (question?: ChatMessage, answer?: ChatMessage) => {
     let textToCopy = "";
     if (question && answer) {
@@ -337,7 +336,6 @@ const PublicServiceChatPage: React.FC = () => {
           toast.error("Gagal menyalin pesan.");
         });
     } else {
-      
       toast.error("Fitur salin tidak didukung di browser ini.");
     }
   };
@@ -355,7 +353,6 @@ const PublicServiceChatPage: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col mx-auto w-full bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden relative">
-      
       <div className="p-3 border-b border-gray-200 flex items-center bg-gray-50 z-10">
         <button
           onClick={handleGoBackToIntro}
@@ -367,7 +364,6 @@ const PublicServiceChatPage: React.FC = () => {
         <h2 className="text-md font-semibold text-gray-800">Sesi Chatbot</h2>
       </div>
 
-      
       <div className="flex-1 p-4 overflow-y-auto custom-scrollbar bg-white scroll-smooth">
         {messages.map((msg, index) => {
           const previousMsg =
@@ -385,8 +381,8 @@ const PublicServiceChatPage: React.FC = () => {
                 citations={citations}
                 isOpen={!!openCitations[msg.id]}
                 onToggleCitation={toggleCitations}
-                onOpenCitation={handleOpenCitation} 
-                onFeedback={handleFeedbackUpdate}   
+                onOpenCitation={handleOpenCitation}
+                onFeedback={handleFeedbackUpdate}
                 onCopy={handleCopy}
                 userInitial={userInitial}
               />
@@ -394,7 +390,6 @@ const PublicServiceChatPage: React.FC = () => {
           );
         })}
 
-        
         {isBotLoading && (
           <div className="mb-4 flex gap-3 animate-pulse">
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 bg-bOss-red text-white">
@@ -412,7 +407,6 @@ const PublicServiceChatPage: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      
       <div className="p-4 bg-white border-t border-gray-200 z-10">
         <form onSubmit={handleSendMessage} className="flex gap-3 items-end">
           <textarea
@@ -446,14 +440,13 @@ const PublicServiceChatPage: React.FC = () => {
       </div>
 
       <PdfViewModal
-        isOpen={isPdfModalOpen} 
-        onClose={handleClosePdfModal} 
-        url={pdfUrl || ""} 
-        isLoading={isLoadingPdf} 
-        title={pdfTitle} 
+        isOpen={isPdfModalOpen}
+        onClose={handleClosePdfModal}
+        url={pdfUrl || ""}
+        isLoading={isLoadingPdf}
+        title={pdfTitle}
       />
 
-      
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; }
