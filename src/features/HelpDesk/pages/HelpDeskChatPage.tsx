@@ -41,7 +41,7 @@ const HelpDeskChatPage: React.FC = () => {
   const previousScrollHeight = useRef<number>(0);
   const wsService = useRef(getWebSocketService());
 
-  // --- HOOKS ---
+  
   const {
     data: chatHistory,
     fetchNextPage,
@@ -49,7 +49,6 @@ const HelpDeskChatPage: React.FC = () => {
     isFetchingNextPage,
     isLoading: isLoadingChat,
     isError,
-    refetch: refetchChatHistory,
   } = useGetChatHistory(sessionId || "", 50, !!sessionId);
 
   const { data: helpdeskInfo, refetch: refetchInfo } =
@@ -59,8 +58,6 @@ const HelpDeskChatPage: React.FC = () => {
   const sendMessageMutation = useSendHelpdeskMessage();
   const acceptMutation = useAcceptHelpDesk();
 
-  // --- LOGIKA STATUS (PERBAIKAN CASE SENSITIVE) ---
-  // Normalisasi status ke lowercase agar "Queue" terbaca sebagai "queue"
   const normalizedStatus = helpdeskInfo?.status?.toLowerCase();
 
   const isQueue =
@@ -78,49 +75,49 @@ const HelpDeskChatPage: React.FC = () => {
       `Session ${sessionId.substring(0, 8)}...`
     : "Sesi Chatbot";
 
-  let statusColorClass = "bg-gray-400"; // Default color
+  let statusColorClass = "bg-gray-400"; 
   if (isQueue) {
     statusColorClass = "bg-orange-500";
   } else if (canInteract) {
     statusColorClass = "bg-green-500";
   }
-  // --- WEBSOCKET ---
+  
  useEffect(() => {
     if (!sessionId) return;
 
     const ws = wsService.current;
     const agentChannel = `${sessionId}-agent`;
 
-    // Fungsi wrapper untuk memastikan koneksi siap sebelum subscribe
+    
     const initWebSocket = async () => {
       try {
-        // 1. Cek status, jika belum connect, tunggu sampai connect selesai
+        
         if (!ws.isConnected()) {
-          console.log("⏳ Connecting to WebSocket...");
+          
           await ws.connect();
         }
 
-        // 2. Registrasi Handler untuk menerima pesan
-        // Handler ini yang akan mengupdate data secara otomatis
+        
+        
         const unsubscribe = ws.onMessage(agentChannel, (data: any) => {
-          console.log("📨 Received WebSocket message:", data);
           
-          // Trigger refetch data chat history
+          
+          
           queryClient.invalidateQueries({ queryKey: ["chatHistory", sessionId] });
 
-          // Jika ada update status (misal user menutup chat), refresh info helpdesk
+          
           if (data?.type === "status_update") {
             queryClient.invalidateQueries({ queryKey: ["helpdesks", "session", sessionId] });
           }
         });
 
-        // 3. Simpan fungsi cleanup ke ref agar bisa dibersihkan saat unmount
-        // (Kita simpan manual karena onMessage di service Anda mengembalikan func unsubscribe)
+        
+        
         (ws as any)._tempUnsubscribe = unsubscribe; 
 
-        // 4. Lakukan Subscribe SETELAH dipastikan koneksi aman
+        
         ws.subscribe(agentChannel, "$");
-        console.log(`✅ Subscribed to channel: ${agentChannel}`);
+        
 
       } catch (error) {
         console.error("❌ Failed to initialize WebSocket:", error);
@@ -129,15 +126,15 @@ const HelpDeskChatPage: React.FC = () => {
 
     initWebSocket();
 
-    // Cleanup saat agent meninggalkan halaman
+    
     return () => {
-      console.log(`🔌 Unsubscribing from channel: ${agentChannel}`);
+      
       if ((ws as any)._tempUnsubscribe) {
         (ws as any)._tempUnsubscribe();
       }
     };
   }, [sessionId, queryClient])
-  // --- MEMOIZED MESSAGES ---
+  
   const messages: HelpDeskMessage[] = useMemo(() => {
     if (!chatHistory) return [];
 
@@ -154,7 +151,7 @@ const HelpDeskChatPage: React.FC = () => {
     }));
   }, [chatHistory]);
 
-  // --- SCROLL HANDLING ---
+  
   useEffect(() => {
     if (!observerTarget.current || !hasNextPage || isFetchingNextPage) return;
 
@@ -196,7 +193,7 @@ const HelpDeskChatPage: React.FC = () => {
     }
   }, [messages, shouldScrollToBottom]);
 
-  // --- HANDLERS ---
+  
 
   const handleConnectChat = () => {
     if (!helpdeskInfo?.id) {
@@ -276,13 +273,13 @@ const HelpDeskChatPage: React.FC = () => {
 
   const handleQuickResponse = (template: string) => {
     const quickResponses: Record<string, string> = {
-     Greeting: // Sebelumnya "Salam"
+     Greeting: 
         "Halo! Terima kasih telah menghubungi kami. Ada yang bisa saya bantu?",
-      Checking: // Sebelumnya "Pengecekan"
+      Checking: 
         "Saya sedang memeriksa informasi yang Anda butuhkan. Mohon tunggu sebentar.",
-      Followup: // Sebelumnya "Tindak Lanjut"
+      Followup: 
         "Apakah ada hal lain yang bisa saya bantu?",
-      Done: // Sebelumnya "Tindak Lanjut"
+      Done: 
         "Terima kasih telah menghubungi Kementerian Investasi dan Hilirisasi/BKPM. Semoga Bapak/Ibu selalu diberikan kesehatan dan sukses dalam menjalankan usaha",
     };
     setInput(quickResponses[template] || "");
@@ -293,7 +290,7 @@ const HelpDeskChatPage: React.FC = () => {
     navigate("/helpdesk");
   };
 
-  // --- RENDER ---
+  
 
   if (isLoadingChat) {
     return (
