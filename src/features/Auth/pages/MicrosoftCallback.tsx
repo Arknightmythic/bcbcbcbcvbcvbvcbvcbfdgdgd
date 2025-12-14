@@ -50,8 +50,6 @@ function MicrosoftCallback() {
 
       if (status === 'login-success') {
         isProcessed.current = true; 
-
-        console.log('Login success detected, fetching user data...');
         const result = await refetch();
         
         if (result.isError || !result.data) {

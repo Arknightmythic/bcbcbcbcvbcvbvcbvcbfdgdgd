@@ -25,7 +25,6 @@ export const useSyncUser = () => {
       const newUserStr = JSON.stringify(latestUserData);
 
       if (currentUserStr !== newUserStr) {
-        console.log("🔄 User data/roles updated from server");
         actions.setUser(latestUserData);
       }
     }

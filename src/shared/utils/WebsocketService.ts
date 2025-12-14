@@ -53,7 +53,6 @@ class WebSocketService {
         this.ws = new WebSocket(wsUrl);
 
         this.ws.onopen = () => {
-          console.log('✅ Connected to WebSocket server');
           this.reconnectAttempts = 0;
           this.isConnecting = false;
           
@@ -82,7 +81,6 @@ class WebSocketService {
         };
 
         this.ws.onclose = () => {
-          console.log('WebSocket connection closed');
           this.isConnecting = false;
           this.ws = null;
           this.reconnect();
@@ -103,11 +101,6 @@ class WebSocketService {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
       const delay = Math.min(1000 * this.reconnectAttempts, 5000);
-      
-      console.log(
-        `Reconnecting in ${delay}ms... (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`
-      );
-
       this.reconnectTimer = setTimeout(() => {
         this.reconnectTimer = null;
         this.connect().catch((error) => {
@@ -135,7 +128,6 @@ class WebSocketService {
         }
       }
     } else if (message.status) {
-      console.log(`WebSocket status: ${message.status} - ${message.message}`);
     }
   }
 
@@ -153,7 +145,7 @@ class WebSocketService {
 
     this.ws.send(JSON.stringify(message));
     this.subscribedChannels.add(conversationId);
-    console.log(`📡 Subscribed to conversation: ${conversationId}`);
+    
   }
 
   publish(conversationId: string, data: any): void {
@@ -176,7 +168,7 @@ class WebSocketService {
     };
 
     this.ws.send(JSON.stringify(message));
-    console.log(`📤 Published to conversation: ${conversationId}`);
+    
   }
 
   onMessage(conversationId: string, handler: MessageHandler): () => void {

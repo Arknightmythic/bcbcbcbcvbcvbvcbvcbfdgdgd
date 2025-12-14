@@ -205,7 +205,7 @@ export const useServicePublicChat = () => {
     const initWebSocket = async () => {
       try {
         await wsService.current.connect();
-        console.log('🔌 WebSocket connected');
+        
       } catch (error) {
         console.error('❌ WebSocket connection failed:', error);
       }
@@ -233,7 +233,7 @@ export const useServicePublicChat = () => {
       try {
         // 2. TUNGGU sampai koneksi benar-benar OPEN
         if (!ws.isConnected()) {
-          console.log("[User] ⏳ Waiting for WebSocket connection...");
+          
           await ws.connect();
         }
 
@@ -303,7 +303,7 @@ export const useServicePublicChat = () => {
 
         // Register listener baru
         const unsubscribe = ws.onMessage(sessionId, (data) => {
-          console.log('[User] 📨 WebSocket message received:', data);
+          
           
           if (data.answer && (data.chat_history_id || data.answer_id)) {
             handleWsAnswer(data);
@@ -316,7 +316,7 @@ export const useServicePublicChat = () => {
 
         // 4. Lakukan Subscribe SETELAH handler siap
         ws.subscribe(sessionId, '$');
-        console.log(`[User] ✅ Subscribed to conversation: ${sessionId}`);
+        
 
       } catch (error) {
         console.error("[User] ❌ WebSocket subscription failed:", error);
@@ -329,7 +329,7 @@ export const useServicePublicChat = () => {
     return () => {
       isMounted = false;
       if (unsubscribeRef.current) {
-        console.log(`[User] 🔌 Unsubscribing from: ${sessionId}`);
+        
         unsubscribeRef.current();
         unsubscribeRef.current = null;
       }
