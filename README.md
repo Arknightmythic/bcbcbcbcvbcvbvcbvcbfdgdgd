@@ -1,73 +1,71 @@
-# React + TypeScript + Vite
+## 📋 Prasyarat
+Sebelum memulai, pastikan komputer Anda telah terinstal:
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+- **Node.js** (Disarankan versi LTS, v18 atau v20+)
+- **Yarn** (Package manager)
+- **Git**
 
-Currently, two official plugins are available:
+## 🚀 Cara Memulai (Getting Started)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Ikuti langkah-langkah di bawah ini untuk menjalankan proyek ini di lingkungan lokal (local development).
 
-## React Compiler
+### 1\. Clone Repository
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Salin repository ini ke komputer lokal Anda:
 
-## Expanding the ESLint configuration
+```bash
+git clone [https://github.com/username-anda/dokuprime-fe.git](https://github.com/username-anda/dokuprime-fe.git)
+cd dokuprime-fe
+````
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 2\. Instalasi Dependencies
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Instal semua paket yang diperlukan menggunakan Yarn:
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+yarn install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 3\. Konfigurasi Environment Variable
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Proyek ini memerlukan beberapa variabel lingkungan agar dapat berjalan dengan benar (seperti koneksi ke API Backend).
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+1.  Salin file `.env.example` menjadi `.env`:
+
+    ```bash
+    cp .env.example .env
+    ```
+
+    *(Atau buat file baru bernama `.env` secara manual)*
+
+2.  Buka file `.env` dan isi variabel berikut sesuai konfigurasi lokal/development Anda:
+
+    ```env
+    # URL API Backend (Contoh: http://localhost:8080 atau URL staging)
+    VITE_API_BE_URL=http://localhost:8080
+
+    # Environment (Development / Production)
+    # Digunakan untuk menentukan penyimpanan token (localStorage vs secureStorage)
+    VITE_ENVIRONMENT=Development
+
+    #untuk websocket, perlu menambahkan url dan secret key yang sesuai dengan be websockets
+    VITE_WEBSOCKET_URL=
+    VITE_WEBSOCKET_SECRET_KEY=
+    ```
+
+### 4\. Menjalankan Development Server
+
+Setelah konfigurasi selesai, jalankan server development:
+
+```bash
+yarn dev
 ```
+
+Aplikasi biasanya akan berjalan di `http://localhost:5173` (cek terminal Anda untuk port yang pastinya).
+
+## 🛠️ Script yang Tersedia
+
+Berikut adalah perintah-perintah yang dapat dijalankan dalam proyek ini:
+
+  - `yarn dev`: Menjalankan aplikasi dalam mode development.
+  - `yarn build`: Melakukan build aplikasi untuk production.
