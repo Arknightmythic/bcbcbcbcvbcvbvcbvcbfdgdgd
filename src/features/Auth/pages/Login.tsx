@@ -68,7 +68,7 @@ function Login() {
             Selamat Datang Di Layanan
           </h1>
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white">
-            Dokuprime
+            DokumenAI
           </h2>
         </div>
       </div>
@@ -79,7 +79,7 @@ function Login() {
         <div className="absolute top-6 right-6 md:top-12 md:right-12 lg:top-16 lg:right-16">
           <img
             src="/LOGO KEMENTERIAN INVESTASI DAN HILIRISASI BKPM-Horizontal.png"
-            alt="Logo Dokuprime"
+            alt="Logo Kementerian"
             className="h-7 md:h-12"
           />
         </div>
@@ -223,7 +223,7 @@ function Login() {
         </div>
 
         <p className="mt-8 text-center text-xs text-gray-500">
-          &copy; 2025 Dokuprime. Semua hak cipta dilindungi
+          &copy; 2025 DokumenAI. Semua hak cipta dilindungi
         </p>
       </div>
     </div>

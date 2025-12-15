@@ -394,7 +394,7 @@ export const useServicePublicChat = () => {
         {
           id: initialMessageId,
           sender: "system",
-          text: "Halo! Selamat Datang di layanan pelanggan Dokuprime. Ada yang bisa saya bantu?",
+          text: "Halo! Selamat Datang di layanan pelanggan DokumenAI. Ada yang bisa saya bantu?",
           timestamp: new Date().toISOString(),
         },
       ]);
