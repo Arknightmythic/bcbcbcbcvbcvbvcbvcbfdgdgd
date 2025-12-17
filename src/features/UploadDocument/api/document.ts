@@ -1,5 +1,3 @@
-
-
 import { instanceApiToken } from "../../../shared/utils/Axios";
 import type { UploadedDocument } from "../types/types";
 
@@ -76,4 +74,11 @@ export const batchDeleteDocuments = async (ids: number[]) => {
   // Backend mengharapkan body: { ids: [1, 2, 3] }
   const response = await instanceApiToken.post('/api/documents/batch-delete', { ids });
   return response.data;
+};
+
+export const checkDuplicates = async (filenames: string[]) => {
+  // Mengirim array string: { filenames: ["a.pdf", "b.pdf"] }
+  const response = await instanceApiToken.post('/api/documents/check-duplicates', { filenames });
+  // Response data.data.duplicates adalah string[]
+  return response.data.data.duplicates as string[];
 };

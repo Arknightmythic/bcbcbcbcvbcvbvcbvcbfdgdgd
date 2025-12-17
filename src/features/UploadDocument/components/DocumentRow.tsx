@@ -57,33 +57,30 @@ const DocumentActionMenu: React.FC<DocumentActionMenuProps> = ({
   actions,
 }) => {
   
-  
   useEffect(() => {
     const element = dropdownRef.current;
     if (!element) return;
 
-    const handleStopPropagation = (e: MouseEvent) => {
-      e.stopPropagation();
-    };
+    // FIX: Menghapus handleStopPropagation untuk event 'click' 
+    // agar event bisa bubbling ke React dan onClick button berfungsi.
 
     const handleKeyDown = (e: KeyboardEvent) => {
-       e.stopPropagation();
+       // Stop propagation untuk keyboard event (Escape) biasanya aman, 
+       // tapi untuk amannya kita hanya stop jika benar-benar Escape
        if (e.key === 'Escape') {
+          e.stopPropagation();
           actions.closeDropdown();
        }
     };
 
-    element.addEventListener('click', handleStopPropagation);
     element.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      element.removeEventListener('click', handleStopPropagation);
       element.removeEventListener('keydown', handleKeyDown);
     };
   }, [dropdownRef, actions]);
 
   return (
-    
     <dialog
       ref={dropdownRef}
       open={true}
@@ -96,6 +93,9 @@ const DocumentActionMenu: React.FC<DocumentActionMenuProps> = ({
         bottom: position.bottom ? `${position.bottom}px` : 'auto',
         left: 'auto' 
       }}
+      // Tambahan: Cegah klik di dalam dialog menutup dirinya sendiri 
+      // (jika useClickOutside dipasang di parent yang menangkap bubbling)
+      onClick={(e) => e.stopPropagation()} 
     >
       <div className="flex flex-col py-1">
         <button
@@ -157,11 +157,11 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
   const [position, setPosition] = useState<{ top?: number, bottom?: number, right?: number }>({});
   const moreButtonRef = useRef<HTMLButtonElement>(null);
   
-  
+  // useClickOutside biasanya sudah menghandle pengecekan "contains"
+  // jadi tidak perlu khawatir dia menutup saat klik di dalam menu.
   const dropdownRef = useClickOutside<HTMLDialogElement>(() => {
     setIsDropdownOpen(false);
   });
-  
   
   const isPending = doc.status === "Pending";
   const isRejected = doc.status === "Rejected";
@@ -171,8 +171,6 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
   const isActionDisabled = isPending || isRejected || isIngestFailed || isProcessing;
   const isDeleteDisabled = isProcessing;
 
-  
-  
   const getViewFileTooltipMobile = () => {
     if (isProcessing) return "Dokumen sedang diproses";
     if (isIngestFailed) return "Dokumen gagal diproses";
@@ -199,8 +197,6 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
   const getDeleteTooltip = () => {
     return isDeleteDisabled ? "Sedang diproses, tidak dapat dihapus" : "Hapus Dokumen";
   };
-
-  
 
   const getApprovalStatusComponent = () => {
     if (doc.status === "Approved") {
@@ -271,8 +267,14 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
         const dropdownHeight = 176;
         const spaceBelow = window.innerHeight - rect.bottom;
         const spaceAbove = rect.top;
-        let newPos: { top?: number, bottom?: number, right?: number } = { right: window.innerWidth - rect.right + 8 };
-        if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) { newPos.bottom = window.innerHeight - rect.top; } else { newPos.top = rect.bottom; }
+        // Penyesuaian posisi agar tidak offscreen di mobile
+        let newPos: { top?: number, bottom?: number, right?: number } = { right: window.innerWidth - rect.right };
+        
+        if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) { 
+           newPos.bottom = window.innerHeight - rect.top; 
+        } else { 
+           newPos.top = rect.bottom + 5; 
+        }
         setPosition(newPos);
         setIsDropdownOpen(true);
     }
@@ -308,7 +310,6 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
       <td className="px-6 py-4">{getApprovalStatusComponent()}</td>
       
       <td className="px-6 py-4 text-center sticky right-0 bg-white group-hover:bg-gray-50 z-10 border-l border-gray-200">
-        
         
         <div className="hidden md:flex justify-center gap-3">
           <button
@@ -347,7 +348,6 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
           </button>
         </div>
 
-        
         <div className="md:hidden">
           <button
             ref={moreButtonRef}

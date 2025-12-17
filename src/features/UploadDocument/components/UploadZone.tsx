@@ -1,28 +1,32 @@
-import React, { useState, useCallback, useRef } from 'react';
-import { UploadCloud, X, Loader2 } from 'lucide-react';
-import type { DocumentCategory } from '../types/types';
-import { getFileIcon } from '../utils/GetFileIcon';
-import CustomSelect from '../../../shared/components/CustomSelect';
+import React, { useState, useCallback, useRef } from "react";
+import { UploadCloud, X, Loader2, AlertCircle } from "lucide-react";
+import type { DocumentCategory } from "../types/types";
+import { getFileIcon } from "../utils/GetFileIcon";
+import CustomSelect from "../../../shared/components/CustomSelect";
 
 interface UploadZoneProps {
   stagedFiles: File[];
+  duplicateFilenames: Set<string>; // <--- PROP BARU
   isUploading: boolean;
-  selectedCategory: DocumentCategory | '';
+  isScanning: boolean;
+  selectedCategory: DocumentCategory | "";
   onFilesSelected: (files: FileList) => void;
-  onRemoveFile: (fileIndex: number) => void; 
+  onRemoveFile: (fileIndex: number) => void;
   onUpload: () => void;
   onCategoryChange: (category: DocumentCategory) => void;
 }
 
 const categoryOptions = [
-  { value: 'panduan', label: 'Panduan' },
-  { value: 'qna', label: 'Tanya Jawab' },
-  { value: 'peraturan', label: 'Peraturan' },
+  { value: "panduan", label: "Panduan" },
+  { value: "qna", label: "Tanya Jawab" },
+  { value: "peraturan", label: "Peraturan" },
 ];
 
 const UploadZone: React.FC<UploadZoneProps> = ({
   stagedFiles,
+  duplicateFilenames, // <--- Destructure Prop
   isUploading,
+  isScanning,
   selectedCategory,
   onFilesSelected,
   onRemoveFile,
@@ -31,94 +35,146 @@ const UploadZone: React.FC<UploadZoneProps> = ({
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  const handleDragOver = useCallback((e: React.DragEvent) => { e.preventDefault(); setIsDragging(true); }, []);
-  const handleDragLeave = useCallback(() => setIsDragging(false), []);
-  const handleDrop = useCallback((e: React.DragEvent) => {
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-        onFilesSelected(e.dataTransfer.files);
-    }
-  }, [onFilesSelected]);
+  }, []);
 
-  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragging(false);
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        onFilesSelected(e.dataTransfer.files);
+      }
+    },
+    [onFilesSelected]
+  );
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       onFilesSelected(e.target.files);
-      e.target.value = ''; 
     }
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleChooseFileClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
+  // Hitung jumlah file yang valid (Bukan duplikat)
+  const validFilesCount = stagedFiles.filter(f => !duplicateFilenames.has(f.name)).length;
 
-  const canUpload = stagedFiles.length > 0 && !isUploading && selectedCategory !== '';
+  // Tombol nyala jika ada minimal 1 file valid
+  const canUpload =
+    validFilesCount > 0 &&
+    !isUploading &&
+    !isScanning &&
+    selectedCategory !== "";
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
-      
-      {/* PERBAIKAN SONARQUBE:
-         1. Menggunakan <button type="button"> (Semantic HTML).
-         2. Menghapus role="button", tabIndex, dan onKeyDown (sudah native).
-         3. Menambahkan 'w-full' agar lebarnya seperti div block.
-      */}
       <button
         type="button"
+        disabled={isScanning || isUploading}
+        onClick={() => fileInputRef.current?.click()}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        onClick={handleChooseFileClick}
-        aria-label="Area unggah file, tarik file ke sini atau klik untuk memilih"
-        className={`w-full p-4 md:p-8 border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-center transition-colors cursor-pointer outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${ isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300' }`}
+        className={`w-full p-4 md:p-8 border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-center transition-colors cursor-pointer outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+          isScanning || isUploading
+            ? "bg-gray-100 border-gray-200 cursor-not-allowed opacity-60"
+            : isDragging
+            ? "border-blue-500 bg-blue-50"
+            : "border-gray-300"
+        }`}
       >
-        <input 
-            type="file" 
-            id="file-input" 
-            ref={fileInputRef}
-            multiple 
-            className="hidden" 
-            onChange={handleFileInputChange} 
-            accept=".pdf,.txt" 
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          className="hidden"
+          onChange={handleFileChange}
+          accept=".pdf,.txt"
+          disabled={isScanning || isUploading}
         />
-        
-        <UploadCloud className="w-12 h-12 text-gray-400 mb-4" />
-        
-        <p className="text-sm md:text-base text-gray-600">
-            Tarik dokumen ke sini, atau{' '}
-            <span className="text-blue-600 font-semibold hover:underline">
+
+        {isScanning ? (
+          <div className="flex flex-col items-center">
+            <Loader2 className="w-12 h-12 text-blue-500 animate-spin mb-4" />
+            <p className="text-sm text-gray-600 font-semibold">
+              Memindai duplikasi dokumen...
+            </p>
+          </div>
+        ) : (
+          <>
+            <UploadCloud className="w-12 h-12 text-gray-400 mb-4" />
+            <p className="text-sm md:text-base text-gray-600">
+              Tarik dokumen ke sini, atau{" "}
+              <span className="text-blue-600 font-semibold hover:underline">
                 pilih file
-            </span>
-        </p>
-        <p className="text-xs text-gray-400 mt-2">mendukung format: PDF & txt.</p>
+              </span>
+            </p>
+            <p className="text-xs text-gray-400 mt-2">
+              mendukung format: PDF & txt.
+            </p>
+          </>
+        )}
       </button>
 
-     {stagedFiles.length > 0 && (
-        <div className="mt-4 space-y-2">
-          <h3 className="font-semibold text-gray-700">dokumen siap diunggah:</h3>
-          <div className="max-h-60 overflow-y-auto pr-2">
-             {stagedFiles.map((file, index) => (
-            <div 
-                key={`${file.name}-${file.size}-${file.lastModified}`} 
-                className="flex items-center justify-between bg-gray-50 p-2 rounded-md"
-            >
-              <div className="flex items-center space-x-2">
-                {getFileIcon(file.name)} 
-                <span className="text-sm text-gray-800">{file.name}</span>
-              </div>
-              
-              <button 
-                onClick={() => onRemoveFile(index)} 
-                className="text-gray-500 hover:text-red-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-          ))}
+      {stagedFiles.length > 0 && (
+        <div className="mt-6">
+          <h3 className="text-sm font-medium text-gray-700 mb-3">
+            Dokumen Terpilih ({stagedFiles.length})
+          </h3>
+          <div className="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+            {stagedFiles.map((file, index) => {
+              const isDuplicate = duplicateFilenames.has(file.name);
+
+              return (
+                <div
+                  key={`${file.name}-${index}`}
+                  className={`flex items-center justify-between p-3 rounded-md border ${
+                    isDuplicate
+                      ? "bg-red-50 border-red-200" // Style Merah untuk Duplikat
+                      : "bg-gray-50 border-gray-100"
+                  }`}
+                >
+                  <div className="flex items-center space-x-3 overflow-hidden">
+                    <div className="flex-shrink-0">
+                      {getFileIcon(file.name)}
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className={`text-sm font-medium truncate ${isDuplicate ? "text-red-700" : "text-gray-700"}`}>
+                        {file.name}
+                      </span>
+                      <span className="text-xs text-gray-500 flex items-center">
+                        {(file.size / 1024 / 1024).toFixed(2)} MB
+                        
+                        {/* Pesan Error Duplikat */}
+                        {isDuplicate && (
+                          <span className="ml-2 flex items-center text-red-600 font-bold">
+                            <AlertCircle className="w-3 h-3 mr-1" />
+                            Duplikat (Dilewati)
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => onRemoveFile(index)}
+                    disabled={isUploading || isScanning}
+                    className="text-gray-400 hover:text-red-600 p-1 rounded-full hover:bg-gray-200 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              );
+            })}
           </div>
-         
         </div>
       )}
 
@@ -129,19 +185,29 @@ const UploadZone: React.FC<UploadZoneProps> = ({
             onChange={(value) => onCategoryChange(value as DocumentCategory)}
             options={categoryOptions}
             placeholder="pilih kategori..."
-            selectedType='default'
+            selectedType="default"
+            disabled={isUploading || isScanning}
           />
         </div>
-        
+
         <button
           onClick={onUpload}
           disabled={!canUpload}
-          className="w-full md:w-auto bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center disabled:bg-gray-400 disabled:cursor-not-allowed text-xs"
+          className="w-full md:w-auto bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center disabled:bg-gray-400 disabled:cursor-not-allowed text-xs transition-all"
         >
           {isUploading ? (
-            <><Loader2 className="animate-spin h-5 w-5 mr-2" /> Mengunggah...</>
+            <>
+              <Loader2 className="animate-spin h-5 w-5 mr-2" /> Mengunggah...
+            </>
+          ) : isScanning ? (
+            <>
+              <Loader2 className="animate-spin h-5 w-5 mr-2" /> Memindai...
+            </>
           ) : (
-            <><UploadCloud className="h-5 w-5 mr-2" /> Unggah ({stagedFiles.length})</>
+            // Tampilkan jumlah file yang valid saja
+            <>
+              <UploadCloud className="h-5 w-5 mr-2" /> Unggah ({validFilesCount})
+            </>
           )}
         </button>
       </div>
