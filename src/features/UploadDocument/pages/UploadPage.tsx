@@ -42,49 +42,49 @@ const filterConfig: FilterConfig<Filters>[] = [
     key: "type",
     type: "select",
     options: [
-      { label: "Semua Tipe", value: "" },
-      { label: "PDF", value: "pdf" },
-      { label: "TXT", value: "txt" },
+       { value: "", label: "Semua tipe" },
+      { value: "pdf", label: "PDF" },
+      { value: "txt", label: "TXT" },
     ],
-    placeholder: "Tipe File",
   },
   {
     key: "category",
     type: "select",
-    options: [
-      { label: "Semua Kategori", value: "" },
-      { label: "Panduan", value: "panduan" },
-      { label: "Tanya Jawab", value: "qna" },
-      { label: "Peraturan", value: "peraturan" },
+     options: [
+      { value: "", label: "Semua Kategori" },
+      { value: "panduan", label: "Panduan" },
+      { value: "qna", label: "Tanya Jawab" },
+      { value: "peraturan", label: "Peraturan" },
     ],
-    placeholder: "Kategori",
   },
   {
     key: "status",
     type: "select",
     options: [
-      { label: "Semua Status", value: "" },
-      { label: "Approved", value: "Approved" },
-      { label: "Pending", value: "Pending" },
-      { label: "Rejected", value: "Rejected" },
+      { value: "", label: "Semua status" },
+      { value: "Approved", label: "Disetujui" },
+      { value: "Pending", label: "Menunggu" },
+      { value: "Rejected", label: "Ditolak" },
     ],
-    placeholder: "Status Izin",
   },
   {
     key: "ingest_status",
     type: "select",
-    options: [
-      { label: "Semua Proses", value: "" },
-      { label: "Completed", value: "completed" },
-      { label: "Processing", value: "processing" },
-      { label: "Failed", value: "failed" },
+     options: [
+      { value: "", label: "Semua Proses" },
+      { value: "null", label: "Menunggu" }, 
+      { value: "processing", label: "Sedang Diproses" },
+      { value: "finished", label: "Selesai" },
+      { value: "failed", label: "Gagal" },
+      { value: "unprocessed", label: "Tidak Diproses" },
     ],
-    placeholder: "Status Proses",
   },
-  {
-    key: "dateRange",
-    type: "date-range", 
-    placeholder: "Tanggal Upload",
+   {
+    key: "date_range",
+    type: "date-range",
+    startDateKey: "start_date",
+    endDateKey: "end_date",
+    placeholder: "Filter Tanggal",
   },
 ];
 
@@ -99,7 +99,9 @@ const UploadPage: React.FC = () => {
   const [selectedDocs, setSelectedDocs] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+
   const [sortColumn, setSortColumn] = useState<string>("created_at");
   const [sortDirection, setSortDirection] = useState<SortOrder>("desc");
   const [activeFilters, setActiveFilters] = useState<Filters>({
@@ -120,44 +122,63 @@ const UploadPage: React.FC = () => {
 
   // View & Versioning States
   const [currentDocument, setCurrentDocument] = useState<UploadedDocument | null>(null);
+  const [currentDocumentIdForDetails, setCurrentDocumentIdForDetails] =
+    useState<number | null>(null);
   const [isVersioningModalOpen, setIsVersioningModalOpen] = useState(false);
   const [isReplaceModalOpen, setIsReplaceModalOpen] = useState(false);
   
   // PDF View States
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [viewableUrl, setViewableUrl] = useState<string>("");
+  const [viewableUrl, setViewableUrl] = useState<string | null>(null);
   const [isGeneratingUrl, setIsGeneratingUrl] = useState(false);
+  const [viewableTitle, setViewableTitle] = useState<string>("");
 
   // --- React Query Hooks ---
   const queryParams = useMemo(() => {
     const params = new URLSearchParams();
-    params.append("page", currentPage.toString());
-    params.append("limit", itemsPerPage.toString());
-    params.append("sort_by", sortColumn);
-    params.append("sort_order", sortDirection);
+    params.set("limit", String(itemsPerPage));
+    params.set("offset", String((currentPage - 1) * itemsPerPage));
     
-    if (searchQuery) params.append("search", searchQuery);
-    if (activeFilters.type) params.append("type", activeFilters.type);
+    if (searchTerm) params.set("search", searchTerm);
+    if (activeFilters.type) params.append("data_type", activeFilters.type);
     if (activeFilters.category) params.append("category", activeFilters.category);
     if (activeFilters.status) params.append("status", activeFilters.status);
     if (activeFilters.ingest_status) params.append("ingest_status", activeFilters.ingest_status);
     if (activeFilters.start_date) params.append("start_date", activeFilters.start_date);
     if (activeFilters.end_date) params.append("end_date", activeFilters.end_date);
+    
+    if (sortColumn) {
+      params.set("sort_by", sortColumn);
+      params.set("sort_direction", sortDirection);
+    }
 
     return params;
-  }, [currentPage, itemsPerPage, searchQuery, sortColumn, sortDirection, activeFilters]);
+  }, [currentPage, itemsPerPage, searchTerm, sortColumn, sortDirection, activeFilters]);
 
-  const { data, isLoading, isError } = useGetDocuments(queryParams);
+  const { data: documentsData,
+    isLoading: isLoadingDocs,
+    isError,} = useGetDocuments(queryParams);
   const { mutate: upload, isPending: isUploading } = useUploadDocument();
-  const { mutate: deleteDoc, isPending: isDeleting } = useDeleteDocument();
+  const { mutate: deleteDoc, isPending: isDeletingSingle } = useDeleteDocument();
   const { mutate: batchDelete, isPending: isBatchDeleting } = useBatchDeleteDocuments();
   const { mutate: updateDoc, isPending: isReplacing } = useUpdateDocument();
   
   const { data: versionHistoryData } = useGetDocumentDetails(
-    isVersioningModalOpen && currentDocument ? currentDocument.id : null
+    currentDocumentIdForDetails
   );
 
+  const isDeleting = isDeletingSingle||isBatchDeleting;
+  const documents = useMemo(
+    () => documentsData?.documents || [],
+    [documentsData]
+  );
+  const totalItems = useMemo(() => documentsData?.total || 0, [documentsData]);
   // --- Handlers ---
+
+  const handleSearchSubmit = () => {
+    setSearchTerm(searchInput);
+    setCurrentPage(1);
+  };
 
   const handleFileSelect = useCallback(async (selectedFiles: FileList) => {
     const allowedTypes = new Set(["application/pdf", "text/plain"]);
@@ -233,6 +254,22 @@ const UploadPage: React.FC = () => {
     });
   };
 
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+    setCurrentPage(1);
+  };
+
+  const handleOpenModal = (action: ModalAction, data: any = null) =>
+    setModalState({ isOpen: true, action, data });
+  const handleCloseModal = () =>
+    setModalState({ isOpen: false, action: null, data: null });
+
+  
   const handleUpload = () => {
     const filesToProcess = filesToUpload.filter(f => !duplicateFilenames.has(f.name));
 
@@ -241,22 +278,8 @@ const UploadPage: React.FC = () => {
       return;
     }
 
-    setModalState({
-      isOpen: true,
-      action: "upload",
-      data: { count: filesToProcess.length },
-    });
+    handleOpenModal("upload", { count: filesToProcess.length })
   };
-
-  const handleSort = (column: string) => {
-    if (sortColumn === column) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortColumn(column);
-      setSortDirection("asc");
-    }
-  };
-
   const handleFilterChange = (filterName: string | keyof Filters, value: any) => {
     setActiveFilters((prev) => {
       if (filterName === "dateRange" && value && typeof value === 'object') {
@@ -275,18 +298,13 @@ const UploadPage: React.FC = () => {
     setCurrentPage(1);
   };
 
-  const handlePageChange = (page: number) => setCurrentPage(page);
   const handleItemsPerPageChange = (items: number) => {
     setItemsPerPage(items);
     setCurrentPage(1);
   };
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.checked && data?.documents) {
-      setSelectedDocs(data.documents.map((doc) => doc.id));
-    } else {
-      setSelectedDocs([]);
-    }
+    setSelectedDocs(e.target.checked ? documents.map((d) => d.id) : []);
   };
 
   const handleSelectOne = (e: React.ChangeEvent<HTMLInputElement>, docId: number) => {
@@ -305,16 +323,20 @@ const UploadPage: React.FC = () => {
     setModalState({ isOpen: true, action: "deleteSingle", data: doc });
   };
 
-  const handleOpenViewFile = async (doc: UploadedDocument | any) => {
-    setIsGeneratingUrl(true);
+  const handleOpenViewFile = async (doc: {
+    document_name: string;
+    filename: string;
+  }) => {
     setIsViewModalOpen(true);
-    setCurrentDocument(doc as UploadedDocument); 
-    
+    setIsGeneratingUrl(true);
+    setViewableTitle(doc.document_name);
+
     try {
-      const result = await generateViewUrl(doc.filename);
-      setViewableUrl(result.data.url);
+      const response = await generateViewUrl(doc.filename);
+      setViewableUrl(response.data.url);
     } catch (error) {
-      toast.error("Gagal membuka dokumen");
+      console.error("Failed to get view URL:", error);
+      toast.error("Gagal memuat pratinjau dokumen.");
       setIsViewModalOpen(false);
     } finally {
       setIsGeneratingUrl(false);
@@ -323,8 +345,8 @@ const UploadPage: React.FC = () => {
 
   const handleCloseViewModal = () => {
     setIsViewModalOpen(false);
-    setViewableUrl("");
-    setCurrentDocument(null);
+    setViewableUrl(null);
+    setViewableTitle("");
   };
 
   const handleNewVersion = (doc: UploadedDocument) => {
@@ -332,8 +354,9 @@ const UploadPage: React.FC = () => {
     setIsReplaceModalOpen(true);
   };
 
-  const handleViewVersions = (doc: UploadedDocument) => {
+  const handleOpenVersioningModal = (doc: UploadedDocument) => {
     setCurrentDocument(doc);
+    setCurrentDocumentIdForDetails(doc.id);
     setIsVersioningModalOpen(true);
   };
 
@@ -341,10 +364,7 @@ const UploadPage: React.FC = () => {
     setIsReplaceModalOpen(false);
     setIsVersioningModalOpen(false);
     setCurrentDocument(null);
-  };
-
-  const handleCloseModal = () => {
-    setModalState({ isOpen: false, action: null });
+    setCurrentDocumentIdForDetails(null);
   };
 
   const handleConfirmAction = () => {
@@ -422,20 +442,22 @@ const UploadPage: React.FC = () => {
           confirmText: "Ya, Unggah",
           confirmColor: "bg-blue-600 hover:bg-blue-700",
         };
+      // --- PERUBAHAN TEKS DELETE (Request Delete) ---
       case "deleteSingle":
         return {
-          title: "Hapus Dokumen",
-          body: `Apakah Anda yakin ingin menghapus dokumen "${modalState.data?.document_name}"?`,
-          confirmText: "Hapus",
+          title: "Ajukan Hapus Dokumen", // Updated Title
+          body: `Apakah Anda yakin ingin mengajukan penghapusan untuk dokumen "${modalState.data?.document_name}"? \n\nTindakan ini memerlukan persetujuan Admin sebelum file benar-benar dihapus.`, // Updated Body
+          confirmText: "Ajukan Hapus",
           confirmColor: "bg-red-600 hover:bg-red-700",
         };
       case "deleteMultiple":
         return {
-          title: "Hapus Banyak Dokumen",
-          body: `Apakah Anda yakin ingin menghapus ${selectedDocs.length} dokumen terpilih?`,
-          confirmText: "Hapus Semua",
+          title: "Ajukan Hapus Massal", // Updated Title
+          body: `Apakah Anda yakin ingin mengajukan penghapusan untuk ${selectedDocs.length} dokumen terpilih? \n\nTindakan ini memerlukan persetujuan Admin.`, // Updated Body
+          confirmText: "Ajukan Hapus",
           confirmColor: "bg-red-600 hover:bg-red-700",
         };
+      // ----------------------------------------------
       default:
         return { title: "", body: "", confirmText: "", confirmColor: "bg-blue-600 hover:bg-blue-700" };
     }
@@ -458,13 +480,12 @@ const UploadPage: React.FC = () => {
       </div>
 
       <div className="mt-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-          <h2 className="text-xl font-bold text-gray-800">Daftar Dokumen</h2>
+        <div className="px-4 bg-gray-50 rounded-t-lg shadow-md">
           <TableControls
-            searchTerm={searchQuery} // FIXED: Menggunakan 'searchTerm'
-            searchPlaceholder="Cari nama dokumen..." // FIXED: Prop wajib
-            onSearchChange={setSearchQuery}
-            onSearchSubmit={() => setCurrentPage(1)} // FIXED: Prop wajib
+            searchTerm={searchInput} 
+            searchPlaceholder="Cari nama dokumen..." 
+            onSearchChange={setSearchInput}
+            onSearchSubmit={handleSearchSubmit} 
             filters={activeFilters}
             onFilterChange={handleFilterChange}
             filterConfig={filterConfig}
@@ -472,22 +493,22 @@ const UploadPage: React.FC = () => {
         </div>
 
         <DocumentsTable
-          documents={data?.documents || []}
+          documents={documents}
           selectedDocs={selectedDocs}
-          isLoading={isLoading}
+          isLoading={isLoadingDocs}
           isError={isError}
-          isDeleting={isDeleting || isBatchDeleting}
+          isDeleting={isDeleting}
           onSelectAll={handleSelectAll}
           onSelectOne={handleSelectOne}
           onDeleteMultiple={handleDeleteMultiple}
           onDeleteSingle={handleDeleteSingle}
           onNewVersion={handleNewVersion}
-          onViewVersions={handleViewVersions}
+          onViewVersions={handleOpenVersioningModal}
           onViewFile={handleOpenViewFile}
           currentPage={currentPage}
           itemsPerPage={itemsPerPage}
-          totalItems={data?.total || 0}
-          onPageChange={handlePageChange}
+          totalItems={totalItems}
+          onPageChange={setCurrentPage}
           onItemsPerPageChange={handleItemsPerPageChange}
           sortColumn={sortColumn}
           sortDirection={sortDirection}
@@ -523,8 +544,8 @@ const UploadPage: React.FC = () => {
         onConfirm={handleConfirmAction}
         title={modalContent.title}
         confirmText={modalContent.confirmText}
-        confirmColor={modalContent.confirmColor as "blue" | "red"}
-        isConfirming={isUploading || isDeleting || isBatchDeleting}
+        confirmColor={modalContent.confirmColor}
+        isConfirming={isUploading || isDeleting}
       >
         <p>{modalContent.body}</p>
       </ConfirmationModal>
@@ -534,7 +555,7 @@ const UploadPage: React.FC = () => {
         onClose={handleCloseViewModal}
         url={viewableUrl}
         isLoading={isGeneratingUrl}
-        title={currentDocument?.document_name || "Dokumen"}
+        title={viewableTitle}
       />
     </>
   );

@@ -298,7 +298,7 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
         {doc.document_name}
       </td>
       <td className="px-6 py-4">{doc.staff}</td>
-      <td className="px-6 py-4">
+      <td className="px-6 py-4 text-center">
          <span className="font-mono text-[10px] bg-gray-200 text-gray-700 px-2 py-1 rounded">
           {doc.data_type}
         </span>
@@ -306,8 +306,8 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
       <td className="px-6 py-4 capitalize">{`${doc.category==='qna'?"Tanya Jawab":doc.category}`}</td>
       <td className="px-6 py-4 ">{doc.team}</td>
       
-      <td className="px-6 py-4">{getIngestStatusComponent()}</td>
-      <td className="px-6 py-4">{getApprovalStatusComponent()}</td>
+      <td className="px-6 py-4 text-center">{getIngestStatusComponent()}</td>
+      <td className="px-6 py-4 text-center">{getApprovalStatusComponent()}</td>
       
       <td className="px-6 py-4 text-center sticky right-0 bg-white group-hover:bg-gray-50 z-10 border-l border-gray-200">
         

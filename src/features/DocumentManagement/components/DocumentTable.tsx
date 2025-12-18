@@ -3,6 +3,7 @@ import DocumentTableRow from "./DocumentTableRow";
 import { ArrowUp, ArrowDown } from "lucide-react";
 import type { ActionType, Document, SortOrder } from "../types/types"; 
 import TablePagination from "../../../shared/components/TablePagination";
+import { SortableHeader } from "../../UploadDocument/components/SortableHeader";
 
 interface DocumentTableProps {
   documents: Document[];
@@ -29,31 +30,31 @@ interface SortableHeaderProps {
 }
 
 // Fixed: Component definition is explicitly kept outside the parent component
-const SortableHeader: React.FC<SortableHeaderProps> = ({ 
-  label, 
-  columnKey, 
-  className = "", 
-  sortColumn, 
-  sortDirection, 
-  onSort 
-}) => {
-  const isActive = sortColumn === columnKey;
-  return (
-    <th 
-      className={`px-4 py-3 sticky top-0 bg-gray-100 cursor-pointer hover:bg-gray-200 transition-colors ${className}`}
-      onClick={() => onSort(columnKey)}
-    >
-      <div className="flex items-center justify-center gap-1">
-        {label}
-        {isActive && (
-          sortDirection === 'asc' 
-            ? <ArrowUp className="w-3 h-3 text-blue-600" /> 
-            : <ArrowDown className="w-3 h-3 text-blue-600" />
-        )}
-      </div>
-    </th>
-  );
-};
+// const SortableHeader: React.FC<SortableHeaderProps> = ({ 
+//   label, 
+//   columnKey, 
+//   className = "", 
+//   sortColumn, 
+//   sortDirection, 
+//   onSort 
+// }) => {
+//   const isActive = sortColumn === columnKey;
+//   return (
+//     <th 
+//       className={`px-4 py-3 sticky top-0 bg-gray-100 cursor-pointer hover:bg-gray-200 transition-colors ${className}`}
+//       onClick={() => onSort(columnKey)}
+//     >
+//       <div className="flex items-center justify-center gap-1">
+//         {label}
+//         {isActive && (
+//           sortDirection === 'asc' 
+//             ? <ArrowUp className="w-3 h-3 text-blue-600" /> 
+//             : <ArrowDown className="w-3 h-3 text-blue-600" />
+//         )}
+//       </div>
+//     </th>
+//   );
+// };
 
 const DocumentTable: React.FC<DocumentTableProps> = ({
   documents,
@@ -109,7 +110,7 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
                 sortDirection={sortDirection}
                 onSort={onSort}
               />
-              <SortableHeader 
+              <SortableHeader
                 label="Nama Dokumen" 
                 columnKey="document_name" 
                 className="text-left !justify-start" 

@@ -160,11 +160,11 @@ const DocumentsTable: React.FC<DocumentsTableProps> = (props) => {
                 sortDirection={sortDirection}
                 onSort={onSort}
               />
-              <th className="px-6 py-4">Tipe</th>
+              <th className="px-6 py-4 text-center">Tipe</th>
               <th className="px-6 py-4">Kategori</th>
               <th className="px-6 py-4">Tim</th>
-              <th className="px-6 py-4">Status Proses</th>
-              <th className="px-6 py-4">Status Izin</th>
+              <th className="px-6 py-4 text-center">Status Proses</th>
+              <th className="px-6 py-4 text-center">Status Izin</th>
               <th className="px-6 py-4 text-center sticky right-0 bg-gray-100 z-10">Aksi</th>
             </tr>
           </thead>
