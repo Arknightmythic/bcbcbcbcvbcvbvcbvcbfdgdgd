@@ -163,13 +163,17 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
     setIsDropdownOpen(false);
   });
   
-  const isPending = doc.status === "Pending";
+  const isApproved = doc.status === "Approved";
+  const isDeleteRequested = doc.request_type === 'DELETE' && doc.status === 'Pending';
+  
+  const isPending = doc.status === "Pending" && doc.request_type === "NEW"; // Pending Upload/Update
   const isRejected = doc.status === "Rejected";
   const isIngestFailed = doc.ingest_status === "failed";
   const isProcessing = doc.ingest_status === "processing"; 
 
-  const isActionDisabled = isPending || isRejected || isIngestFailed || isProcessing;
-  const isDeleteDisabled = isProcessing;
+  // 2. Update Kondisi Disabled (Tambahkan isDeleteRequested)
+  const isActionDisabled = isPending || isRejected || isIngestFailed || isProcessing || isDeleteRequested;
+  const isDeleteDisabled = isProcessing || isDeleteRequested;
 
   const getViewFileTooltipMobile = () => {
     if (isProcessing) return "Dokumen sedang diproses";
@@ -281,7 +285,7 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
   };
 
   return (
-    <tr className="group bg-white hover:bg-gray-50 text-[10px]">
+    <tr className={`group hover:bg-gray-50 text-[10px] ${isDeleteRequested ? "bg-red-50/50" : "bg-white"}`}>
       <td className="px-4 py-4">
         <input
           type="checkbox"
@@ -295,7 +299,22 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
         {new Date(doc.created_at).toLocaleDateString("id-ID")}
       </td>
       <td className="px-6 py-4 font-medium text-gray-900 break-words">
-        {doc.document_name}
+        <div>
+          {doc.document_name}
+          {/* Penanda Visual untuk Request Delete */}
+          {isDeleteRequested && (
+            <div className="flex items-center gap-1 text-[9px] text-red-600 mt-1 font-bold italic">
+              <Clock className="w-3 h-3" />
+              MENUNGGU PERSETUJUAN HAPUS (ADMIN)
+            </div>
+          )}
+          {/* Penanda untuk Rejected agar user tahu bisa hapus langsung */}
+          {isRejected && !isApproved && (
+            <div className="text-[9px] text-gray-500 mt-1 italic">
+              *Dokumen ditolak, Anda dapat menghapusnya langsung.
+            </div>
+          )}
+        </div>
       </td>
       <td className="px-6 py-4">{doc.staff}</td>
       <td className="px-6 py-4 text-center">

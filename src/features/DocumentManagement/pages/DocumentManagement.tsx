@@ -9,9 +9,8 @@ import ConfirmationModal from "../../../shared/components/ConfirmationModal";
 import TableControls, { type FilterConfig } from "../../../shared/components/tablecontrols/TableControls";
 import PdfViewModal from "../../../shared/components/PDFViewModal";
 
-
 export interface Filters extends Record<string, any> {
-  type: string;
+  request_type: string; // Diubah dari 'type'
   category: DocumentCategory | "";
   status: string;
   start_date: string; 
@@ -20,12 +19,13 @@ export interface Filters extends Record<string, any> {
 
 const filterConfig: FilterConfig<Filters>[] = [
     {
-        key: "type",
+        key: "request_type", // Ganti dari 'type' ke 'request_type'
         type: "select",
         options: [
-            { value: "", label: "Semua Tipe" },
-            { value: "pdf", label: "PDF" },
-            { value: "txt", label: "TXT" },
+            { value: "", label: "Semua Tipe Request" },
+            { value: "NEW", label: "Baru" },
+            { value: "UPDATE", label: "Versi" },
+            { value: "DELETE", label: "Hapus" },
         ],
     },
     {
@@ -48,13 +48,12 @@ const filterConfig: FilterConfig<Filters>[] = [
             { value: "Rejected", label: "Ditolak" },
         ],
     },
-    
     {
         key: "date_range",
         type: "date-range",
         startDateKey: "start_date",
         endDateKey: "end_date",
-        placeholder: "Filter Tanggal",
+        placeholder: "Filter Tanggal Permintaan", // Label diperbarui
     },
 ];
 
@@ -64,13 +63,13 @@ const DocumentManagementPage = () => {
   const [searchInput, setSearchInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   
-  const [filters, setFilters] = useState<Filters>({ type: "", category: "", status: "", start_date: "", end_date: "" });
+  const [filters, setFilters] = useState<Filters>({ request_type: "", category: "", status: "", start_date: "", end_date: "" });
   
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  
-  const [sortColumn, setSortColumn] = useState<string>("created_at");
+  // UBAH: Default sort ke requested_at
+  const [sortColumn, setSortColumn] = useState<string>("requested_at");
   const [sortDirection, setSortDirection] = useState<SortOrder>("desc");
 
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -83,22 +82,20 @@ const DocumentManagementPage = () => {
     setCurrentPage(1);
   };
 
-  
   const searchParams = useMemo(() => {
     const params = new URLSearchParams();
     params.set('limit', String(itemsPerPage));
     params.set('offset', String((currentPage - 1) * itemsPerPage));
     
     if (searchTerm) params.set('search', searchTerm);
-    if (filters.type) params.set('data_type', filters.type);
+    if (filters.request_type) params.set('request_type', filters.request_type); // UBAH: Kirim request_type
     if (filters.category) params.set('category', filters.category);
     if (filters.status) params.set('status', filters.status);
     
-    
+    // Backend akan memfilter requested_at berdasarkan parameter ini
     if (filters.start_date) params.set('start_date', filters.start_date);
     if (filters.end_date) params.set('end_date', filters.end_date);
 
-    
     if (sortColumn) {
         params.set('sort_by', sortColumn);
         params.set('sort_direction', sortDirection);
@@ -117,7 +114,6 @@ const DocumentManagementPage = () => {
 
   const hasManagerAccess = true;
 
-  
   const handleFilterChange = (filterName: keyof Filters, value: any) => {
     setFilters((prev) => ({ ...prev, [filterName]: value }));
     setCurrentPage(1);
@@ -128,13 +124,10 @@ const DocumentManagementPage = () => {
     setCurrentPage(1);
   };
 
-  
   const handleSort = (column: string) => {
     if (sortColumn === column) {
-      
       setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
     } else {
-      
       setSortColumn(column);
       setSortDirection('asc'); 
     }
@@ -156,7 +149,7 @@ const DocumentManagementPage = () => {
     if (action === "approve") {
         approve(document.id, {
             onSuccess: () => {
-              toast.success("Dokumen disetujui.");
+              toast.success("Permintaan disetujui.");
               handleCloseModal();
             },
             onError: (e: any) => {
@@ -167,7 +160,7 @@ const DocumentManagementPage = () => {
     } else if (action === "reject") {
         reject(document.id, {
             onSuccess: () => {
-              toast.success("Dokumen ditolak.");
+              toast.success("Permintaan ditolak.");
               handleCloseModal();
             },
             onError: (e: any) => {
@@ -183,34 +176,38 @@ const DocumentManagementPage = () => {
     }
   };
   
+  // UBAH: Logika dinamis berdasarkan request_type
   const getModalContent = () => {
     const { action, document } = modalState;
-    if (!document) return {};
+    if (!document) return { title: "", body: "", confirmText: "", confirmColor: "" };
+
+    const reqType = document.request_type;
+    const reqLabel = reqType === 'NEW' ? "Penambahan" : reqType === 'UPDATE' ? "Pembaruan Versi" : "Penghapusan";
 
     switch (action) {
       case "approve":
         return { 
           title: "Konfirmasi Persetujuan", 
-          body: `Apakah Anda yakin ingin menyetujui "${document.document_name}"?`, 
+          body: `Apakah Anda yakin ingin menyetujui permintaan ${reqLabel} untuk dokumen "${document.document_name}"?`, 
           confirmText: "Setujui", 
           confirmColor: "bg-green-600 hover:bg-green-700" 
         };
       case "reject":
         return { 
           title: "Konfirmasi Penolakan", 
-          body: `Apakah Anda yakin ingin menolak "${document.document_name}"?`, 
+          body: `Apakah Anda yakin ingin menolak permintaan ${reqLabel} untuk dokumen "${document.document_name}"?`, 
           confirmText: "Tolak", 
           confirmColor: "bg-orange-600 hover:bg-orange-700" 
         };
       case "delete":
         return { 
           title: "Konfirmasi Penghapusan", 
-          body: `Apakah Anda yakin ingin menghapus "${document.document_name}"? Tindakan ini akan menghapus dokumen utama dan SEMUA versinya.`, 
+          body: `Apakah Anda yakin ingin menghapus "${document.document_name}" secara paksa? Tindakan ini akan menghapus dokumen dan seluruh versinya.`, 
           confirmText: "Hapus", 
           confirmColor: "bg-red-600 hover:bg-red-700" 
         };
       default:
-        return {};
+        return { title: "", body: "", confirmText: "", confirmColor: "" };
     }
   };
   
@@ -292,7 +289,7 @@ const DocumentManagementPage = () => {
         confirmText={modalContent.confirmText}
         confirmColor={modalContent.confirmColor}
       >
-        <p>{modalContent.body}</p>
+        <p className="whitespace-pre-line">{modalContent.body}</p>
       </ConfirmationModal>
 
       <PdfViewModal

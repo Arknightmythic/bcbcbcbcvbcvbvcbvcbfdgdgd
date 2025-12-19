@@ -1,6 +1,5 @@
 import React from "react";
 import DocumentTableRow from "./DocumentTableRow";
-import { ArrowUp, ArrowDown } from "lucide-react";
 import type { ActionType, Document, SortOrder } from "../types/types"; 
 import TablePagination from "../../../shared/components/TablePagination";
 import { SortableHeader } from "../../UploadDocument/components/SortableHeader";
@@ -20,41 +19,6 @@ interface DocumentTableProps {
   onSort: (column: string) => void;
 }
 
-interface SortableHeaderProps {
-  label: string;
-  columnKey: string;
-  className?: string;
-  sortColumn: string;
-  sortDirection: SortOrder;
-  onSort: (column: string) => void;
-}
-
-// Fixed: Component definition is explicitly kept outside the parent component
-// const SortableHeader: React.FC<SortableHeaderProps> = ({ 
-//   label, 
-//   columnKey, 
-//   className = "", 
-//   sortColumn, 
-//   sortDirection, 
-//   onSort 
-// }) => {
-//   const isActive = sortColumn === columnKey;
-//   return (
-//     <th 
-//       className={`px-4 py-3 sticky top-0 bg-gray-100 cursor-pointer hover:bg-gray-200 transition-colors ${className}`}
-//       onClick={() => onSort(columnKey)}
-//     >
-//       <div className="flex items-center justify-center gap-1">
-//         {label}
-//         {isActive && (
-//           sortDirection === 'asc' 
-//             ? <ArrowUp className="w-3 h-3 text-blue-600" /> 
-//             : <ArrowDown className="w-3 h-3 text-blue-600" />
-//         )}
-//       </div>
-//     </th>
-//   );
-// };
 
 const DocumentTable: React.FC<DocumentTableProps> = ({
   documents,
@@ -104,8 +68,8 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
           <thead className="bg-gray-100 sticky top-0 ">
             <tr className="text-left text-[10px] font-semibold text-gray-600">
               <SortableHeader 
-                label="Tanggal Unggah" 
-                columnKey="created_at" 
+                label="Tanggal Permintaan" 
+                columnKey="requested_at"
                 sortColumn={sortColumn}
                 sortDirection={sortDirection}
                 onSort={onSort}
@@ -125,8 +89,7 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
                 sortDirection={sortDirection}
                 onSort={onSort}
               />              
-              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">Tipe</th>
-              <th className="px-4 py-3 sticky top-0 bg-gray-100">Kategori</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">Tipe Request</th>              <th className="px-4 py-3 sticky top-0 bg-gray-100">Kategori</th>
               <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">Tim</th>
               <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center">Status</th>
               <th className="px-4 py-3 sticky top-0 bg-gray-100 text-center right-0 z-10">Aksi</th>

@@ -98,8 +98,8 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
   onAction,
   onViewFile,
 }) => {
-  const isPending = doc.is_approve === null;
-  const isRejected = doc.is_approve === false;
+  const isPending = doc.status === "Pending"; 
+  const isRejected = doc.status === "Rejected";
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [position, setPosition] = useState<{ top?: number, bottom?: number, right?: number }>({});

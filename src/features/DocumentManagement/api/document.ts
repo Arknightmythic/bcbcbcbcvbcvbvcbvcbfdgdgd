@@ -72,15 +72,13 @@ export const getDocuments = async (params: URLSearchParams) => {
 };
 
 export const getAllDocumentDetails = async (params: URLSearchParams) => {
+  // Params ini otomatis membawa request_type jika di-set di UploadPage/ManagementPage
   const response = await instanceApiToken.get<ApiAllDetailsResponse>('/api/documents/all-details', { params });
-
-  // PERUBAHAN 4: Menangani jika response.data.data adalah null
+  
   if (!response.data.data) {
-    // Kembalikan struktur data kosong agar sesuai dengan tipe yang diharapkan
     return { documents: [], total: 0 };
   }
 
-  // Kembalikan data dengan format yang sama seperti getDocuments
   return {
     documents: response.data.data.document_details,
     total: response.data.data.total,

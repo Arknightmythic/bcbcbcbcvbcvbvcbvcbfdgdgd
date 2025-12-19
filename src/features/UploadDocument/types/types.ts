@@ -2,6 +2,7 @@ export type DocumentCategory = 'panduan' | 'qna' | 'peraturan';
 
 export type SortOrder = 'asc' | 'desc' | '';
 
+//
 export interface UploadedDocument {
   id: number;
   created_at: string; 
@@ -14,6 +15,8 @@ export interface UploadedDocument {
   category: DocumentCategory;
   is_approve: boolean | null;
   ingest_status: string | null;
+  request_type?: 'NEW' | 'UPDATE' | 'DELETE' | null;
+  requested_at?: string | null;
 }
 
 export interface DocumentVersion {

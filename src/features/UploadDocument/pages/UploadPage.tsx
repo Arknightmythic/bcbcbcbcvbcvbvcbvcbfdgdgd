@@ -42,7 +42,7 @@ const filterConfig: FilterConfig<Filters>[] = [
     key: "type",
     type: "select",
     options: [
-       { value: "", label: "Semua tipe" },
+      { value: "", label: "Semua tipe" },
       { value: "pdf", label: "PDF" },
       { value: "txt", label: "TXT" },
     ],
@@ -50,7 +50,7 @@ const filterConfig: FilterConfig<Filters>[] = [
   {
     key: "category",
     type: "select",
-     options: [
+    options: [
       { value: "", label: "Semua Kategori" },
       { value: "panduan", label: "Panduan" },
       { value: "qna", label: "Tanya Jawab" },
@@ -70,16 +70,16 @@ const filterConfig: FilterConfig<Filters>[] = [
   {
     key: "ingest_status",
     type: "select",
-     options: [
+    options: [
       { value: "", label: "Semua Proses" },
-      { value: "null", label: "Menunggu" }, 
+      { value: "null", label: "Menunggu" },
       { value: "processing", label: "Sedang Diproses" },
       { value: "finished", label: "Selesai" },
       { value: "failed", label: "Gagal" },
       { value: "unprocessed", label: "Tidak Diproses" },
     ],
   },
-   {
+  {
     key: "date_range",
     type: "date-range",
     startDateKey: "start_date",
@@ -91,10 +91,14 @@ const filterConfig: FilterConfig<Filters>[] = [
 const UploadPage: React.FC = () => {
   // --- States ---
   const [filesToUpload, setFilesToUpload] = useState<File[]>([]);
-  const [duplicateFilenames, setDuplicateFilenames] = useState<Set<string>>(new Set());
+  const [duplicateFilenames, setDuplicateFilenames] = useState<Set<string>>(
+    new Set()
+  );
   const [isScanning, setIsScanning] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<DocumentCategory | "">("");
-  
+  const [selectedCategory, setSelectedCategory] = useState<
+    DocumentCategory | ""
+  >("");
+
   // Table States
   const [selectedDocs, setSelectedDocs] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -121,12 +125,13 @@ const UploadPage: React.FC = () => {
   }>({ isOpen: false, action: null });
 
   // View & Versioning States
-  const [currentDocument, setCurrentDocument] = useState<UploadedDocument | null>(null);
+  const [currentDocument, setCurrentDocument] =
+    useState<UploadedDocument | null>(null);
   const [currentDocumentIdForDetails, setCurrentDocumentIdForDetails] =
     useState<number | null>(null);
   const [isVersioningModalOpen, setIsVersioningModalOpen] = useState(false);
   const [isReplaceModalOpen, setIsReplaceModalOpen] = useState(false);
-  
+
   // PDF View States
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [viewableUrl, setViewableUrl] = useState<string | null>(null);
@@ -138,36 +143,51 @@ const UploadPage: React.FC = () => {
     const params = new URLSearchParams();
     params.set("limit", String(itemsPerPage));
     params.set("offset", String((currentPage - 1) * itemsPerPage));
-    
+
     if (searchTerm) params.set("search", searchTerm);
     if (activeFilters.type) params.append("data_type", activeFilters.type);
-    if (activeFilters.category) params.append("category", activeFilters.category);
+    if (activeFilters.category)
+      params.append("category", activeFilters.category);
     if (activeFilters.status) params.append("status", activeFilters.status);
-    if (activeFilters.ingest_status) params.append("ingest_status", activeFilters.ingest_status);
-    if (activeFilters.start_date) params.append("start_date", activeFilters.start_date);
-    if (activeFilters.end_date) params.append("end_date", activeFilters.end_date);
-    
+    if (activeFilters.ingest_status)
+      params.append("ingest_status", activeFilters.ingest_status);
+    if (activeFilters.start_date)
+      params.append("start_date", activeFilters.start_date);
+    if (activeFilters.end_date)
+      params.append("end_date", activeFilters.end_date);
+
     if (sortColumn) {
       params.set("sort_by", sortColumn);
       params.set("sort_direction", sortDirection);
     }
 
     return params;
-  }, [currentPage, itemsPerPage, searchTerm, sortColumn, sortDirection, activeFilters]);
+  }, [
+    currentPage,
+    itemsPerPage,
+    searchTerm,
+    sortColumn,
+    sortDirection,
+    activeFilters,
+  ]);
 
-  const { data: documentsData,
+  const {
+    data: documentsData,
     isLoading: isLoadingDocs,
-    isError,} = useGetDocuments(queryParams);
+    isError,
+  } = useGetDocuments(queryParams);
   const { mutate: upload, isPending: isUploading } = useUploadDocument();
-  const { mutate: deleteDoc, isPending: isDeletingSingle } = useDeleteDocument();
-  const { mutate: batchDelete, isPending: isBatchDeleting } = useBatchDeleteDocuments();
+  const { mutate: deleteDoc, isPending: isDeletingSingle } =
+    useDeleteDocument();
+  const { mutate: batchDelete, isPending: isBatchDeleting } =
+    useBatchDeleteDocuments();
   const { mutate: updateDoc, isPending: isReplacing } = useUpdateDocument();
-  
+
   const { data: versionHistoryData } = useGetDocumentDetails(
     currentDocumentIdForDetails
   );
 
-  const isDeleting = isDeletingSingle||isBatchDeleting;
+  const isDeleting = isDeletingSingle || isBatchDeleting;
   const documents = useMemo(
     () => documentsData?.documents || [],
     [documentsData]
@@ -180,71 +200,76 @@ const UploadPage: React.FC = () => {
     setCurrentPage(1);
   };
 
-  const handleFileSelect = useCallback(async (selectedFiles: FileList) => {
-    const allowedTypes = new Set(["application/pdf", "text/plain"]);
-    const validFiles: File[] = [];
-    const invalidFiles: string[] = [];
-    
-    // 1. Client-side validation
-    for (const file of Array.from(selectedFiles)) {
-      if (allowedTypes.has(file.type)) {
-        validFiles.push(file);
-      } else {
-        invalidFiles.push(file.name);
-      }
-    }
+  const handleFileSelect = useCallback(
+    async (selectedFiles: FileList) => {
+      const allowedTypes = new Set(["application/pdf", "text/plain"]);
+      const validFiles: File[] = [];
+      const invalidFiles: string[] = [];
 
-    if (invalidFiles.length > 0) {
-      toast.error(`Tipe file tidak cocok: ${invalidFiles.join(", ")}`);
-    }
-
-    if (validFiles.length === 0) return;
-
-    // 2. Scan Duplicates
-    setIsScanning(true);
-    try {
-      const alreadyStagedNames = new Set(filesToUpload.map(f => f.name));
-      const uniqueNewFiles = validFiles.filter(f => !alreadyStagedNames.has(f.name));
-
-      if (uniqueNewFiles.length === 0) {
-        toast("File sudah ada di daftar unggahan.");
-        return;
+      // 1. Client-side validation
+      for (const file of Array.from(selectedFiles)) {
+        if (allowedTypes.has(file.type)) {
+          validFiles.push(file);
+        } else {
+          invalidFiles.push(file.name);
+        }
       }
 
-      const namesToCheck = uniqueNewFiles.map(f => f.name);
-      const duplicates = (await checkDuplicates(namesToCheck)) || [];
-
-      // 3. Update State
-      setDuplicateFilenames(prev => {
-        const newSet = new Set(prev);
-        duplicates.forEach(d => newSet.add(d));
-        return newSet;
-      });
-
-      setFilesToUpload((prev) => [...prev, ...uniqueNewFiles]);
-
-      if (duplicates.length > 0) {
-        toast(
-          <span>
-             Ditemukan <b>{duplicates.length}</b> dokumen duplikat. 
-             Dokumen tersebut ditandai merah dan <b>tidak akan diunggah</b>.
-          </span>
-        , { duration: 5000, icon: '⚠️' });
+      if (invalidFiles.length > 0) {
+        toast.error(`Tipe file tidak cocok: ${invalidFiles.join(", ")}`);
       }
 
-    } catch (error) {
-      console.error("Scan error:", error);
-      toast.error("Gagal memindai duplikasi dokumen.");
-    } finally {
-      setIsScanning(false);
-    }
-  }, [filesToUpload]);
+      if (validFiles.length === 0) return;
+
+      // 2. Scan Duplicates
+      setIsScanning(true);
+      try {
+        const alreadyStagedNames = new Set(filesToUpload.map((f) => f.name));
+        const uniqueNewFiles = validFiles.filter(
+          (f) => !alreadyStagedNames.has(f.name)
+        );
+
+        if (uniqueNewFiles.length === 0) {
+          toast("File sudah ada di daftar unggahan.");
+          return;
+        }
+
+        const namesToCheck = uniqueNewFiles.map((f) => f.name);
+        const duplicates = (await checkDuplicates(namesToCheck)) || [];
+
+        // 3. Update State
+        setDuplicateFilenames((prev) => {
+          const newSet = new Set(prev);
+          duplicates.forEach((d) => newSet.add(d));
+          return newSet;
+        });
+
+        setFilesToUpload((prev) => [...prev, ...uniqueNewFiles]);
+
+        if (duplicates.length > 0) {
+          toast(
+            <span>
+              Ditemukan <b>{duplicates.length}</b> dokumen duplikat. Dokumen
+              tersebut ditandai merah dan <b>tidak akan diunggah</b>.
+            </span>,
+            { duration: 5000, icon: "⚠️" }
+          );
+        }
+      } catch (error) {
+        console.error("Scan error:", error);
+        toast.error("Gagal memindai duplikasi dokumen.");
+      } finally {
+        setIsScanning(false);
+      }
+    },
+    [filesToUpload]
+  );
 
   const handleRemoveFile = (index: number) => {
     setFilesToUpload((prev) => {
       const fileToRemove = prev[index];
       if (fileToRemove) {
-        setDuplicateFilenames(currentSet => {
+        setDuplicateFilenames((currentSet) => {
           const newSet = new Set(currentSet);
           newSet.delete(fileToRemove.name);
           return newSet;
@@ -269,25 +294,29 @@ const UploadPage: React.FC = () => {
   const handleCloseModal = () =>
     setModalState({ isOpen: false, action: null, data: null });
 
-  
   const handleUpload = () => {
-    const filesToProcess = filesToUpload.filter(f => !duplicateFilenames.has(f.name));
+    const filesToProcess = filesToUpload.filter(
+      (f) => !duplicateFilenames.has(f.name)
+    );
 
     if (filesToProcess.length === 0) {
       toast.error("Tidak ada file valid untuk diunggah.");
       return;
     }
 
-    handleOpenModal("upload", { count: filesToProcess.length })
+    handleOpenModal("upload", { count: filesToProcess.length });
   };
-  const handleFilterChange = (filterName: string | keyof Filters, value: any) => {
+  const handleFilterChange = (
+    filterName: string | keyof Filters,
+    value: any
+  ) => {
     setActiveFilters((prev) => {
-      if (filterName === "dateRange" && value && typeof value === 'object') {
-         return {
-           ...prev,
-           start_date: value.startDate || "",
-           end_date: value.endDate || "",
-         };
+      if (filterName === "dateRange" && value && typeof value === "object") {
+        return {
+          ...prev,
+          start_date: value.startDate || "",
+          end_date: value.endDate || "",
+        };
       }
 
       return {
@@ -307,7 +336,10 @@ const UploadPage: React.FC = () => {
     setSelectedDocs(e.target.checked ? documents.map((d) => d.id) : []);
   };
 
-  const handleSelectOne = (e: React.ChangeEvent<HTMLInputElement>, docId: number) => {
+  const handleSelectOne = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    docId: number
+  ) => {
     if (e.target.checked) {
       setSelectedDocs((prev) => [...prev, docId]);
     } else {
@@ -371,8 +403,10 @@ const UploadPage: React.FC = () => {
     const { action, data: modalData } = modalState;
 
     if (action === "upload") {
-      const validFiles = filesToUpload.filter(f => !duplicateFilenames.has(f.name));
-      
+      const validFiles = filesToUpload.filter(
+        (f) => !duplicateFilenames.has(f.name)
+      );
+
       if (validFiles.length === 0) {
         toast.error("Semua file terpilih adalah duplikat.");
         handleCloseModal();
@@ -394,7 +428,9 @@ const UploadPage: React.FC = () => {
           handleCloseModal();
         },
         onError: (err: any) => {
-          toast.error(err.response?.data?.message || "Gagal mengunggah dokumen.");
+          toast.error(
+            err.response?.data?.message || "Gagal mengunggah dokumen."
+          );
           handleCloseModal();
         },
       });
@@ -411,13 +447,13 @@ const UploadPage: React.FC = () => {
       });
     }
   };
-  
+
   const handleConfirmNewVersion = (file: File) => {
     if (!currentDocument) return;
 
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("document_id", currentDocument.id.toString());
+    formData.append("id", currentDocument.id.toString());
 
     updateDoc(formData, {
       onSuccess: () => {
@@ -425,12 +461,16 @@ const UploadPage: React.FC = () => {
         handleCloseModals();
       },
       onError: (err: any) => {
-        toast.error(err.response?.data?.message || "Gagal mengunggah versi baru.");
+        toast.error(
+          err.response?.data?.message || "Gagal mengunggah versi baru."
+        );
       },
     });
   };
 
   const modalContent = useMemo(() => {
+    const data = modalState.data;
+    const isApproved = data?.status === "Approved";
     switch (modalState.action) {
       case "upload":
         const displayCategory =
@@ -445,21 +485,29 @@ const UploadPage: React.FC = () => {
       // --- PERUBAHAN TEKS DELETE (Request Delete) ---
       case "deleteSingle":
         return {
-          title: "Ajukan Hapus Dokumen", // Updated Title
-          body: `Apakah Anda yakin ingin mengajukan penghapusan untuk dokumen "${modalState.data?.document_name}"? \n\nTindakan ini memerlukan persetujuan Admin sebelum file benar-benar dihapus.`, // Updated Body
-          confirmText: "Ajukan Hapus",
+          // Jika sudah Approved, judulnya "Ajukan", jika belum "Konfirmasi Hapus"
+          title: isApproved ? "Ajukan Hapus Dokumen" : "Hapus Dokumen",
+          body: isApproved
+            ? `Dokumen "${data?.document_name}" sudah disetujui. Penghapusan memerlukan persetujuan Admin.`
+            : `Apakah Anda yakin ingin menghapus dokumen "${data?.document_name}"? Dokumen ini akan dihapus permanen dari sistem.`,
+          confirmText: isApproved ? "Ajukan Hapus" : "Hapus Permanen",
           confirmColor: "bg-red-600 hover:bg-red-700",
         };
       case "deleteMultiple":
         return {
-          title: "Ajukan Hapus Massal", // Updated Title
-          body: `Apakah Anda yakin ingin mengajukan penghapusan untuk ${selectedDocs.length} dokumen terpilih? \n\nTindakan ini memerlukan persetujuan Admin.`, // Updated Body
+          title: "Ajukan Hapus Massal",
+          body: `Apakah Anda yakin ingin mengajukan penghapusan untuk ${selectedDocs.length} dokumen terpilih? \n\nPermintaan ini akan diproses setelah mendapatkan persetujuan dari Admin.`,
           confirmText: "Ajukan Hapus",
           confirmColor: "bg-red-600 hover:bg-red-700",
         };
       // ----------------------------------------------
       default:
-        return { title: "", body: "", confirmText: "", confirmColor: "bg-blue-600 hover:bg-blue-700" };
+        return {
+          title: "",
+          body: "",
+          confirmText: "",
+          confirmColor: "bg-blue-600 hover:bg-blue-700",
+        };
     }
   }, [modalState, selectedDocs, selectedCategory]);
 
@@ -482,10 +530,10 @@ const UploadPage: React.FC = () => {
       <div className="mt-8">
         <div className="px-4 bg-gray-50 rounded-t-lg shadow-md">
           <TableControls
-            searchTerm={searchInput} 
-            searchPlaceholder="Cari nama dokumen..." 
+            searchTerm={searchInput}
+            searchPlaceholder="Cari nama dokumen..."
             onSearchChange={setSearchInput}
-            onSearchSubmit={handleSearchSubmit} 
+            onSearchSubmit={handleSearchSubmit}
             filters={activeFilters}
             onFilterChange={handleFilterChange}
             filterConfig={filterConfig}

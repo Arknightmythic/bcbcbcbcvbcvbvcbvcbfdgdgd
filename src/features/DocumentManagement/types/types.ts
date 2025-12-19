@@ -4,6 +4,7 @@ export type ActionType = 'approve' | 'reject' | 'delete';
 // Tambahkan tipe SortOrder
 export type SortOrder = 'asc' | 'desc';
 
+// types.ts
 export interface Document {
   id: number;
   created_at: string;
@@ -15,4 +16,6 @@ export interface Document {
   filename: string;
   category: DocumentCategory;
   status: 'Pending' | 'Approved' | 'Rejected';
+  request_type?: 'NEW' | 'UPDATE' | 'DELETE' | null;
+  requested_at?: string | null;
 }

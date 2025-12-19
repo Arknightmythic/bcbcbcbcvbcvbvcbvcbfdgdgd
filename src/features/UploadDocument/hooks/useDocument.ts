@@ -48,27 +48,29 @@ export const useGetDocumentDetails = (documentId: number | null) => {
 export const useDeleteDocument = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    
     mutationFn: (id: number) => deleteDocument(id),
     onSuccess: () => {
-      toast.success("Dokumen berhasil dihapus!");
-      
+      // Perubahan Pesan Sukses
+      toast.success("Permintaan hapus berhasil dikirim. Menunggu persetujuan Admin.");
       queryClient.invalidateQueries({ queryKey: ['documents'] });
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Gagal menghapus dokumen.");
+      toast.error(err.response?.data?.message || "Gagal mengajukan penghapusan.");
     },
   });
 };
-
 
 export const useBatchDeleteDocuments = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (ids: number[]) => batchDeleteDocuments(ids),
     onSuccess: () => {
-      // Invalidate query agar tabel ter-refresh otomatis
+      // Perubahan Pesan Sukses
+      toast.success("Permintaan hapus berhasil dikirim.");
       queryClient.invalidateQueries({ queryKey: ['documents'] });
     },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || "Gagal mengajukan penghapusan massal.");
+    }
   });
 };
