@@ -208,7 +208,7 @@ function Login() {
                 type="button"
                 onClick={handleMicrosoftLogin}
                 disabled={isMicrosoftPending}
-                className="w-full inline-flex justify-center items-center py-3 px-4 border border-blue-600 rounded-md shadow-sm bg-white font-medium text-gray-700 hover:bg-blue-50 transition-colors duration-200 text-sm "
+                className="w-full inline-flex justify-center items-center py-3 px-4 border border-blue-600 rounded-md shadow-sm bg-white font-medium text-gray-700 hover:bg-blue-50 transition-colors duration-200 text-sm"
               >
                 <img
                   src="/microsoft-svgrepo-com.svg"
