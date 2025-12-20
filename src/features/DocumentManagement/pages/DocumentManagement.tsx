@@ -176,13 +176,24 @@ const DocumentManagementPage = () => {
     }
   };
   
-  // UBAH: Logika dinamis berdasarkan request_type
-  const getModalContent = () => {
+ const getModalContent = () => {
     const { action, document } = modalState;
     if (!document) return { title: "", body: "", confirmText: "", confirmColor: "" };
 
+    // Ambil reqType dari document
     const reqType = document.request_type;
-    const reqLabel = reqType === 'NEW' ? "Penambahan" : reqType === 'UPDATE' ? "Pembaruan Versi" : "Penghapusan";
+
+    const requestLabels: Record<string, string> = {
+      NEW: "Penambahan",
+      UPDATE: "Pembaruan Versi",
+      DELETE: "Penghapusan",
+    };
+
+    /** * PERBAIKAN: 
+     * Gunakan pengecekan (reqType && requestLabels[reqType]) 
+     * untuk memastikan reqType tidak null/undefined sebelum melakukan indexing.
+     */
+    const reqLabel = (reqType && requestLabels[reqType]) || "Penghapusan";
 
     switch (action) {
       case "approve":

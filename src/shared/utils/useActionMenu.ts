@@ -1,4 +1,3 @@
-// Path: src/shared/hooks/useActionMenu.ts
 import { useState, useRef } from 'react';
 import { useClickOutside } from '../hooks/useClickOutside';
 

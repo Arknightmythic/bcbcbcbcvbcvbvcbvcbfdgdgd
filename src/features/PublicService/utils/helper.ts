@@ -12,15 +12,19 @@ export const normalizeMarkdown = (text: string) => {
 
   let processed = text;
   try {
-    processed = processed.replace(/\\u([\d\w]{4})/gi, (match, grp) => {
-      return String.fromCharCode(parseInt(grp, 16));
+    // FIX: Menghapus kurung siku [] di sekitar \w
+    // Sebelumnya: /\\u([\w]{4})/gi
+    // Sesudah:    /\\u(\w{4})/gi
+    processed = processed.replaceAll(/\\u(\w{4})/gi, (match, grp) => {
+      return String.fromCodePoint(Number.parseInt(grp, 16));
     });
   } catch (e) {
     console.error("Failed to decode unicode:", e);
   }
 
-
-  processed = processed.replace(/\\n/g, "\n");
+  // Bagian ini sudah benar dari perbaikan sebelumnya
+  processed = processed.replaceAll(String.raw`\n`, "\n");
+  
   processed = processed.replaceAll(
     /^\s{0,50}([a-zA-Z])\.\s{1,50}/gm,
     (match, p1) => {
@@ -29,10 +33,7 @@ export const normalizeMarkdown = (text: string) => {
     }
   );
 
-  
-  
-  
-  processed = processed.replace(/\n/g, "  \n");
+  processed = processed.replaceAll("\n", "  \n");
 
   return processed;
 };

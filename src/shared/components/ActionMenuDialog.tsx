@@ -18,6 +18,8 @@ export const ActionMenuDialog: React.FC<ActionMenuDialogProps> = ({
     const element = dropdownRef.current;
     if (!element) return;
 
+    element.focus();
+
     const handleStopPropagation = (e: MouseEvent) => {
       e.stopPropagation();
     };

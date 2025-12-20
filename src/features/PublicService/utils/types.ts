@@ -11,6 +11,7 @@ export interface ChatMessage {
   isHelpdesk?: boolean;
   questionId?: number;
   answerId?: number;
+  hasCategory?: boolean;
 }
 
 export interface Citation {

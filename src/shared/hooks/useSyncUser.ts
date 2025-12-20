@@ -34,12 +34,10 @@ export const useSyncUser = () => {
     if (isError && error) {
       const axiosError = error as AxiosError;
       const status = axiosError.response?.status;
-
-      // Jika 404 (User Not Found di DB) atau 401 (Token Invalid/Expired)
       if (status === 404 || status === 401) {
         console.warn("🚫 User tidak valid atau tidak ditemukan. Melakukan logout...");
         actions.logout();
-        globalThis.location.href = "/login"; // Redirect paksa ke login
+        globalThis.location.href = "/login"; 
       }
     }
   }, [isError, error, actions]);

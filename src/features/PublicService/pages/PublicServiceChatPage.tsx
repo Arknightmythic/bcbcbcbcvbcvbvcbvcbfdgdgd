@@ -166,7 +166,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = React.memo(
       message.sender === "agent" &&
       !message.isHumanAgent &&
       !isHelpdesk &&
-      !isZeroIds;
+      !isZeroIds &&
+      message.hasCategory === true;
 
     let avatarLabel = userInitial;
     if (message.sender !== "user") {

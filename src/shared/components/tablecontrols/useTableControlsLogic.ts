@@ -173,8 +173,6 @@ export const useTableControlsLogic = <T extends Record<string, any>>({
       const filterBtn = filterBtnRef.current;
       const dateBtn = dateBtnRef.current;
       const customSelectDropdown = document.getElementById("custom-select-dropdown");
-
-      // PERBAIKAN: Pecah kondisi kompleks menjadi variabel terpisah
       const isOutsidePortal = portalEl ? !portalEl.contains(target) : false;
       const isOutsideFilterBtn = filterBtn ? !filterBtn.contains(target) : true;
       const isOutsideDateBtn = dateBtn ? !dateBtn.contains(target) : true;

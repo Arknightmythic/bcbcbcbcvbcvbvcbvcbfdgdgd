@@ -57,18 +57,22 @@ const DocumentActionMenu: React.FC<DocumentActionMenuProps> = ({
   actions,
 }) => {
   
+  // SAST FIX: Menggunakan native listener di useEffect untuk Keydown (Escape)
+  // Ini aman dari deteksi linter JSX dan tetap berfungsi.
   useEffect(() => {
     const element = dropdownRef.current;
     if (!element) return;
 
-    // FIX: Menghapus handleStopPropagation untuk event 'click' 
-    // agar event bisa bubbling ke React dan onClick button berfungsi.
+    // Fokus ke tombol pertama saat menu terbuka (Aksesibilitas yang baik & direkomendasikan)
+    // Ini menggantikan kebutuhan tabIndex pada container dialog
+    const firstButton = element.querySelector('button');
+    if (firstButton) {
+      (firstButton as HTMLElement).focus();
+    }
 
     const handleKeyDown = (e: KeyboardEvent) => {
-       // Stop propagation untuk keyboard event (Escape) biasanya aman, 
-       // tapi untuk amannya kita hanya stop jika benar-benar Escape
        if (e.key === 'Escape') {
-          e.stopPropagation();
+          e.stopPropagation(); // Mencegah bubbling jika perlu
           actions.closeDropdown();
        }
     };
@@ -83,8 +87,7 @@ const DocumentActionMenu: React.FC<DocumentActionMenuProps> = ({
   return (
     <dialog
       ref={dropdownRef}
-      open={true}
-      tabIndex={-1}
+      open={true}      
       aria-modal="true"
       className="fixed z-[9999] w-48 bg-white rounded-md shadow-lg border border-gray-200 m-0 p-0 outline-none"
       style={{
@@ -93,9 +96,6 @@ const DocumentActionMenu: React.FC<DocumentActionMenuProps> = ({
         bottom: position.bottom ? `${position.bottom}px` : 'auto',
         left: 'auto' 
       }}
-      // Tambahan: Cegah klik di dalam dialog menutup dirinya sendiri 
-      // (jika useClickOutside dipasang di parent yang menangkap bubbling)
-      onClick={(e) => e.stopPropagation()} 
     >
       <div className="flex flex-col py-1">
         <button
@@ -142,7 +142,6 @@ const DocumentActionMenu: React.FC<DocumentActionMenuProps> = ({
   );
 };
 
-
 const DocumentRow: React.FC<DocumentRowProps> = ({
   document: doc,
   isSelected,
@@ -157,8 +156,8 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
   const [position, setPosition] = useState<{ top?: number, bottom?: number, right?: number }>({});
   const moreButtonRef = useRef<HTMLButtonElement>(null);
   
-  // useClickOutside biasanya sudah menghandle pengecekan "contains"
-  // jadi tidak perlu khawatir dia menutup saat klik di dalam menu.
+  
+  
   const dropdownRef = useClickOutside<HTMLDialogElement>(() => {
     setIsDropdownOpen(false);
   });
@@ -166,12 +165,12 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
   const isApproved = doc.status === "Approved";
   const isDeleteRequested = doc.request_type === 'DELETE' && doc.status === 'Pending';
   
-  const isPending = doc.status === "Pending" && doc.request_type === "NEW"; // Pending Upload/Update
+  const isPending = doc.status === "Pending" && doc.request_type === "NEW"; 
   const isRejected = doc.status === "Rejected";
   const isIngestFailed = doc.ingest_status === "failed";
   const isProcessing = doc.ingest_status === "processing"; 
 
-  // 2. Update Kondisi Disabled (Tambahkan isDeleteRequested)
+  
   const isActionDisabled = isPending || isRejected || isIngestFailed || isProcessing || isDeleteRequested;
   const isDeleteDisabled = isProcessing || isDeleteRequested;
 
@@ -271,7 +270,7 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
         const dropdownHeight = 176;
         const spaceBelow = window.innerHeight - rect.bottom;
         const spaceAbove = rect.top;
-        // Penyesuaian posisi agar tidak offscreen di mobile
+        
         let newPos: { top?: number, bottom?: number, right?: number } = { right: window.innerWidth - rect.right };
         
         if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) { 
@@ -305,7 +304,7 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
           {isDeleteRequested && (
             <div className="flex items-center gap-1 text-[9px] text-red-600 mt-1 font-bold italic">
               <Clock className="w-3 h-3" />
-              MENUNGGU PERSETUJUAN HAPUS (ADMIN)
+              MENUNGGU PERSETUJUAN HAPUS
             </div>
           )}
           {/* Penanda untuk Rejected agar user tahu bisa hapus langsung */}

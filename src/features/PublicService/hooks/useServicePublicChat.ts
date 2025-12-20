@@ -53,46 +53,65 @@ const determineSender = (msg: any): "user" | "agent" => {
 
 const checkIsHumanAgent = (sender: string, msg: any): boolean => {
   if (sender !== "agent") return false;
+  if (msg.message?.type === 'ai' || msg.message?.data?.type === 'ai') {
+    return false;
+  }
   const data = msg.message.data || {};
   const responseMetadata = data.response_metadata || {};
   return Object.keys(responseMetadata).length === 0 && !responseMetadata.model;
 };
 
 
-const mapBackendHistoryToFrontend = (
-  history: BackendChatHistory[] 
-): ChatMessage[] => {
+const mapBackendHistoryToFrontend = (history: BackendChatHistory[]): ChatMessage[] => {
   if (!history) return [];
 
   return history
-    .map((msg: any) => {
+    .map((msg: any, index: number) => { // Tambahkan parameter index
       const text = extractMessageContent(msg);
       if (!text) return null;
       
       const sender = determineSender(msg);
-      const isHumanAgent = checkIsHumanAgent(sender, msg);
+      // Gunakan fix deteksi human agent yang sudah kita bahas sebelumnya
+      const isHumanAgent = checkIsHumanAgent(sender, msg); 
       const messageId = `${sender}-${msg.id}`;
 
-      
-      let feedbackStatus: "like" | "dislike" | null = null;
-      if (msg.feedback === true) {
-        feedbackStatus = "like";
-      } else if (msg.feedback === false) {
-        feedbackStatus = "dislike";
+      // --- LOGIKA BARU UNTUK KATEGORI ---
+      let hasCategory = false;
+
+      if (sender === "agent") {
+        // Cek pesan sebelumnya (index - 1)
+        // Apakah pesan sebelumnya dari User DAN memiliki kategori?
+        if (index > 0) {
+          const prevMsg = history[index - 1];
+          const prevIsUser = prevMsg.message?.type === 'human' || prevMsg.message?.data?.type === 'human';
+          
+          // Cek field 'category' atau 'question_category' pada pesan user sebelumnya
+          // Data JSON Anda menunjukkan field ada di root object history (prevMsg.category)
+          if (prevIsUser && (prevMsg.category || prevMsg.question_category)) {
+            hasCategory = true;
+          }
+        }
       }
+      // ------------------------------------
+
+      let feedbackStatus: "like" | "dislike" | null = null;
+      if (msg.feedback === true) feedbackStatus = "like";
+      else if (msg.feedback === false) feedbackStatus = "dislike";
 
       const chatMessage: ChatMessage = {
         id: messageId,
-        dbId: msg.id, 
+        dbId: msg.id,
         sender: sender,
         text: text,
         timestamp: msg.created_at,
-        feedback: feedbackStatus, 
+        feedback: feedbackStatus,
         is_answered: msg.is_cannot_answer === null ? null : !msg.is_cannot_answer,
         isHumanAgent: isHumanAgent,
-        isHelpdesk: false, 
-        questionId: msg.id, 
-        answerId: msg.id,  
+        isHelpdesk: false, // Set false default agar tidak memblokir feedback (kita filter pakai hasCategory nanti)
+        questionId: msg.id,
+        answerId: msg.id,
+        
+        hasCategory: hasCategory, // <--- Masukkan hasil cek tadi
       };
       
       return chatMessage;
@@ -131,10 +150,10 @@ const addMessageOrdered = (prevMessages: ChatMessage[], newMessage: ChatMessage)
   
   
   if (prevMessages.length > 0) {
-    // [FIX 1] Prefer .at(...) over [length - 1]
+    
     const lastMsg = prevMessages.at(-1);
     
-    // Perlu pengecekan existence karena .at bisa return undefined secara type
+    
     if (lastMsg) {
       const lastTime = new Date(lastMsg.timestamp || 0).getTime();
       if (finalTimestamp <= lastTime) {
@@ -221,35 +240,37 @@ export const useServicePublicChat = () => {
 
   
   useEffect(() => {
-    // 1. Pastikan syarat dasar terpenuhi
+    
     if (!wsEnabledRef.current || !sessionId || sessionId === "new") return;
 
     const ws = wsService.current;
     
-    // Gunakan ref untuk melacak apakah komponen masih mount saat async berjalan
+    
     let isMounted = true; 
 
     const initWebSocketSubscription = async () => {
       try {
-        // 2. TUNGGU sampai koneksi benar-benar OPEN
+        
         if (!ws.isConnected()) {
           
           await ws.connect();
         }
-
-        // Cek lagi apakah komponen masih mounted setelah await
+        
         if (!isMounted) return;
 
-        // 3. Setup Handler (User & Agent Messages)
         currentConversationIdRef.current = sessionId;
 
         const handleWsAnswer = (data: any) => {
-          const botMessageId = `agent-api-${data.answer_id}`; // Samakan format ID dengan HTTP success
-          // Fallback ID jika answer_id 0 atau tidak ada
+          const botMessageId = `agent-api-${data.answer_id}`; 
+          
           const historyMsgId = `agent-${data.answer_id}`;
           const finalId = data.answer_id ? botMessageId : `agent-${data.chat_history_id}`;
 
-          if (processedMessageIdsRef.current.has(finalId) || processedMessageIdsRef.current.has(historyMsgId)) return;          processedMessageIdsRef.current.add(finalId);
+          if (processedMessageIdsRef.current.has(finalId) || processedMessageIdsRef.current.has(historyMsgId)) {
+            return;
+          }
+          
+          processedMessageIdsRef.current.add(finalId);
           
           const cleanedAnswer = cleanText(data.answer);
           if (!cleanedAnswer) return;
@@ -296,12 +317,12 @@ export const useServicePublicChat = () => {
           setMessages((prev) => addMessageOrdered(prev, agentMessage));
         };
 
-        // Hapus listener lama jika ada (defensive)
+        
         if (unsubscribeRef.current) {
           unsubscribeRef.current();
         }
 
-        // Register listener baru
+        
         const unsubscribe = ws.onMessage(sessionId, (data) => {
           
           
@@ -314,7 +335,7 @@ export const useServicePublicChat = () => {
 
         unsubscribeRef.current = unsubscribe;
 
-        // 4. Lakukan Subscribe SETELAH handler siap
+        
         ws.subscribe(sessionId, '$');
         
 
@@ -325,7 +346,7 @@ export const useServicePublicChat = () => {
 
     initWebSocketSubscription();
 
-    // Cleanup function
+    
     return () => {
       isMounted = false;
       if (unsubscribeRef.current) {
@@ -334,7 +355,7 @@ export const useServicePublicChat = () => {
         unsubscribeRef.current = null;
       }
     };
-  }, [sessionId, wsEnabledRef.current]); // Dependency tetap sama
+  }, [sessionId, wsEnabledRef.current]); 
 
   
   useEffect(() => {
@@ -357,7 +378,7 @@ export const useServicePublicChat = () => {
 
       const sortedMessages = uniqueMessages;
       
-      // [FIX 2] Use for...of instead of .forEach
+      
       for (const msg of sortedMessages) {
         processedMessageIdsRef.current.add(msg.id);
       }
@@ -463,15 +484,15 @@ export const useServicePublicChat = () => {
         ? `agent-api-gen-${Date.now()}` 
         : `agent-api-${data.answer_id}`;
 
-      // [FIX] Tambahkan pengecekan format ID History
+      
       const historyMsgId = `agent-${data.answer_id}`;
 
-      // [FIX] Cek kedua format ID
+      
       if (processedMessageIdsRef.current.has(botMessageId) || (!isGenericResponse && processedMessageIdsRef.current.has(historyMsgId))) {
         return; 
       }
       processedMessageIdsRef.current.add(botMessageId);
-      
+      const hasCategory = !!(data.category || (data.question_category && data.question_category.length > 0));
       const botMessage: ChatMessage = {
         id: botMessageId,
         dbId: data.answer_id, 
@@ -483,6 +504,7 @@ export const useServicePublicChat = () => {
         isHelpdesk: data.is_helpdesk,
         questionId: data.question_id,
         answerId: data.answer_id,
+        hasCategory: hasCategory,
       };
       
       setMessages((prev) => addMessageOrdered(prev, botMessage));
@@ -608,7 +630,7 @@ export const useServicePublicChat = () => {
     setIsLoadingPdf(true);
 
     try {
-      // [FIX 3] Prefer Number.parseInt over parseInt
+      
       const url = await generateViewUrlByDocId(Number.parseInt(citation.fileId));
       setPdfUrl(url);
     } catch (error) {

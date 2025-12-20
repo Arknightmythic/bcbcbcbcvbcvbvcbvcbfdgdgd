@@ -89,7 +89,7 @@ const filterConfig: FilterConfig<Filters>[] = [
 ];
 
 const UploadPage: React.FC = () => {
-  // --- States ---
+  
   const [filesToUpload, setFilesToUpload] = useState<File[]>([]);
   const [duplicateFilenames, setDuplicateFilenames] = useState<Set<string>>(
     new Set()
@@ -99,7 +99,7 @@ const UploadPage: React.FC = () => {
     DocumentCategory | ""
   >("");
 
-  // Table States
+  
   const [selectedDocs, setSelectedDocs] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -117,14 +117,14 @@ const UploadPage: React.FC = () => {
     end_date: "",
   });
 
-  // Modal States
+  
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     action: ModalAction | null;
     data?: any;
   }>({ isOpen: false, action: null });
 
-  // View & Versioning States
+  
   const [currentDocument, setCurrentDocument] =
     useState<UploadedDocument | null>(null);
   const [currentDocumentIdForDetails, setCurrentDocumentIdForDetails] =
@@ -132,13 +132,13 @@ const UploadPage: React.FC = () => {
   const [isVersioningModalOpen, setIsVersioningModalOpen] = useState(false);
   const [isReplaceModalOpen, setIsReplaceModalOpen] = useState(false);
 
-  // PDF View States
+  
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [viewableUrl, setViewableUrl] = useState<string | null>(null);
   const [isGeneratingUrl, setIsGeneratingUrl] = useState(false);
   const [viewableTitle, setViewableTitle] = useState<string>("");
 
-  // --- React Query Hooks ---
+  
   const queryParams = useMemo(() => {
     const params = new URLSearchParams();
     params.set("limit", String(itemsPerPage));
@@ -193,7 +193,7 @@ const UploadPage: React.FC = () => {
     [documentsData]
   );
   const totalItems = useMemo(() => documentsData?.total || 0, [documentsData]);
-  // --- Handlers ---
+  
 
   const handleSearchSubmit = () => {
     setSearchTerm(searchInput);
@@ -206,7 +206,7 @@ const UploadPage: React.FC = () => {
       const validFiles: File[] = [];
       const invalidFiles: string[] = [];
 
-      // 1. Client-side validation
+      
       for (const file of Array.from(selectedFiles)) {
         if (allowedTypes.has(file.type)) {
           validFiles.push(file);
@@ -221,7 +221,7 @@ const UploadPage: React.FC = () => {
 
       if (validFiles.length === 0) return;
 
-      // 2. Scan Duplicates
+      
       setIsScanning(true);
       try {
         const alreadyStagedNames = new Set(filesToUpload.map((f) => f.name));
@@ -237,10 +237,12 @@ const UploadPage: React.FC = () => {
         const namesToCheck = uniqueNewFiles.map((f) => f.name);
         const duplicates = (await checkDuplicates(namesToCheck)) || [];
 
-        // 3. Update State
+        
         setDuplicateFilenames((prev) => {
           const newSet = new Set(prev);
-          duplicates.forEach((d) => newSet.add(d));
+          for (const d of duplicates) {
+            newSet.add(d);
+          }
           return newSet;
         });
 
@@ -414,9 +416,9 @@ const UploadPage: React.FC = () => {
       }
 
       const formData = new FormData();
-      validFiles.forEach((file) => {
+      for (const file of validFiles) {
         formData.append("files", file);
-      });
+      }
       formData.append("category", selectedCategory);
 
       upload(formData, {
@@ -472,7 +474,7 @@ const UploadPage: React.FC = () => {
     const data = modalState.data;
     const isApproved = data?.status === "Approved";
     switch (modalState.action) {
-      case "upload":
+      case "upload": {  
         const displayCategory =
           selectedCategory === "qna" ? "Tanya Jawab" : selectedCategory;
 
@@ -482,10 +484,10 @@ const UploadPage: React.FC = () => {
           confirmText: "Ya, Unggah",
           confirmColor: "bg-blue-600 hover:bg-blue-700",
         };
-      // --- PERUBAHAN TEKS DELETE (Request Delete) ---
+      } 
       case "deleteSingle":
         return {
-          // Jika sudah Approved, judulnya "Ajukan", jika belum "Konfirmasi Hapus"
+          
           title: isApproved ? "Ajukan Hapus Dokumen" : "Hapus Dokumen",
           body: isApproved
             ? `Dokumen "${data?.document_name}" sudah disetujui. Penghapusan memerlukan persetujuan Admin.`
@@ -500,7 +502,7 @@ const UploadPage: React.FC = () => {
           confirmText: "Ajukan Hapus",
           confirmColor: "bg-red-600 hover:bg-red-700",
         };
-      // ----------------------------------------------
+      
       default:
         return {
           title: "",
