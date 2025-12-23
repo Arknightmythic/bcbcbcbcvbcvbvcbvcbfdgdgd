@@ -4,7 +4,6 @@ import { useAuthStore } from '../store/authStore';
 const instanceApi = axios.create({
   baseURL: import.meta.env.VITE_API_BE_URL,
   timeout: 10000,
-  withCredentials: true, 
 });
 
 export const instanceApiToken = axios.create({
