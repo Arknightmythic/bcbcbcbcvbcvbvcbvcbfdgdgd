@@ -9,7 +9,6 @@ const instanceApi = axios.create({
 export const instanceApiToken = axios.create({
   baseURL: import.meta.env.VITE_API_BE_URL,
   timeout: 10000,
-  withCredentials: true, 
 });
 
 instanceApiToken.interceptors.request.use(
