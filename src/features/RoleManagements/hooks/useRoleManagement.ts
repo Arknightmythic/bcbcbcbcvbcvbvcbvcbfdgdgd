@@ -34,8 +34,8 @@ export const useCreateRole = () => {
       toast.success("Peran berhasil dibuat!");
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Gagal membuat peran.");
+    onError: () => {
+      toast.error("Gagal membuat peran.");
     },
   });
 };
@@ -50,8 +50,8 @@ export const useUpdateRole = () => {
       toast.success("Peran berhasil diperbarui!");
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Gagal memperbarui peran.");
+    onError: () => {
+      toast.error("Gagal memperbarui peran.");
     },
   });
 };
@@ -65,8 +65,8 @@ export const useDeleteRole = () => {
       toast.success("Peran berhasil dihapus!");
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Gagal menghapus peran.");
+    onError: () => {
+      toast.error("Gagal menghapus peran.");
     },
   });
 };

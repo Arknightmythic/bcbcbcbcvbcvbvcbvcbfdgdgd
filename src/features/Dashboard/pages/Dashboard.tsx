@@ -67,7 +67,7 @@ function Dashboard() {
         setIframeLoading(false);
       },
       onError: (err: any) => {
-        console.error("Failed to load dashboard:", err);
+        console.error("Gagal menampilkan dasbor:", err);
         setIframeLoading(false); 
       },
     });
