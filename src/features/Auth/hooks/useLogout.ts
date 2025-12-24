@@ -1,9 +1,12 @@
 import { useMutation } from '@tanstack/react-query';
 import { instanceApiToken } from '../../../shared/utils/Axios';
-import { useAuthActions } from '../../../shared/store/authStore';
+import { useAuthActions, useAuthStore } from '../../../shared/store/authStore';
 
 const logoutApi = async () => {
-  return instanceApiToken.post('/auth/logout');
+  const sessionId = useAuthStore.getState().sessionId;
+  return instanceApiToken.post('/auth/logout', {
+      session_id: sessionId
+  });
 };
 
 export const useLogout = () => {

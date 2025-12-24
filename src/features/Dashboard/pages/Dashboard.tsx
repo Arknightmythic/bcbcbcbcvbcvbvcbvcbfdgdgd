@@ -54,8 +54,17 @@ function Dashboard() {
     }
 
     getEmbedUrl(payload, {
-      onSuccess: (data) => {
-        setIframeUrl(data.data.url);
+     onSuccess: (response) => {
+        if (response?.data?.url) {
+          // [PERBAIKAN] Tambahkan timestamp agar iframe selalu reload
+          // meskipun URL dasarnya sama (/api/grafana/view-embed)
+          const cleanUrl = response.data.url;
+          const timestamp = new Date().getTime();
+          const separator = cleanUrl.includes('?') ? '&' : '?';
+          
+          setIframeUrl(`${cleanUrl}${separator}t=${timestamp}`);
+        }
+        setIframeLoading(false);
       },
       onError: (err: any) => {
         console.error("Failed to load dashboard:", err);
