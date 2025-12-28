@@ -4,12 +4,13 @@ import { useAuthStore } from '../store/authStore';
 const instanceApi = axios.create({
   baseURL: import.meta.env.VITE_API_BE_URL,
   timeout: 10000,
+  withCredentials: true,
 });
 
 export const instanceApiToken = axios.create({
   baseURL: import.meta.env.VITE_API_BE_URL,
   timeout: 10000,
-  withCredentials: true, 
+  withCredentials: true,
 });
 
 instanceApiToken.interceptors.request.use(
@@ -32,10 +33,26 @@ instanceApiToken.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
-        const { data } = await instanceApi.post('/auth/refresh');
+        // AMBIL Refresh Token dari Store
+        const refreshToken = useAuthStore.getState().refreshToken;
+
+        if (!refreshToken) {
+            throw new Error("No refresh token available");
+        }
+
+        // KIRIM refresh_token di BODY (sesuai backend handler.go)
+        const { data } = await instanceApi.post('/auth/refresh', {
+            refresh_token: refreshToken
+        });
+
         const newAccessToken = data.data.access_token;
+        
+        // Update store
         useAuthStore.getState().actions.refreshToken(newAccessToken);
+        
+        // Update header request yang gagal tadi
         originalRequest.headers['Authorization'] = 'Bearer ' + newAccessToken;
+        
         return instanceApiToken(originalRequest);
       } catch (refreshError) {
         useAuthStore.getState().actions.logout();

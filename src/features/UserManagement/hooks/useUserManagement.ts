@@ -34,8 +34,8 @@ export const useCreateUser = () => {
       toast.success("Akun berhasil dibuat!");
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Akun gagal dibuat.");
+    onError: () => {
+      toast.error("Akun gagal dibuat.");
     },
   });
 };
@@ -50,8 +50,8 @@ export const useUpdateUser = () => {
       toast.success("AKun berhasil diperbarui!");
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Gagal memperbarui akun.");
+    onError: () => {
+      toast.error( "Gagal memperbarui akun.");
     },
   });
 };
@@ -65,8 +65,8 @@ export const useDeleteUser = () => {
       toast.success("Akun berhasil dihapus!");
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || "gagal menghapus akun.");
+    onError: () => {
+      toast.error("gagal menghapus akun.");
     },
   });
 };

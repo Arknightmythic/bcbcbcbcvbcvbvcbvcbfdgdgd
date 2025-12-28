@@ -30,8 +30,8 @@ export const useCreateTeam = () => {
       toast.success("tim berhasil dibuat!");
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Gagal membuat tim.");
+    onError: () => {
+      toast.error("Gagal membuat tim.");
     },
   });
 };
@@ -46,8 +46,8 @@ export const useUpdateTeam = () => {
       toast.success("Tim berhasil diperbarui!");
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Gagal memperbarui tim.");
+    onError: () => {
+      toast.error("Gagal memperbarui tim.");
     },
   });
 };
@@ -61,8 +61,8 @@ export const useDeleteTeam = () => {
       toast.success("Tim berhasil dihapus!");
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Gagal menghapus tim.");
+    onError: () => {
+      toast.error("Gagal menghapus tim.");
     },
   });
 };

@@ -31,7 +31,9 @@ const PdfViewModal: React.FC<PdfViewModalProps> = ({ isOpen, onClose, url, isLoa
       setIsDownloading(true);
       setDownloadError(false);
       try {
-        const response = await fetch(url);
+        const response = await fetch(url, {
+            credentials: 'include' 
+        });
         if (!response.ok) throw new Error("Gagal mengunduh file");
         
         const blob = await response.blob();

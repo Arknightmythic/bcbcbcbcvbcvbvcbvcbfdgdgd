@@ -522,9 +522,9 @@ export const useServicePublicChat = () => {
 
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
-    onError: (err: any) => {
+    onError: () => {
       hideLoadingToast();
-      toast.error(err.response?.data?.message || "Gagal mengirim pesan.");
+      toast.error("Gagal mengirim pesan.");
       setMessages((prev) => prev.slice(0, -1)); 
     },
   });
