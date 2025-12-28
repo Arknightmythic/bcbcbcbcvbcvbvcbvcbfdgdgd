@@ -25,13 +25,14 @@ import toast from "react-hot-toast";
 import TextExpandModal from "../../../shared/components/TextExpandModal";
 import { Loader2, Download } from "lucide-react";
 import ApproveWithCorrectionModal from "../../../shared/components/ApproveWithCorrectionModal";
-import DownloadPopup from "../components/DownloadPopUp";
+import DownloadPopup from "../components/DownloadPopup";
+import { useAuthStore } from "../../../shared/store/authStore";
 
 interface HistoryPageFilters extends Record<string, any> {
-    aiAnswer: string;
-    validationStatus: string;
-    start_date: string;
-    end_date: string;
+  aiAnswer: string;
+  validationStatus: string;
+  start_date: string;
+  end_date: string;
 }
 
 const filterConfig: FilterConfig<HistoryPageFilters>[] = [
@@ -54,11 +55,9 @@ const filterConfig: FilterConfig<HistoryPageFilters>[] = [
   },
 ];
 
-const mapChatPairToValidationItem = (
-  pair: ChatPair
-): ValidationHistoryItem => {
+const mapChatPairToValidationItem = (pair: ChatPair): ValidationHistoryItem => {
   let status: ValidationStatus = "Pending";
-  
+
   // @ts-ignore
   if (pair.is_validated === true) {
     status = "Validated";
@@ -71,7 +70,7 @@ const mapChatPairToValidationItem = (
   return {
     id: pair.question_id,
     answerId: pair.answer_id,
-    tanggal: pair.created_at, 
+    tanggal: pair.created_at,
     user: pair.platform_unique_id || "Anonymous User",
     session_id: pair.session_id,
     pertanyaan: pair.question_content,
@@ -82,6 +81,9 @@ const mapChatPairToValidationItem = (
 };
 
 const HistoryValidationPage = () => {
+  const { user } = useAuthStore();
+  const userRoleName = user?.role?.name;
+  const isSuperAdmin = userRoleName === "superadmin";
   // State Modals
   const [chatModalOpen, setChatModalOpen] = useState(false);
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
@@ -94,7 +96,7 @@ const HistoryValidationPage = () => {
   const [filters, setFilters] = useState<HistoryPageFilters>({
     aiAnswer: "",
     validationStatus: "",
-    start_date: "", 
+    start_date: "",
     end_date: "",
   });
   const [sortOrder, setSortOrder] = useState<SortOrder>("latest");
@@ -102,10 +104,15 @@ const HistoryValidationPage = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Selected Items
-  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
-  const [selectedHistoryItem, setSelectedHistoryItem] = useState<ValidationHistoryItem | null>(null);
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
+    null
+  );
+  const [selectedHistoryItem, setSelectedHistoryItem] =
+    useState<ValidationHistoryItem | null>(null);
   const [textModalState, setTextModalState] = useState<{
-    isOpen: boolean; title: string; content: string;
+    isOpen: boolean;
+    title: string;
+    content: string;
   }>({ isOpen: false, title: "", content: "" });
 
   const searchParams = useMemo(() => {
@@ -120,33 +127,42 @@ const HistoryValidationPage = () => {
 
   const isValidatedParam = useMemo(() => {
     switch (filters.validationStatus) {
-      case "Pending": return "null";
-      case "Validated": return "1";
-      case "Rejected": return "0";
-      default: return "";
+      case "Pending":
+        return "null";
+      case "Validated":
+        return "1";
+      case "Rejected":
+        return "0";
+      default:
+        return "";
     }
   }, [filters.validationStatus]);
 
   const isAnsweredParam = useMemo(() => {
     switch (filters.aiAnswer) {
-      case "answered": return "true";
-      case "unanswered": return "false";
-      default: return "";
+      case "answered":
+        return "true";
+      case "unanswered":
+        return "false";
+      default:
+        return "";
     }
   }, [filters.aiAnswer]);
 
   const { data: historyData, isLoading: isLoadingTable } =
     useGetValidationHistory(
-      searchParams, 
-      sortOrder, 
-      filters.start_date, 
+      searchParams,
+      sortOrder,
+      filters.start_date,
       filters.end_date,
       isValidatedParam,
       isAnsweredParam
-    ); 
+    );
 
-  const { mutate: submitValidation, isPending: isSubmitting } = useSubmitValidation();
-  const { mutate: downloadHistory, isPending: isDownloading } = useDownloadChatHistory();
+  const { mutate: submitValidation, isPending: isSubmitting } =
+    useSubmitValidation();
+  const { mutate: downloadHistory, isPending: isDownloading } =
+    useDownloadChatHistory();
 
   const { data: chatHistoryForModal, isLoading: isLoadingModal } =
     useGetChatHistory(selectedSessionId);
@@ -159,13 +175,25 @@ const HistoryValidationPage = () => {
   const totalItems = historyData?.total || 0;
 
   // Handlers
-  const handleSearchSubmit = () => { setSearchTerm(searchInput); setCurrentPage(1); };
-  const handleFilterChange = (filterName: keyof HistoryPageFilters, value: string) => {
-    setFilters((prev) => ({ ...prev, [filterName]: value })); 
+  const handleSearchSubmit = () => {
+    setSearchTerm(searchInput);
     setCurrentPage(1);
   };
-  const handleSortToggle = () => { setSortOrder(prev => (prev === "latest" ? "oldest" : "latest")); setCurrentPage(1); };
-  const handleItemsPerPageChange = (items: number) => { setItemsPerPage(items); setCurrentPage(1); };
+  const handleFilterChange = (
+    filterName: keyof HistoryPageFilters,
+    value: string
+  ) => {
+    setFilters((prev) => ({ ...prev, [filterName]: value }));
+    setCurrentPage(1);
+  };
+  const handleSortToggle = () => {
+    setSortOrder((prev) => (prev === "latest" ? "oldest" : "latest"));
+    setCurrentPage(1);
+  };
+  const handleItemsPerPageChange = (items: number) => {
+    setItemsPerPage(items);
+    setCurrentPage(1);
+  };
 
   // Action Dispatcher
   const handleAction = (action: ActionType, item: ValidationHistoryItem) => {
@@ -174,7 +202,7 @@ const HistoryValidationPage = () => {
       setChatModalOpen(true);
     } else if (action === "approve") {
       setSelectedHistoryItem(item);
-      setIsApproveModalOpen(true); 
+      setIsApproveModalOpen(true);
     } else if (action === "reject") {
       setSelectedHistoryItem(item);
       setIsRejectConfirmOpen(true);
@@ -182,46 +210,57 @@ const HistoryValidationPage = () => {
   };
 
   // Handle Approve
-  const handleApproveSubmit = (item: ValidationHistoryItem, correction: string) => {
+  const handleApproveSubmit = (
+    item: ValidationHistoryItem,
+    correction: string
+  ) => {
     const isModified = correction.trim() !== item.jawaban_ai.trim();
     const revisionPayload = isModified ? correction : "";
 
-    submitValidation({
-      question_id: item.id,
-      question: item.pertanyaan,
-      answer_id: item.answerId,
-      answer: item.jawaban_ai,
-      revision: revisionPayload,
-      validate: true
-    }, {
-      onSuccess: () => {
-        const msg = isModified ? "Revisi berhasil disimpan & divalidasi." : "Jawaban berhasil divalidasi.";
-        toast.success(msg);
-        setIsApproveModalOpen(false);
-        setSelectedHistoryItem(null);
+    submitValidation(
+      {
+        question_id: item.id,
+        question: item.pertanyaan,
+        answer_id: item.answerId,
+        answer: item.jawaban_ai,
+        revision: revisionPayload,
+        validate: true,
       },
-      onError: () => toast.error("Gagal memproses validasi.")
-    });
+      {
+        onSuccess: () => {
+          const msg = isModified
+            ? "Revisi berhasil disimpan & divalidasi."
+            : "Jawaban berhasil divalidasi.";
+          toast.success(msg);
+          setIsApproveModalOpen(false);
+          setSelectedHistoryItem(null);
+        },
+        onError: () => toast.error("Gagal memproses validasi."),
+      }
+    );
   };
 
   // Handle Reject
   const handleRejectConfirm = () => {
     if (!selectedHistoryItem) return;
-    submitValidation({
-      question_id: selectedHistoryItem.id,
-      question: selectedHistoryItem.pertanyaan,
-      answer_id: selectedHistoryItem.answerId,
-      answer: selectedHistoryItem.jawaban_ai,
-      revision: "",
-      validate: false
-    }, {
-      onSuccess: () => {
-        toast.success("Jawaban ditandai tidak valid.");
-        setIsRejectConfirmOpen(false);
-        setSelectedHistoryItem(null);
+    submitValidation(
+      {
+        question_id: selectedHistoryItem.id,
+        question: selectedHistoryItem.pertanyaan,
+        answer_id: selectedHistoryItem.answerId,
+        answer: selectedHistoryItem.jawaban_ai,
+        revision: "",
+        validate: false,
       },
-      onError: () => toast.error("Gagal menolak.")
-    });
+      {
+        onSuccess: () => {
+          toast.success("Jawaban ditandai tidak valid.");
+          setIsRejectConfirmOpen(false);
+          setSelectedHistoryItem(null);
+        },
+        onError: () => toast.error("Gagal menolak."),
+      }
+    );
   };
 
   // Handle Download
@@ -235,7 +274,7 @@ const HistoryValidationPage = () => {
         },
         onError: () => {
           toast.error("Gagal mendownload file.");
-        }
+        },
       }
     );
   };
@@ -254,15 +293,17 @@ const HistoryValidationPage = () => {
               onFilterChange={handleFilterChange}
               filterConfig={filterConfig}
             />
-            
+
             {/* Download Button */}
-            <button
-              onClick={() => setIsDownloadPopupOpen(true)}
-              className="ml-4 flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition-colors"
-            >
-              <Download className="w-4 h-4" />
-              <span>Download</span>
-            </button>
+            {isSuperAdmin && (
+              <button
+                onClick={() => setIsDownloadPopupOpen(true)}
+                className="ml-4 flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                <span>Download</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -274,7 +315,9 @@ const HistoryValidationPage = () => {
           <HistoryValidationTable
             histories={paginatedHistories}
             onAction={handleAction}
-            onViewText={(title, content) => setTextModalState({ isOpen: true, title, content })}
+            onViewText={(title, content) =>
+              setTextModalState({ isOpen: true, title, content })
+            }
             currentPage={currentPage}
             itemsPerPage={itemsPerPage}
             totalItems={totalItems}
@@ -287,17 +330,17 @@ const HistoryValidationPage = () => {
       </div>
 
       {/* Modal Components */}
-      <ChatHistoryModal 
-        isOpen={chatModalOpen} 
-        onClose={() => setChatModalOpen(false)} 
-        chatHistory={isLoadingModal ? [] : chatHistoryForModal || []} 
+      <ChatHistoryModal
+        isOpen={chatModalOpen}
+        onClose={() => setChatModalOpen(false)}
+        chatHistory={isLoadingModal ? [] : chatHistoryForModal || []}
       />
-      
-      <TextExpandModal 
-        isOpen={textModalState.isOpen} 
-        onClose={() => setTextModalState({ ...textModalState, isOpen: false })} 
-        title={textModalState.title} 
-        content={textModalState.content} 
+
+      <TextExpandModal
+        isOpen={textModalState.isOpen}
+        onClose={() => setTextModalState({ ...textModalState, isOpen: false })}
+        title={textModalState.title}
+        content={textModalState.content}
       />
 
       <ApproveWithCorrectionModal
@@ -317,16 +360,20 @@ const HistoryValidationPage = () => {
         confirmColor="bg-red-600 hover:bg-red-700"
         isConfirming={isSubmitting}
       >
-        <p>Apakah Anda yakin ingin menandai jawaban ini sebagai <strong>Tidak Valid (Reject)?</strong></p>
+        <p>
+          Apakah Anda yakin ingin menandai jawaban ini sebagai{" "}
+          <strong>Tidak Valid (Reject)?</strong>
+        </p>
       </ConfirmationModal>
 
-      {/* Download Popup */}
-      <DownloadPopup
-        isOpen={isDownloadPopupOpen}
-        onClose={() => setIsDownloadPopupOpen(false)}
-        onDownload={handleDownload}
-        isDownloading={isDownloading}
-      />
+      {isSuperAdmin && (
+        <DownloadPopup
+          isOpen={isDownloadPopupOpen}
+          onClose={() => setIsDownloadPopupOpen(false)}
+          onDownload={handleDownload}
+          isDownloading={isDownloading}
+        />
+      )}
     </>
   );
 };
