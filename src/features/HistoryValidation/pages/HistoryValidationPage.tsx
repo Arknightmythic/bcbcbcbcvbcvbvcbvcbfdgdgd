@@ -26,6 +26,7 @@ import TextExpandModal from "../../../shared/components/TextExpandModal";
 import { Loader2, Download } from "lucide-react";
 import ApproveWithCorrectionModal from "../../../shared/components/ApproveWithCorrectionModal";
 import DownloadPopup from "../components/DownloadPopup";
+import { useAuthStore } from "../../../shared/store/authStore";
 
 
 interface HistoryPageFilters extends Record<string, any> {
@@ -83,6 +84,9 @@ const mapChatPairToValidationItem = (
 };
 
 const HistoryValidationPage = () => {
+
+  const { user } = useAuthStore();
+  const userRoleName = user?.role?.name;
   // State Modals
   const [chatModalOpen, setChatModalOpen] = useState(false);
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
@@ -321,13 +325,14 @@ const HistoryValidationPage = () => {
         <p>Apakah Anda yakin ingin menandai jawaban ini sebagai <strong>Tidak Valid (Reject)?</strong></p>
       </ConfirmationModal>
 
-      {/* Download Popup */}
-      <DownloadPopup
+      {userRoleName === "superadmin" && (
+        <DownloadPopup
         isOpen={isDownloadPopupOpen}
         onClose={() => setIsDownloadPopupOpen(false)}
         onDownload={handleDownload}
         isDownloading={isDownloading}
       />
+      )}
     </>
   );
 };
