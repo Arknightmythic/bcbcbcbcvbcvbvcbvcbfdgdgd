@@ -39,6 +39,7 @@ export const getDocuments = async (params: URLSearchParams): Promise<DocumentsPa
 
 export const uploadDocument = async (formData: FormData) => {
   const response = await instanceApiToken.post('/api/documents/upload', formData, {
+    timeout: 600000,
     headers: {
       'Content-Type': 'multipart/form-data',
     },
@@ -49,6 +50,7 @@ export const uploadDocument = async (formData: FormData) => {
 
 export const updateDocument = async (formData: FormData) => {
   const response = await instanceApiToken.put('/api/documents/update', formData, {
+    timeout: 600000,
     headers: {
       'Content-Type': 'multipart/form-data',
     },
