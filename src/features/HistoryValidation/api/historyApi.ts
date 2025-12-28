@@ -1,3 +1,5 @@
+// src/features/HistoryValidation/api/historyApi.ts
+
 import { instanceApiToken } from "../../../shared/utils/Axios";
 import type {
   PaginatedChatPairsResponse,
@@ -7,7 +9,7 @@ import type {
 } from "../utils/types";
 
 export const getValidationHistory = async (
-  baseParams: URLSearchParams, // Ganti nama parameter agar jelas ini base-nya
+  baseParams: URLSearchParams,
   sort: SortOrder = "", 
   startDate: string = "", 
   endDate: string = "",
@@ -15,10 +17,8 @@ export const getValidationHistory = async (
   isAnswered?: string   
 ): Promise<PaginatedChatPairsResponse> => {
   
-  // SOLUSI: Clone params agar tidak memutasi object asli dari component
   const params = new URLSearchParams(baseParams);
 
-  // Setup params
   if (sort) {
     params.set("sort_by", "created_at");
     params.set("sort_direction", sort === "latest" ? "desc" : "asc");
@@ -27,12 +27,10 @@ export const getValidationHistory = async (
   if (startDate) params.set("start_date", startDate);
   if (endDate) params.set("end_date", endDate);
 
-  // Logika Filter is_validated
   if (isValidated !== undefined && isValidated !== "") {
     params.set("is_validated", isValidated);
   }
 
-  // Logika Filter is_answered
   if (isAnswered !== undefined && isAnswered !== "") {
     params.set("is_answered", isAnswered);
   }
@@ -63,11 +61,9 @@ export const updateChatFeedback = async (
 export const submitChatValidation = async (
   payload: ValidatePayload
 ): Promise<void> => {
-  // Menggunakan POST ke /validate sesuai handler.go
   const response = await instanceApiToken.post("/api/chat/validate", payload);
   return response.data;
 };
-
 
 export const getConversationHistory = async (
   sessionId: string
@@ -76,4 +72,24 @@ export const getConversationHistory = async (
     `/api/chat/conversations/${sessionId}`
   );
   return response.data.data;
+};
+
+// NEW: Function untuk download chat history
+export const downloadChatHistory = async (
+  startDate: string,
+  endDate: string,
+  type: string
+): Promise<Blob> => {
+  const params = new URLSearchParams();
+  
+  if (startDate) params.set("start_date", startDate);
+  if (endDate) params.set("end_date", endDate);
+  if (type) params.set("type", type);
+
+  const response = await instanceApiToken.get("/api/chat/history/download", {
+    params,
+    responseType: 'blob', // Important untuk download file
+  });
+  
+  return response.data;
 };

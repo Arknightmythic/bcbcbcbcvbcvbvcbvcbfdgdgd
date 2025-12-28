@@ -1,8 +1,11 @@
+// src/features/HistoryValidation/hooks/useHistoryValidation.ts
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getValidationHistory,
   submitChatValidation,
   getConversationHistory,
+  downloadChatHistory,
 } from "../api/historyApi";
 
 import type { BackendChatHistory, ChatMessage, SortOrder, ValidatePayload } from "../utils/types";
@@ -15,21 +18,16 @@ export const useGetValidationHistory = (
   sort: SortOrder, 
   startDate: string,
   endDate: string,
-  // Terima parameter baru
   isValidated?: string,
   isAnswered?: string
 ) => {
   return useQuery({
-    // Tambahkan filter ke queryKey agar data refresh saat filter berubah
     queryKey: [QUERY_KEY, params.toString(), sort, startDate, endDate, isValidated, isAnswered], 
     queryFn: () => getValidationHistory(params, sort, startDate, endDate, isValidated, isAnswered),
     placeholderData: (prevData) => prevData,
   });
 };
 
-/**
- * Hook untuk mutasi Validate/Reject/Revise
- */
 export const useSubmitValidation = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -53,6 +51,32 @@ export const useGetChatHistory = (sessionId: string | null) => {
           text: msg.message.content,
         })
       );
+    },
+  });
+};
+
+// NEW: Hook untuk download chat history
+export const useDownloadChatHistory = () => {
+  return useMutation({
+    mutationFn: ({ startDate, endDate, type }: { startDate: string; endDate: string; type: string }) => 
+      downloadChatHistory(startDate, endDate, type),
+    onSuccess: (blob) => {
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Generate filename with timestamp
+      const timestamp = new Date().toISOString().split('T')[0];
+      link.download = `chat_history_${timestamp}.csv`;
+      
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
     },
   });
 };
