@@ -8,7 +8,7 @@ USER node
 
 COPY --chown=node:node package.json yarn.lock ./
 
-RUN yarn install --frozen-lockfile
+RUN yarn install --frozen-lockfile .env .env
 
 COPY --chown=node:node . .
 
