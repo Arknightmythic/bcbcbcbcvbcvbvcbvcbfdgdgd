@@ -122,8 +122,11 @@ const DownloadPopup: React.FC<DownloadPopupProps> = ({
               disabled={isDownloading}
             >
               <option value="all">Semua</option>
-              <option value="human">Human</option>
+              <option value="human-ai">Human - AI</option>
+              <option value="human-agent">Human - Agent</option>
               <option value="ai">AI</option>
+              <option value="agent">Agent</option>
+              <option value="human">Human</option>
             </select>
           </div>
 
