@@ -25,7 +25,8 @@ import toast from "react-hot-toast";
 import TextExpandModal from "../../../shared/components/TextExpandModal";
 import { Loader2, Download } from "lucide-react";
 import ApproveWithCorrectionModal from "../../../shared/components/ApproveWithCorrectionModal";
-import DownloadPopup from "../components/DownloadPopUp";
+import DownloadPopup from "../components/DownloadPopup";
+
 
 interface HistoryPageFilters extends Record<string, any> {
     aiAnswer: string;
