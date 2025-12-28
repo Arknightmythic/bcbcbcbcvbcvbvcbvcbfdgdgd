@@ -1,4 +1,4 @@
-// [GANTI: src/features/HistoryValidation/pages/HistoryValidationPage.tsx]
+// src/features/HistoryValidation/pages/HistoryValidationPage.tsx
 
 import { useMemo, useState } from "react";
 import type {
@@ -12,6 +12,7 @@ import {
   useGetValidationHistory,
   useSubmitValidation,
   useGetChatHistory,
+  useDownloadChatHistory,
 } from "../hooks/useHistoryValidation";
 
 import HistoryValidationTable from "../components/HistoryValidationTable";
@@ -22,10 +23,10 @@ import TableControls, {
 import ConfirmationModal from "../../../shared/components/ConfirmationModal";
 import toast from "react-hot-toast";
 import TextExpandModal from "../../../shared/components/TextExpandModal";
-import { Loader2 } from "lucide-react";
+import { Loader2, Download } from "lucide-react";
 import ApproveWithCorrectionModal from "../../../shared/components/ApproveWithCorrectionModal";
+import DownloadPopup from "../components/DownloadPopUp";
 
-// Interface Filter State
 interface HistoryPageFilters extends Record<string, any> {
     aiAnswer: string;
     validationStatus: string;
@@ -34,15 +35,6 @@ interface HistoryPageFilters extends Record<string, any> {
 }
 
 const filterConfig: FilterConfig<HistoryPageFilters>[] = [
-  // {
-  //   key: "aiAnswer",
-  //   type: "select",
-  //   options: [
-  //     { value: "", label: "Kondisi Jawaban" },
-  //     { value: "answered", label: "Terjawab" },
-  //     { value: "unanswered", label: "Tidak Terjawab" },
-  //   ],
-  // },
   {
     key: "validationStatus",
     type: "select",
@@ -65,7 +57,6 @@ const filterConfig: FilterConfig<HistoryPageFilters>[] = [
 const mapChatPairToValidationItem = (
   pair: ChatPair
 ): ValidationHistoryItem => {
-  // Inisialisasi awal 'Pending'
   let status: ValidationStatus = "Pending";
   
   // @ts-ignore
@@ -76,10 +67,6 @@ const mapChatPairToValidationItem = (
   else if (pair.is_validated === false) {
     status = "Rejected";
   }
-  
-  // PERBAIKAN: Blok 'else status = "Pending"' DIHAPUS.
-  // Karena jika tidak masuk ke if/else if di atas, nilai status otomatis 
-  // tetap "Pending" (sesuai inisialisasi awal).
 
   return {
     id: pair.question_id,
@@ -97,10 +84,9 @@ const mapChatPairToValidationItem = (
 const HistoryValidationPage = () => {
   // State Modals
   const [chatModalOpen, setChatModalOpen] = useState(false);
-  
-  // GANTI: Menggunakan satu modal Approve yang bisa input revisi
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
   const [isRejectConfirmOpen, setIsRejectConfirmOpen] = useState(false);
+  const [isDownloadPopupOpen, setIsDownloadPopupOpen] = useState(false);
 
   // State Data & Filter
   const [searchInput, setSearchInput] = useState("");
@@ -160,6 +146,7 @@ const HistoryValidationPage = () => {
     ); 
 
   const { mutate: submitValidation, isPending: isSubmitting } = useSubmitValidation();
+  const { mutate: downloadHistory, isPending: isDownloading } = useDownloadChatHistory();
 
   const { data: chatHistoryForModal, isLoading: isLoadingModal } =
     useGetChatHistory(selectedSessionId);
@@ -186,7 +173,6 @@ const HistoryValidationPage = () => {
       setSelectedSessionId(item.session_id);
       setChatModalOpen(true);
     } else if (action === "approve") {
-      // GANTI: Approve sekarang membuka modal dengan opsi revisi
       setSelectedHistoryItem(item);
       setIsApproveModalOpen(true); 
     } else if (action === "reject") {
@@ -195,14 +181,8 @@ const HistoryValidationPage = () => {
     }
   };
 
-  // --- LOGIKA SUBMIT BARU ---
-
-  // 1. Handle Approve (dengan atau tanpa revisi) via Modal
+  // Handle Approve
   const handleApproveSubmit = (item: ValidationHistoryItem, correction: string) => {
-    // Cek apakah ada revisi? 
-    // Jika correction == jawaban asli, berarti "Approve Tanpa Revisi" -> kirim revision: ""
-    // Jika correction != jawaban asli, berarti "Approve Revisi" -> kirim revision: correction
-    
     const isModified = correction.trim() !== item.jawaban_ai.trim();
     const revisionPayload = isModified ? correction : "";
 
@@ -210,8 +190,8 @@ const HistoryValidationPage = () => {
       question_id: item.id,
       question: item.pertanyaan,
       answer_id: item.answerId,
-      answer: item.jawaban_ai, // Jawaban asli selalu dikirim
-      revision: revisionPayload, // "" atau string revisi
+      answer: item.jawaban_ai,
+      revision: revisionPayload,
       validate: true
     }, {
       onSuccess: () => {
@@ -220,11 +200,11 @@ const HistoryValidationPage = () => {
         setIsApproveModalOpen(false);
         setSelectedHistoryItem(null);
       },
-      onError: (e: any) => toast.error("Gagal memproses validasi.")
+      onError: () => toast.error("Gagal memproses validasi.")
     });
   };
 
-  // 2. Reject (Tidak Valid)
+  // Handle Reject
   const handleRejectConfirm = () => {
     if (!selectedHistoryItem) return;
     submitValidation({
@@ -232,7 +212,7 @@ const HistoryValidationPage = () => {
       question: selectedHistoryItem.pertanyaan,
       answer_id: selectedHistoryItem.answerId,
       answer: selectedHistoryItem.jawaban_ai,
-      revision: "", // Reject tidak perlu revisi teks, kirim kosong atau jawaban asli (sesuai kebutuhan backend, di sini kita kirim kosong agar aman)
+      revision: "",
       validate: false
     }, {
       onSuccess: () => {
@@ -240,23 +220,50 @@ const HistoryValidationPage = () => {
         setIsRejectConfirmOpen(false);
         setSelectedHistoryItem(null);
       },
-      onError: (e: any) => toast.error("Gagal menolak.")
+      onError: () => toast.error("Gagal menolak.")
     });
+  };
+
+  // Handle Download
+  const handleDownload = (startDate: string, endDate: string, type: string) => {
+    downloadHistory(
+      { startDate, endDate, type },
+      {
+        onSuccess: () => {
+          toast.success("File berhasil didownload!");
+          setIsDownloadPopupOpen(false);
+        },
+        onError: () => {
+          toast.error("Gagal mendownload file.");
+        }
+      }
+    );
   };
 
   return (
     <>
       <div className="flex flex-col flex-1 min-h-0">
         <div className="px-4 bg-gray-50 rounded-t-lg shadow-md">
-          <TableControls
-            searchTerm={searchInput}
-            searchPlaceholder="Cari berdasarkan nama, nomor, email...."
-            filters={filters}
-            onSearchChange={setSearchInput}
-            onSearchSubmit={handleSearchSubmit}
-            onFilterChange={handleFilterChange}
-            filterConfig={filterConfig}
-          />
+          <div className="flex items-center justify-between mb-3">
+            <TableControls
+              searchTerm={searchInput}
+              searchPlaceholder="Cari berdasarkan nama, nomor, email...."
+              filters={filters}
+              onSearchChange={setSearchInput}
+              onSearchSubmit={handleSearchSubmit}
+              onFilterChange={handleFilterChange}
+              filterConfig={filterConfig}
+            />
+            
+            {/* Download Button */}
+            <button
+              onClick={() => setIsDownloadPopupOpen(true)}
+              className="ml-4 flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              <span>Download</span>
+            </button>
+          </div>
         </div>
 
         {isLoadingTable ? (
@@ -293,17 +300,14 @@ const HistoryValidationPage = () => {
         content={textModalState.content} 
       />
 
-      {/* Modal Approve (Menggunakan kembali komponen ApproveWithCorrectionModal) */}
       <ApproveWithCorrectionModal
         isOpen={isApproveModalOpen}
         onClose={() => setIsApproveModalOpen(false)}
         history={selectedHistoryItem}
-        onConfirm={handleApproveSubmit} // Handler baru
+        onConfirm={handleApproveSubmit}
         isConfirming={isSubmitting}
-        // Opsional: Bisa ubah title modal via props jika component mendukung, misal: title="Validasi Jawaban"
       />
 
-      {/* Modal Reject */}
       <ConfirmationModal
         isOpen={isRejectConfirmOpen}
         onClose={() => setIsRejectConfirmOpen(false)}
@@ -315,6 +319,14 @@ const HistoryValidationPage = () => {
       >
         <p>Apakah Anda yakin ingin menandai jawaban ini sebagai <strong>Tidak Valid (Reject)?</strong></p>
       </ConfirmationModal>
+
+      {/* Download Popup */}
+      <DownloadPopup
+        isOpen={isDownloadPopupOpen}
+        onClose={() => setIsDownloadPopupOpen(false)}
+        onDownload={handleDownload}
+        isDownloading={isDownloading}
+      />
     </>
   );
 };
