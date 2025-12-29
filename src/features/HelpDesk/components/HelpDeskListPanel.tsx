@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react'; 
 import { useNavigate, useParams } from 'react-router';
-import { MessageSquare, Clock, CheckCheck, RefreshCw, type LucideIcon } from 'lucide-react';
+import { MessageSquare, Clock, CheckCheck, RefreshCw, type LucideIcon, Loader2 } from 'lucide-react';
 import type { HelpDeskChatListType, ChatChannel, HelpDeskChat } from '../utils/types';
 import { ChatList } from '../../../shared/components/sidebar/ChatList';
 import toast from 'react-hot-toast'; 
 import CustomSelect from '../../../shared/components/CustomSelect'; 
-import { useGetHelpDesks, useAcceptHelpDesk, useGetAllHelpDesks } from '../hooks/useHelpDesk';
+import { useAcceptHelpDesk, useGetAllHelpDesks, useGetHelpDesksInfinite } from '../hooks/useHelpDesk';
 import { useQueryClient } from '@tanstack/react-query';
 import HelpDeskSwitch from './HelpDeskSwitch';
+import { formatIndonesianShortNumber } from '../../../shared/utils/numberformatter';
 
 const channelFilterOptions = [
   { value: "", label: "Semua Channel" },
@@ -20,14 +21,22 @@ const channelFilterOptions = [
 const TabButton = ({ label, count, isActive, onClick }: { label: string, count: number, isActive: boolean, onClick: () => void }) => {
   const activeStyle = "bg-bOss-red border-bOss-red-200 shadow-sm";
   const inactiveStyle = "bg-transparent border-transparent";
-  
+  const displayCount = formatIndonesianShortNumber(count);
+  const fullCount = new Intl.NumberFormat('id-ID').format(count);
+
   return (
     <button
       onClick={onClick}
-      className={`flex-1 rounded-md py-1 text-xs transition-all duration-200 ${isActive ? activeStyle : inactiveStyle}`}
+      
+      title={`Total: ${fullCount} tiket`} 
+      className={`flex-1 rounded-md py-1 text-xs transition-all duration-200 group relative ${isActive ? activeStyle : inactiveStyle}`}
     >
-      <span className={`block font-bold text-lg ${isActive ? "text-white" : "text-gray-800"}`}>{count}</span>
-      <span className={`capitalize ${isActive ? "text-white" : "text-gray-600"}`}>{label}</span>
+      <span className={`block font-bold text-lg ${isActive ? "text-white" : "text-gray-800"}`}>
+        {displayCount}
+      </span>
+      <span className={`capitalize ${isActive ? "text-white" : "text-gray-600"}`}>
+        {label}
+      </span>
     </button>
   );
 };
@@ -52,7 +61,7 @@ const HelpDeskListPanel: React.FC = () => {
   const queryClient = useQueryClient();
 
 
-  const { data: allHelpDesks } = useGetAllHelpDesks();
+const { data: allHelpDesks } = useGetAllHelpDesks();
 
 
 const counts = useMemo(() => {
@@ -77,21 +86,37 @@ const counts = useMemo(() => {
     return stats;
   }, [allHelpDesks]);
 
-  const queryParams = useMemo(() => {
-    const params = new URLSearchParams();
-    params.append('limit', '50');
-  
-    params.append('status', getStatusFromTab(activeList));
-    
-    if (selectedChannel) {
-      params.append('search', selectedChannel);
-    }
-    
-    return params;
-  }, [activeList, selectedChannel]);
 
+  const currentStatus = getStatusFromTab(activeList);
+  const currentSearch = selectedChannel || "";
 
-  const { data: responseData, isLoading, isError, refetch } = useGetHelpDesks(queryParams);
+  const { 
+    data, 
+    fetchNextPage, 
+    hasNextPage, 
+    isFetchingNextPage, 
+    isLoading,
+    isError,
+    refetch 
+  } = useGetHelpDesksInfinite(currentStatus, currentSearch);
+
+  const currentChats: HelpDeskChat[] = useMemo(() => {
+    if (!data?.pages) return [];
+
+    const allHelpdesks = data.pages.flatMap((page) => page.helpdesks);
+
+    return allHelpdesks.map((helpdesk) => ({
+      id: helpdesk.session_id,
+      user_name: helpdesk.platform_unique_id || `User ${helpdesk.id}`,
+      
+      last_message: helpdesk.platform_unique_id ? `ID: ${helpdesk.platform_unique_id}` : `Status: ${helpdesk.status}`, 
+      timestamp: helpdesk.created_at,
+      channel: helpdesk.platform,
+      status: helpdesk.status,
+      helpdesk_id: helpdesk.id,
+    }));
+  }, [data]);
+
   const acceptMutation = useAcceptHelpDesk();
 
 
@@ -109,20 +134,6 @@ const counts = useMemo(() => {
     };
   }, [refetch, queryClient]);
 
-
-  const currentChats: HelpDeskChat[] = useMemo(() => {
-    if (!responseData?.helpdesks) return [];
-
-    return responseData.helpdesks.map((helpdesk) => ({
-      id: helpdesk.session_id,
-      user_name: helpdesk.platform_unique_id || `User ${helpdesk.id}`,
-      last_message: `Status: ${helpdesk.status}`, 
-      timestamp: helpdesk.created_at,
-      channel: helpdesk.platform,
-      status: helpdesk.status,
-      helpdesk_id: helpdesk.id,
-    }));
-  }, [responseData]);
 
 
   const listConfig: Record<HelpDeskChatListType, { icon: LucideIcon; title: string; empty: string }> = {
@@ -235,23 +246,44 @@ const counts = useMemo(() => {
         />
       </div>
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar">
+     <div className="flex-1 overflow-y-auto custom-scrollbar" id="scrollable-chat-list">
         {isLoading ? (
           <div className="flex items-center justify-center h-32">
-            <div className="text-gray-500 text-sm">Memuat data...</div>
+             <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
           </div>
         ) : (
-          <ChatList
-            title={currentListConfig.title}
-            icon={currentListConfig.icon}
-            chats={currentChats} 
-            onItemClick={handleSelectChat}
-            emptyMessage={currentListConfig.empty}
-            type={activeList}
-            selectedChatId={sessionId}
-            itemActionType={itemActionType}
-            onItemActionClick={handleAcceptChat}
-          />
+          <>
+            <ChatList
+              title={currentListConfig.title}
+              icon={currentListConfig.icon}
+              chats={currentChats} 
+              onItemClick={handleSelectChat}
+              emptyMessage={currentListConfig.empty}
+              type={activeList}
+              selectedChatId={sessionId}
+              itemActionType={itemActionType}
+              onItemActionClick={handleAcceptChat}
+            />
+            
+            {/* Tombol Load More Manual (Lebih aman & mudah daripada auto scroll observer untuk list sidebar) */}
+            {hasNextPage && (
+              <div className="p-2 flex justify-center">
+                <button
+                  onClick={() => fetchNextPage()}
+                  disabled={isFetchingNextPage}
+                  className="text-xs text-blue-600 hover:text-blue-800 font-medium py-2 px-4 bg-blue-50 hover:bg-blue-100 rounded-full transition-colors flex items-center gap-2"
+                >
+                  {isFetchingNextPage ? (
+                    <>
+                      <Loader2 className="w-3 h-3 animate-spin" /> Memuat...
+                    </>
+                  ) : (
+                    "Muat Lebih Banyak"
+                  )}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

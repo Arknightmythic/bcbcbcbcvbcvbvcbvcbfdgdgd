@@ -176,11 +176,11 @@ export const sendHelpdeskMessage = async (data: {
 
 export const solveHelpDeskSession = async (
   sessionId: string, 
-  clientTimestamp: string // Parameter baru
+  clientTimestamp: string 
 ): Promise<void> => {
   await instanceApiToken.post<ApiResponse<void>>(
     `/api/helpdesk/solved/${sessionId}`,
-    { resolved_at: clientTimestamp } // Kirim sebagai payload
+    { resolved_at: clientTimestamp } 
   );
 };
 
@@ -196,6 +196,31 @@ export const updateHelpDeskSwitchStatus = async (status: boolean): Promise<HelpD
   const response = await instanceApiToken.post<ApiResponse<HelpDeskSwitchStatus>>(
     "/api/helpdesk/switch",
     { status }
+  );
+  return response.data.data;
+};
+
+
+export const getHelpDesksInfinite = async ({
+  pageParam = 0, 
+  queryKey,
+}: any): Promise<PaginatedHelpDeskResponse> => {
+  // PERBAIKAN DISINI:
+  // queryKey strukturnya: ["helpdesks", "infinite", { status, search }]
+  // Jadi params ada di index ke-2, bukan ke-1.
+  const [_key, _type, params] = queryKey; 
+  
+  const searchParams = new URLSearchParams();
+  searchParams.append("limit", "100"); 
+  searchParams.append("offset", pageParam.toString()); 
+  
+  // Pastikan params ada sebelum akses propertinya
+  if (params?.status) searchParams.append("status", params.status);
+  if (params?.search) searchParams.append("search", params.search);
+
+  const response = await instanceApiToken.get<ApiResponse<PaginatedHelpDeskResponse>>(
+    "/api/helpdesk",
+    { params: searchParams }
   );
   return response.data.data;
 };

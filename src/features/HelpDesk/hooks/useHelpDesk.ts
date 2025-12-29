@@ -14,6 +14,7 @@ import {
   solveHelpDeskSession,
   getHelpDeskSwitchStatus,
   updateHelpDeskSwitchStatus,
+  getHelpDesksInfinite
 } from "../api/helpDeskApi";
 import type { HelpDeskPayload, SendHelpdeskMessagePayload } from "../utils/types";
 import toast from "react-hot-toast";
@@ -64,10 +65,10 @@ export const useGetAllHelpDesks = (enabled: boolean = true) => {
     queryKey: [QUERY_KEY, "all"],
     queryFn: getAllHelpDesks,
     enabled,
-    staleTime: 0, // Always consider data stale
-    gcTime: 0, // Don't cache data (previously cacheTime in older versions)
-    refetchOnMount: true, // Always refetch on mount
-    refetchOnWindowFocus: true, // Refetch when window regains focus
+    staleTime: 0, 
+    gcTime: 0, 
+    refetchOnMount: true, 
+    refetchOnWindowFocus: true, 
   });
 };
 
@@ -184,7 +185,7 @@ export const useAcceptHelpDesk = () => {
 export const useResolveHelpDesk = () => {
   const queryClient = useQueryClient();
   
-  // Ubah tipe parameter mutationFn
+  
   return useMutation({
     mutationFn: ({ sessionId, timestamp }: { sessionId: string; timestamp: string }) => 
       solveHelpDeskSession(sessionId, timestamp),
@@ -218,10 +219,10 @@ export const useGetChatHistory = (
     },
     initialPageParam: 1,
     enabled: enabled && !!sessionId,
-    staleTime: 0, // Always consider data stale for real-time updates
-    refetchInterval: false, // Don't use polling
+    staleTime: 0, 
+    refetchInterval: false, 
     refetchOnMount: true,
-    refetchOnWindowFocus: false, // Disable refetch on window focus to avoid unnecessary calls
+    refetchOnWindowFocus: false, 
   });
 };
 
@@ -235,7 +236,7 @@ export const useSendHelpdeskMessage = () => {
   return useMutation({
    mutationFn: (data: SendHelpdeskMessagePayload) => sendHelpdeskMessage(data),
     onSuccess: (_, variables) => {
-      // Invalidate chat history to refetch
+      
       queryClient.invalidateQueries({ 
         queryKey: ["chatHistory", variables.session_id] 
       });
@@ -270,6 +271,22 @@ export const useUpdateHelpDeskSwitchStatus = () => {
     },
     onError: (err: any) => {
       toast.error(err.response?.data?.message || "Gagal mengubah status layanan helpdesk.");
+    },
+  });
+};
+
+export const useGetHelpDesksInfinite = (status: string, search: string) => {
+  return useInfiniteQuery({
+    queryKey: ["helpdesks", "infinite", { status, search }],
+    queryFn: getHelpDesksInfinite,
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => {
+      
+      if (lastPage.helpdesks.length < 100) {
+        return undefined;
+      }
+      
+      return allPages.length * 100;
     },
   });
 };
