@@ -123,15 +123,15 @@ function generateDownloadFilename(type: string, startDate: string, endDate: stri
 
   // Build filename
   if (startDateStr && endDateStr) {
-    return `${typeStr}-${startDateStr}-${endDateStr}.csv`;
+    return `${typeStr}-${startDateStr}-${endDateStr}.xlsx`;
   } else if (startDateStr) {
-    return `${typeStr}-${startDateStr}.csv`;
+    return `${typeStr}-${startDateStr}.xlsx`;
   } else if (endDateStr) {
-    return `${typeStr}-${endDateStr}.csv`;
+    return `${typeStr}-${endDateStr}.xlsx`;
   } else {
     // Jika tidak ada tanggal, gunakan tanggal hari ini
     const today = new Date();
     const todayStr = formatDate(today.toISOString().split('T')[0]);
-    return `${typeStr}-${todayStr}.csv`;
+    return `${typeStr}-${todayStr}.xlsx`;
   }
 }
