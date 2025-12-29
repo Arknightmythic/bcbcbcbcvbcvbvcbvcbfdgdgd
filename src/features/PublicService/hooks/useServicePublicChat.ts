@@ -484,6 +484,10 @@ export const useServicePublicChat = () => {
         ? `agent-api-gen-${Date.now()}` 
         : `agent-api-${data.answer_id}`;
 
+      const newCitations = mapAskResponseToCitations(data, botMessageId);
+     setCitations((prev) => {
+        return [...prev, ...newCitations];
+      });
       
       const historyMsgId = `agent-${data.answer_id}`;
 
@@ -509,9 +513,6 @@ export const useServicePublicChat = () => {
       
       setMessages((prev) => addMessageOrdered(prev, botMessage));
       
-      
-      const newCitations = mapAskResponseToCitations(data, botMessageId);
-      setCitations((prev) => [...prev, ...newCitations]);
 
       if (sessionId === "new") {
         wsEnabledRef.current = true;
