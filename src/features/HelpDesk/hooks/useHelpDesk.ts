@@ -14,16 +14,15 @@ import {
   solveHelpDeskSession,
   getHelpDeskSwitchStatus,
   updateHelpDeskSwitchStatus,
-  getHelpDesksInfinite
+  getHelpDesksInfinite,
+  getHelpDeskSummary
 } from "../api/helpDeskApi";
 import type { HelpDeskPayload, SendHelpdeskMessagePayload } from "../utils/types";
 import toast from "react-hot-toast";
 
 const QUERY_KEY = "helpdesks";
 
-/**
- * Hook to get paginated helpdesks
- */
+
 export const useGetHelpDesks = (params: URLSearchParams) => {
   return useQuery({
     queryKey: [QUERY_KEY, params.toString()],
@@ -57,9 +56,7 @@ export const useGetHelpDeskBySessionId = (
   });
 };
 
-/**
- * Hook to get all helpdesks (without pagination)
- */
+
 export const useGetAllHelpDesks = (enabled: boolean = true) => {
   return useQuery({
     queryKey: [QUERY_KEY, "all"],
@@ -288,6 +285,15 @@ export const useGetHelpDesksInfinite = (status: string, search: string) => {
       
       return allPages.length * 100;
     },
+  });
+};
+
+
+export const useGetHelpDeskSummary = () => {
+  return useQuery({
+    queryKey: ["helpdesks", "summary"],
+    queryFn: getHelpDeskSummary,
+    refetchOnWindowFocus: true, 
   });
 };
 

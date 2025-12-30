@@ -127,3 +127,10 @@ export interface HelpDeskSwitchStatus {
   id: number;
   status: boolean;
 }
+
+export interface HelpDeskSummary {
+  queue: number;
+  active: number;
+  pending: number;
+  resolved: number;
+}

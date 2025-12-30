@@ -5,7 +5,7 @@ import type { HelpDeskChatListType, ChatChannel, HelpDeskChat } from '../utils/t
 import { ChatList } from '../../../shared/components/sidebar/ChatList';
 import toast from 'react-hot-toast'; 
 import CustomSelect from '../../../shared/components/CustomSelect'; 
-import { useAcceptHelpDesk, useGetAllHelpDesks, useGetHelpDesksInfinite } from '../hooks/useHelpDesk';
+import { useAcceptHelpDesk, useGetHelpDesksInfinite, useGetHelpDeskSummary } from '../hooks/useHelpDesk';
 import { useQueryClient } from '@tanstack/react-query';
 import HelpDeskSwitch from './HelpDeskSwitch';
 import { formatIndonesianShortNumber } from '../../../shared/utils/numberformatter';
@@ -61,30 +61,15 @@ const HelpDeskListPanel: React.FC = () => {
   const queryClient = useQueryClient();
 
 
-const { data: allHelpDesks } = useGetAllHelpDesks();
+const { data: summaryData } = useGetHelpDeskSummary();
 
 
-const counts = useMemo(() => {
-    const stats = { active: 0, queue: 0, pending: 0, resolve: 0 };
-
-    if (allHelpDesks) {
-      for (const ticket of allHelpDesks) {
-        const status = ticket.status?.toLowerCase();
-        
-        if (status === 'in_progress') {
-          stats.active++;
-        } else if (status === 'resolved' || status === 'closed') {
-          stats.resolve++;
-        } else if (status === 'pending') {
-          stats.pending++;
-        } else if (status === 'queue' || status === 'open') {
-          stats.queue++;
-        }
-      }
-    }
-
-    return stats;
-  }, [allHelpDesks]);
+const counts = {
+    active: summaryData?.active || 0,
+    queue: summaryData?.queue || 0,
+    pending: summaryData?.pending || 0,
+    resolve: summaryData?.resolved || 0,
+  };
 
 
   const currentStatus = getStatusFromTab(activeList);
@@ -121,11 +106,15 @@ const counts = useMemo(() => {
 
 
   useEffect(() => {
+    queryClient.invalidateQueries({ queryKey: ['helpdesks', 'summary'] });
+  }, [activeList, queryClient]);
+
+
+  useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         refetch();
-        queryClient.invalidateQueries({ queryKey: ['helpdesks', 'all'] });
-      }
+        queryClient.invalidateQueries({ queryKey: ['helpdesks', 'summary'] });      }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -150,8 +139,8 @@ const counts = useMemo(() => {
   };
 
   const handleRefresh = () => {
-    refetch();
-    queryClient.invalidateQueries({ queryKey: ['helpdesks', 'all'] });
+    refetch(); 
+    queryClient.invalidateQueries({ queryKey: ['helpdesks', 'summary'] }); 
     toast.success('Memuat ulang data berhasil');
   };
 
@@ -171,7 +160,7 @@ const counts = useMemo(() => {
         onSuccess: () => {
           toast.success("Chat berhasil dihubungkan!");
           refetch();
-          queryClient.invalidateQueries({ queryKey: ['helpdesks', 'all'] });
+          queryClient.invalidateQueries({ queryKey: ['helpdesks', 'summary'] });
           navigate(`/helpdesk/${chatId}`);
         },
       }
