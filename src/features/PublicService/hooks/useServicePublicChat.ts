@@ -523,12 +523,37 @@ export const useServicePublicChat = () => {
 
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
-    onError: () => {
+    onError: (error: any) => {
       hideLoadingToast();
-      toast.error("Gagal mengirim pesan.");
-      setMessages((prev) => prev.slice(0, -1)); 
+      
+      const is429Error = error?.response?.status === 429 || 
+                         error?.status === 429 ||
+                         error?.response?.data?.message === "Mohon maaf, saat ini terdapat peningkatan jumlah pesan yang masuk. Silakan kirim ulang pesan Anda beberapa saat lagi. Terimakasih.";
+      
+      if (is429Error) {
+        const errorMessage = error?.response?.data?.message || "Mohon maaf, saat ini terdapat peningkatan jumlah pesan yang masuk. Silakan kirim ulang pesan Anda beberapa saat lagi. Terimakasih.";
+        
+        const errorMessageId = `agent-error-${Date.now()}`;
+        processedMessageIdsRef.current.add(errorMessageId);
+        
+        const agentErrorMessage: ChatMessage = {
+          id: errorMessageId,
+          sender: "agent", 
+          text: errorMessage,
+          timestamp: new Date().toISOString(),
+          feedback: null,
+        };
+        
+        setMessages((prev) => addMessageOrdered(prev, agentErrorMessage));
+        
+        toast.error(errorMessage);
+      } else {
+        toast.error("Gagal mengirim pesan.");
+        setMessages((prev) => prev.slice(0, -1)); 
+      }
     },
   });
+
 
   
   const handleSendMessage = useCallback(() => {
