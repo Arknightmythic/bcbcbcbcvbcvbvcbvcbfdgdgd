@@ -3,11 +3,10 @@
 import React from 'react';
 import { ShieldCheck, X } from 'lucide-react';
 import type { Role } from '../utils/types'; 
-
-// --- HELPER CONFIG (Sama dengan RoleTableRow) ---
-const shouldShowPermission = (name: string) => name.endsWith(':read');
-const formatPermissionLabel = (name: string) => name.replace(':read', ':access');
-// ------------------------------------------------
+import { 
+  shouldShowPermission, 
+  formatPermissionLabel 
+} from '../utils/roleHelpers';
 
 interface ViewPermissionsModalProps {
   isOpen: boolean;

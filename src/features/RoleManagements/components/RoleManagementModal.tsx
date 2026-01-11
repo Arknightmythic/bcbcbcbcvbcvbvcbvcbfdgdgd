@@ -3,16 +3,10 @@ import { Loader2, X, Check, Square, CheckSquare } from 'lucide-react';
 import CustomSelect from '../../../shared/components/CustomSelect';
 import type { Role, Permission, Team, RoleModalData } from '../utils/types';
 import toast from 'react-hot-toast';
-
-// --- HELPER FUNCTIONS (Diluar Component) ---
-
-const shouldShowPermission = (permissionName: string): boolean => {
-  return permissionName.endsWith(':read');
-};
-
-const formatPermissionLabel = (permissionName: string): string => {
-  return permissionName.replace(':read', ':access');
-};
+import { 
+  shouldShowPermission, 
+  formatPermissionLabel 
+} from '../utils/roleHelpers';
 
 const formatGroupName = (name: string) => {
   return name

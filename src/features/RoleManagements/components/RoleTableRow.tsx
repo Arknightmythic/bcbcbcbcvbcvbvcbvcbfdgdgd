@@ -8,13 +8,7 @@ import TeamBadge from '../../UserManagement/components/TeamBadge';
 
 import { ActionMenuDialog } from '../../../shared/components/ActionMenuDialog';
 import { useActionMenu } from '../../../shared/utils/useActionMenu';
-
-
-
-
-
-const shouldShowPermission = (name: string) => name.endsWith(':read');
-const formatPermissionLabel = (name: string) => name.replace(':read', ':access');
+import { shouldShowPermission, formatPermissionLabel } from '../utils/roleHelpers';
 
 interface RoleTableRowProps {
   role: Role; 
