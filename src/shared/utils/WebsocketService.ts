@@ -55,12 +55,12 @@ class WebSocketService {
         this.ws.onopen = () => {
           this.reconnectAttempts = 0;
           this.isConnecting = false;
-          
-          
-         for (const channel of this.subscribedChannels) {
+
+
+          for (const channel of this.subscribedChannels) {
             this.subscribe(channel, '$');
           }
-          
+
           resolve();
         };
 
@@ -116,7 +116,7 @@ class WebSocketService {
     if (event === 'message' && channel) {
       const handlers = this.messageHandlers.get(channel);
       if (handlers) {
-        
+
         for (const handler of handlers) {
           try {
             handler(data);
@@ -125,7 +125,7 @@ class WebSocketService {
           }
         }
       }
-    } 
+    }
   }
 
   subscribe(conversationId: string, lastMessageId = '$'): void {
@@ -142,7 +142,7 @@ class WebSocketService {
 
     this.ws.send(JSON.stringify(message));
     this.subscribedChannels.add(conversationId);
-    
+
   }
 
   publish(conversationId: string, data: any): void {
@@ -151,7 +151,7 @@ class WebSocketService {
       return;
     }
 
-    
+
     const array = new Uint32Array(1);
     crypto.getRandomValues(array);
     const randomPart = array[0].toString(36);
@@ -165,7 +165,7 @@ class WebSocketService {
     };
 
     this.ws.send(JSON.stringify(message));
-    
+
   }
 
   onMessage(conversationId: string, handler: MessageHandler): () => void {
@@ -176,17 +176,23 @@ class WebSocketService {
     const handlers = this.messageHandlers.get(conversationId)!;
     handlers.push(handler);
 
-    
+
     return () => {
       const index = handlers.indexOf(handler);
       if (index > -1) {
         handlers.splice(index, 1);
       }
-      
-      
+
+
       if (handlers.length === 0) {
         this.messageHandlers.delete(conversationId);
         this.subscribedChannels.delete(conversationId);
+        if (this.isConnected()) {
+          this.ws?.send(JSON.stringify({
+            action: "unsubscribe",
+            channel: conversationId
+          }));
+        }
       }
     };
   }
