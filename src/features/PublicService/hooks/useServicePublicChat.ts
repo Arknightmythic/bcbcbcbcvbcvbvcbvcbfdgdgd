@@ -482,7 +482,6 @@ export const useServicePublicChat = () => {
     onSuccess: async (data: AskResponse) => {
       hideLoadingToast();
       
-      
       if (data.is_helpdesk && !data.answer) {
         if (sessionId === "new") {
           isTransitioningFromNewRef.current = true;
@@ -541,6 +540,9 @@ export const useServicePublicChat = () => {
       
 
       if (sessionId === "new") {
+        isTransitioningFromNewRef.current = true;
+        hasLoadedHistoryRef.current = true;
+        setIsHistoryLoaded(true);
         setIsWsEnabled(true);
         navigate(`/public-service/${data.conversation_id}`, { replace: true });
       } else {
