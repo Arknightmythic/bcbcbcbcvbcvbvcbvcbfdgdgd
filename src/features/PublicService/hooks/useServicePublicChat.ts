@@ -175,6 +175,7 @@ const addMessageOrdered = (prevMessages: ChatMessage[], newMessage: ChatMessage)
 
 export const useServicePublicChat = () => {
   const navigate = useNavigate();
+  const isTransitioningFromNewRef = useRef(false);
   const { sessionId } = useParams<{ sessionId: string }>();
   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
@@ -360,6 +361,24 @@ export const useServicePublicChat = () => {
   
   useEffect(() => {
     if (historyData && !hasLoadedHistoryRef.current && sessionId !== "new") {
+      if (isTransitioningFromNewRef.current) {
+        console.log("Skipping history load due to fresh transition from new session");
+        
+        // Tandai history sudah "loaded" agar tidak fetch ulang
+        hasLoadedHistoryRef.current = true;
+        setIsHistoryLoaded(true);
+        
+        // Reset flag transisi
+        isTransitioningFromNewRef.current = false; 
+        
+        // Segera aktifkan WS
+        setTimeout(() => {
+          setIsWsEnabled(true);
+        }, 500);
+        
+        return; // STOP DI SINI, jangan jalankan logika setMessages di bawah
+      }
+
       processedMessageIdsRef.current.clear();
       
       const mappedHistory = mapBackendHistoryToFrontend(
@@ -466,15 +485,19 @@ export const useServicePublicChat = () => {
       
       if (data.is_helpdesk && !data.answer) {
         if (sessionId === "new") {
+          isTransitioningFromNewRef.current = true;
+        
+        // Kita set HistoryLoaded true secara paksa karena kita sudah punya datanya di local state
+        hasLoadedHistoryRef.current = true; 
+        setIsHistoryLoaded(true);
+
           setIsWsEnabled(true);
           navigate(`/public-service/${data.conversation_id}`, { replace: true });
         } else {
           setIsWsEnabled(true);
         }
         queryClient.invalidateQueries({ queryKey: ["conversations"] });
-        if (data.conversation_id) {
-          queryClient.invalidateQueries({ queryKey: ["conversation", data.conversation_id] });
-        }
+        queryClient.invalidateQueries({ queryKey: ["conversation", data.conversation_id] });
         return;
       }
       
