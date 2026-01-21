@@ -97,11 +97,7 @@ const HelpDeskChatPage: React.FC = () => {
           await ws.connect();
         }
 
-        
-        
         const unsubscribe = ws.onMessage(agentChannel, (data: any) => {
-          
-          
           
           queryClient.invalidateQueries({ queryKey: ["chatHistory", sessionId] });
 

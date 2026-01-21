@@ -175,6 +175,7 @@ const addMessageOrdered = (prevMessages: ChatMessage[], newMessage: ChatMessage)
 
 export const useServicePublicChat = () => {
   const navigate = useNavigate();
+  const isTransitioningFromNewRef = useRef(false);
   const { sessionId } = useParams<{ sessionId: string }>();
   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
@@ -204,7 +205,7 @@ export const useServicePublicChat = () => {
   const wsService = useRef(getWebSocketService());
   const unsubscribeRef = useRef<(() => void) | null>(null);
   const currentConversationIdRef = useRef<string | null>(null);
-  const wsEnabledRef = useRef(false);
+  const [isWsEnabled, setIsWsEnabled] = useState(false);
 
   const hasLoadedHistoryRef = useRef(false);
 
@@ -215,7 +216,7 @@ export const useServicePublicChat = () => {
   } = useQuery({
     queryKey: ["conversation", sessionId],
     queryFn: () => getConversationById(sessionId!),
-    enabled: !!sessionId && sessionId !== "new" && !isHistoryLoaded,
+    enabled: !!sessionId && sessionId !== "new",
     retry: false,
   });
 
@@ -241,7 +242,7 @@ export const useServicePublicChat = () => {
   
   useEffect(() => {
     
-    if (!wsEnabledRef.current || !sessionId || sessionId === "new") return;
+    if (!isWsEnabled || !sessionId || sessionId === "new") return;
 
     const ws = wsService.current;
     
@@ -355,11 +356,29 @@ export const useServicePublicChat = () => {
         unsubscribeRef.current = null;
       }
     };
-  }, [sessionId, wsEnabledRef.current]); 
+  }, [sessionId, isWsEnabled]); 
 
   
   useEffect(() => {
     if (historyData && !hasLoadedHistoryRef.current && sessionId !== "new") {
+      if (isTransitioningFromNewRef.current) {
+        console.log("Skipping history load due to fresh transition from new session");
+        
+        // Tandai history sudah "loaded" agar tidak fetch ulang
+        hasLoadedHistoryRef.current = true;
+        setIsHistoryLoaded(true);
+        
+        // Reset flag transisi
+        isTransitioningFromNewRef.current = false; 
+        
+        // Segera aktifkan WS
+        setTimeout(() => {
+          setIsWsEnabled(true);
+        }, 500);
+        
+        return; // STOP DI SINI, jangan jalankan logika setMessages di bawah
+      }
+
       processedMessageIdsRef.current.clear();
       
       const mappedHistory = mapBackendHistoryToFrontend(
@@ -389,7 +408,7 @@ export const useServicePublicChat = () => {
       hasLoadedHistoryRef.current = true;
       
       setTimeout(() => {
-        wsEnabledRef.current = true;
+        setIsWsEnabled(true);
       }, 500);
     }
   }, [historyData, sessionId]);
@@ -402,7 +421,7 @@ export const useServicePublicChat = () => {
       setIsHistoryLoaded(false);
       setMessages([]);
       setCitations([]);
-      wsEnabledRef.current = false;
+      setIsWsEnabled(false);
     }
   }, [sessionId]);
 
@@ -463,15 +482,21 @@ export const useServicePublicChat = () => {
     onSuccess: async (data: AskResponse) => {
       hideLoadingToast();
       
-      
       if (data.is_helpdesk && !data.answer) {
         if (sessionId === "new") {
-          wsEnabledRef.current = true;
+          isTransitioningFromNewRef.current = true;
+        
+        // Kita set HistoryLoaded true secara paksa karena kita sudah punya datanya di local state
+        hasLoadedHistoryRef.current = true; 
+        setIsHistoryLoaded(true);
+
+          setIsWsEnabled(true);
           navigate(`/public-service/${data.conversation_id}`, { replace: true });
         } else {
-          wsEnabledRef.current = true;
+          setIsWsEnabled(true);
         }
         queryClient.invalidateQueries({ queryKey: ["conversations"] });
+        queryClient.invalidateQueries({ queryKey: ["conversation", data.conversation_id] });
         return;
       }
       
@@ -515,13 +540,17 @@ export const useServicePublicChat = () => {
       
 
       if (sessionId === "new") {
-        wsEnabledRef.current = true;
+        isTransitioningFromNewRef.current = true;
+        hasLoadedHistoryRef.current = true;
+        setIsHistoryLoaded(true);
+        setIsWsEnabled(true);
         navigate(`/public-service/${data.conversation_id}`, { replace: true });
       } else {
-        wsEnabledRef.current = true;
+        setIsWsEnabled(true);
       }
 
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      queryClient.invalidateQueries({ queryKey: ["conversation", data.conversation_id] });
     },
     onError: (error: any) => {
       hideLoadingToast();
@@ -689,14 +718,14 @@ export const useServicePublicChat = () => {
   const handleSelectSession = useCallback((session: ChatSession) => {
     setIsHistoryLoaded(false);
     hasLoadedHistoryRef.current = false;
-    wsEnabledRef.current = false;
+    setIsWsEnabled(false);
     navigate(`/public-service/${session.id}`);
   }, [navigate]);
 
   const handleCreateNewSession = useCallback(() => {
     setIsHistoryLoaded(false);
     hasLoadedHistoryRef.current = false;
-    wsEnabledRef.current = false;
+    setIsWsEnabled(false);
     setMessages([]);
     navigate("/public-service/new");
   }, [navigate]);

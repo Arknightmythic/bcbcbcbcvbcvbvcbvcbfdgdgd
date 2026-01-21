@@ -74,7 +74,7 @@ export const getConversationHistory = async (
   return response.data.data;
 };
 
-// NEW: Function untuk download chat history
+
 export const downloadChatHistory = async (
   startDate: string,
   endDate: string,
@@ -88,7 +88,8 @@ export const downloadChatHistory = async (
 
   const response = await instanceApiToken.get("/api/chat/history/download", {
     params,
-    responseType: 'blob', // Important untuk download file
+    responseType: 'blob',
+    timeout: 0, 
   });
   
   return response.data;
