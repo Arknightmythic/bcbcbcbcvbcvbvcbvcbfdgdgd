@@ -1,5 +1,3 @@
-// src/features/HistoryValidation/components/DownloadPopup.tsx
-
 import React, { useState, useRef } from 'react';
 import { Download, X } from 'lucide-react';
 import { useClickOutside } from '../../../shared/hooks/useClickOutside';
