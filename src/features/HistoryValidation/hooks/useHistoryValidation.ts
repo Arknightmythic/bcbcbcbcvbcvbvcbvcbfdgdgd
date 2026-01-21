@@ -55,31 +55,31 @@ export const useGetChatHistory = (sessionId: string | null) => {
   });
 };
 
-// NEW: Hook untuk download chat history
 export const useDownloadChatHistory = () => {
   return useMutation({
     mutationFn: ({ startDate, endDate, type }: { startDate: string; endDate: string; type: string }) => 
       downloadChatHistory(startDate, endDate, type),
     onSuccess: (blob, variables) => {
-      // Create download link
+      
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       
-      // Generate filename dengan format: type-startdate-enddate
+      
       const filename = generateDownloadFilename(variables.type, variables.startDate, variables.endDate);
       link.download = filename;
       
-      // Trigger download
+      
       document.body.appendChild(link);
       link.click();
       
-      // Cleanup
+      
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     },
   });
 };
+
 
 // Helper function untuk generate nama file
 function generateDownloadFilename(type: string, startDate: string, endDate: string): string {
