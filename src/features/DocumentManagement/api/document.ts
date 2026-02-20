@@ -80,7 +80,7 @@ export const getAllDocumentDetails = async (params: URLSearchParams) => {
   }
 
   return {
-    documents: response.data.data.document_details,
+    documents: response.data.data.document_details || [],
     total: response.data.data.total,
   };
 };
