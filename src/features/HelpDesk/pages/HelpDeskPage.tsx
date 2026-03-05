@@ -1,11 +1,12 @@
 import React from 'react';
 import { Outlet, useParams } from 'react-router'; 
 import HelpDeskListPanel from '../components/HelpDeskListPanel';
+import { useHelpdeskRealtime } from '../hooks/useHelpdeskRealtime';
 
 
 const HelpDeskPage: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>(); 
-
+  useHelpdeskRealtime();
   return (
     <div className="flex flex-1 h-full min-h-0 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
       
