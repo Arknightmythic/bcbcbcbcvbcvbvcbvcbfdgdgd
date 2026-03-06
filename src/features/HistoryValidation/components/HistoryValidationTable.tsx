@@ -1,5 +1,3 @@
-// [UPDATE: src/features/HistoryValidation/components/HistoryValidationTable.tsx]
-
 import React from "react";
 import HistoryValidationTableRow from "./HistoryValidationRow";
 import type {
@@ -12,6 +10,7 @@ import TablePagination from "../../../shared/components/TablePagination";
 
 interface HistoryValidationTableProps {
   histories: ValidationHistoryItem[];
+  isLoadingSkeleton?: boolean;
   onAction: (action: ActionType, history: ValidationHistoryItem) => void;
   onViewText: (title: string, content: string) => void;
 
@@ -20,21 +19,20 @@ interface HistoryValidationTableProps {
   totalItems: number;
   onPageChange: (page: number) => void;
   onItemsPerPageChange: (items: number) => void;
-
-  // Props Sorting
+  
   currentSort: SortOrder;
   onSortToggle: () => void;
 }
 
-// PERBAIKAN 1: Definisi interface props untuk SortableHeader
+
 interface SortableHeaderProps {
   label: string;
   onClick?: () => void;
   className?: string;
-  currentSort: SortOrder; // Menambahkan currentSort sebagai props
+  currentSort: SortOrder; 
 }
 
-// PERBAIKAN 2: Memindahkan component definition keluar
+
 const SortableHeader: React.FC<SortableHeaderProps> = ({ 
   label, 
   onClick, 
@@ -60,6 +58,7 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({
 
 const HistoryValidationTable: React.FC<HistoryValidationTableProps> = ({
   histories,
+  isLoadingSkeleton = false,
   onAction,
   onViewText,
   currentPage,
@@ -123,7 +122,37 @@ const HistoryValidationTable: React.FC<HistoryValidationTableProps> = ({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {histories.length > 0 ? (
+            {isLoadingSkeleton ? (
+              Array.from({ length: itemsPerPage || 10 }).map((_, index) => (
+                <tr key={`skeleton-${index}`} className="animate-pulse group hover:bg-gray-50 text-[10px] text-gray-700">
+                  <td className="px-4 py-3 w-35">
+                    <div className="h-4 bg-gray-200 rounded"></div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="h-4 bg-gray-200 rounded w-24"></div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="h-4 bg-gray-200 rounded w-32"></div>
+                  </td>
+                  <td className="px-4 py-3 max-w-xs">
+                    <div className="h-4 bg-gray-200 rounded w-48"></div>
+                  </td>
+                  <td className="px-4 py-3 max-w-xs">
+                    <div className="h-4 bg-gray-200 rounded w-48"></div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="h-6 bg-gray-200 rounded-full w-20 mx-auto"></div>
+                  </td>
+                  <td className="px-4 py-3 text-center sticky right-0 z-10">
+                    <div className="flex justify-center gap-2">
+                      <div className="h-6 w-6 bg-gray-200 rounded"></div>
+                      <div className="h-6 w-6 bg-gray-200 rounded"></div>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : histories.length > 0 ? (
+              /* KONDISI NORMAL JIKA ADA DATA */
               histories.map((history) => (
                 <HistoryValidationTableRow
                   key={history.id}
@@ -133,6 +162,7 @@ const HistoryValidationTable: React.FC<HistoryValidationTableProps> = ({
                 />
               ))
             ) : (
+              /* KONDISI KOSONG/TIDAK ADA HASIL */
               <tr>
                 <td
                   colSpan={8}

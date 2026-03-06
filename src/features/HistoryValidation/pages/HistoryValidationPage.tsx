@@ -1,6 +1,4 @@
-// src/features/HistoryValidation/pages/HistoryValidationPage.tsx
-
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import type {
   ActionType,
   ValidationHistoryItem,
@@ -102,7 +100,7 @@ const HistoryValidationPage = () => {
   const [sortOrder, setSortOrder] = useState<SortOrder>("latest");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-
+  const [isSearchAction, setIsSearchAction] = useState(false);
   // Selected Items
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
     null
@@ -149,7 +147,7 @@ const HistoryValidationPage = () => {
     }
   }, [filters.aiAnswer]);
 
-  const { data: historyData, isLoading: isLoadingTable } =
+  const { data: historyData, isLoading: isInitialLoading, isFetching } =
     useGetValidationHistory(
       searchParams,
       sortOrder,
@@ -158,6 +156,13 @@ const HistoryValidationPage = () => {
       isValidatedParam,
       isAnsweredParam
     );
+
+  // TAMBAHAN: Reset status searchAction jika fetching selesai
+  useEffect(() => {
+    if (!isFetching) {
+      setIsSearchAction(false);
+    }
+  }, [isFetching]);
 
   const { mutate: submitValidation, isPending: isSubmitting } =
     useSubmitValidation();
@@ -174,11 +179,12 @@ const HistoryValidationPage = () => {
 
   const totalItems = historyData?.total || 0;
 
-  // Handlers
   const handleSearchSubmit = () => {
+    setIsSearchAction(true); // Set true saat user klik cari
     setSearchTerm(searchInput);
     setCurrentPage(1);
   };
+
   const handleFilterChange = (
     filterName: keyof HistoryPageFilters,
     value: string
@@ -279,6 +285,12 @@ const HistoryValidationPage = () => {
     );
   };
 
+  // TAMBAHAN: Logika Penentuan Loader
+  // Spinner muncul: Saat initial load ATAU sedang fetching khusus untuk search
+  const showSpinner = isInitialLoading || (isFetching && isSearchAction);
+  // Skeleton muncul: Saat fetching tapi bukan initial load dan bukan karena search
+  const showSkeleton = isFetching && !showSpinner;
+
   return (
     <>
       <div className="flex flex-col flex-1 min-h-0">
@@ -307,13 +319,14 @@ const HistoryValidationPage = () => {
           </div>
         </div>
 
-        {isLoadingTable ? (
+        {showSpinner ? (
           <div className="flex-1 flex justify-center items-center p-10">
             <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
           </div>
         ) : (
           <HistoryValidationTable
             histories={paginatedHistories}
+            isLoadingSkeleton={showSkeleton} // Berikan instruksi ke table
             onAction={handleAction}
             onViewText={(title, content) =>
               setTextModalState({ isOpen: true, title, content })
