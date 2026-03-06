@@ -68,7 +68,7 @@ function Login() {
             Selamat Datang Di Layanan
           </h1>
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white">
-            DokumenAI
+            Dokuprime
           </h2>
         </div>
       </div>
@@ -78,7 +78,7 @@ function Login() {
         {/* Logo */}
         <div className="absolute top-6 right-6 md:top-12 md:right-12 lg:top-16 lg:right-16">
           <img
-            src="/LOGO KEMENTERIAN INVESTASI DAN HILIRISASI BKPM-Horizontal.png"
+            src="/Dokuprimegeneral.svg"
             alt="Logo Kementerian"
             className="h-7 md:h-12"
           />

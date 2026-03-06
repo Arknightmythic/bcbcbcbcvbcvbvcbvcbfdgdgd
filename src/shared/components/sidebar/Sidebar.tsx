@@ -58,14 +58,14 @@ const Sidebar = ({
       >
         <div className="relative flex items-center justify-center h-12 w-full">
           <img
-            src="/LOGO KEMENTERIAN INVESTASI DAN HILIRISASI BKPM-Horizontal.png"
+            src="/Dokuprimegeneral.svg"
             alt="Logo"
             className={`absolute h-10 transition-all duration-300 ease-in-out ${
               isCollapsed ? "opacity-0 scale-75" : "opacity-100 scale-100"
             }`}
           />
           <img
-            src="/bkpmlogo.png"
+            src="/dokuprimegeneral.png"
             alt="Collapsed Logo"
             className={`absolute h-7 transition-all duration-300 ease-in-out ${
               isCollapsed ? "opacity-100 scale-100" : "opacity-0 scale-75"
