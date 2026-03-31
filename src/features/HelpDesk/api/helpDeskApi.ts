@@ -30,20 +30,13 @@ export const getHelpDeskBySessionId = async (
   sessionId: string
 ): Promise<HelpDesk | null> => {
   try {
-    const params = new URLSearchParams();
-    params.append("search", sessionId);
-    params.append("limit", "1");
-
-    const response = await instanceApiToken.get<ApiResponse<PaginatedHelpDeskResponse>>(
-      "/api/helpdesk",
-      { params }
+    // Memanggil endpoint spesifik exact match (bukan lagi list/search global)
+    const response = await instanceApiToken.get<ApiResponse<HelpDesk>>(
+      `/api/helpdesk/session/${sessionId}`
     );
 
-    const helpdesks = response.data.data.helpdesks;
-    if (helpdesks.length > 0) {
-      return helpdesks[0];
-    }
-    return null;
+    // Karena backend sekarang mengembalikan object tunggal, langsung return datanya
+    return response.data.data;
   } catch (error) {
     console.error("Error fetching helpdesk by session_id:", error);
     return null;

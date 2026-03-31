@@ -51,7 +51,7 @@ const HelpDeskChatPage: React.FC = () => {
     isError,
   } = useGetChatHistory(sessionId || "", 50, !!sessionId);
 
-  const { data: helpdeskInfo, refetch: refetchInfo } =
+  const { data: helpdeskInfo, refetch: refetchInfo, isLoading: isLoadingInfo } =
     useGetHelpDeskBySessionId(sessionId || "", !!sessionId);
 
   const resolveMutation = useResolveHelpDesk();
@@ -70,10 +70,10 @@ const HelpDeskChatPage: React.FC = () => {
   const isResolved =
     normalizedStatus === "resolved" || normalizedStatus === "closed";
 
-  const currentChatUser = sessionId
-    ? helpdeskInfo?.platform_unique_id ||
-      `Session ${sessionId.substring(0, 8)}...`
-    : "Sesi Chatbot";
+  // const currentChatUser = sessionId
+  //   ? helpdeskInfo?.platform_unique_id ||
+  //     `Session ${sessionId.substring(0, 8)}...`
+  //   : "Sesi Chatbot";
 
   let statusColorClass = "bg-gray-400"; 
   if (isQueue) {
@@ -322,17 +322,43 @@ const HelpDeskChatPage: React.FC = () => {
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
+          
           <div>
-            <h2 className="text-md font-semibold text-gray-800">
-              {currentChatUser}
-            </h2>
-            {helpdeskInfo && (
+            {/* 1. Tampilkan Skeleton jika API sedang loading */}
+            {isLoadingInfo ? (
+              <div className="h-5 w-32 bg-gray-200 animate-pulse rounded mb-1"></div>
+            ) : !helpdeskInfo ? (
+              /* 2. Tampilkan Fallback Session ID + Bintang (*) jika API gagal (misal 429) */
+              /* Atribut 'title' akan memunculkan pesan mengambang saat di-hover */
+              <h2 
+                className="text-md font-semibold text-gray-800 cursor-help"
+                title="traffic sedang tinggi, mohon refresh kembali beberapa saat lagi"
+              >
+                Session {sessionId} <span className="text-red-600">*</span>
+              </h2>
+            ) : (
+              /* 3. Tampilkan Nama User jika berhasil */
+              <h2 className="text-md font-semibold text-gray-800">
+                {helpdeskInfo?.platform_unique_id || "Pengguna Anonim"}
+              </h2>
+            )}
+
+            {/* Tampilkan status HANYA jika data helpdeskInfo sudah ada dan loading selesai */}
+            {!isLoadingInfo && helpdeskInfo && (
               <div className="flex items-center gap-2 mt-0.5">
                 <span className={`w-2 h-2 rounded-full ${statusColorClass}`} />
                 <p className="text-xs text-gray-500 capitalize font-medium">
                   {helpdeskInfo.platform} •{" "}
                   {helpdeskInfo.status.replace("_", " ")}
                 </p>
+              </div>
+            )}
+            
+            {/* Skeleton Loading untuk status */}
+            {isLoadingInfo && (
+              <div className="flex items-center gap-2 mt-1">
+                 <div className="w-2 h-2 rounded-full bg-gray-200 animate-pulse" />
+                 <div className="h-3 w-20 bg-gray-200 animate-pulse rounded"></div>
               </div>
             )}
           </div>
